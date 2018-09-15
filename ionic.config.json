@@ -1,0 +1,8 @@
+{
+  "name": "Clickinn",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "ionic-angular",
+  "pro_id": "956b9a59"
+}
