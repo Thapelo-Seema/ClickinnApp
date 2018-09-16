@@ -1,0 +1,76 @@
+<ion-header>
+  <ion-navbar color="clickinn-pitch">
+    <ion-title style="font-family: 'Ubuntu', sans-serif;">Filter</ion-title>
+  </ion-navbar>
+</ion-header>
+<ion-content padding class="clickinn-bg" style="font-family: 'Raleway', sans-serif;">
+	<div *ngIf="loading" class="centered_on_screen">
+	    <ion-spinner name="ios"></ion-spinner>
+	</div>
+	<ion-grid>
+      <ion-row>
+        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+        </ion-col>
+        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+        	<p style="color: white; text-align: center">
+        	Tell us about the kind of place you're looking for. 
+        	<font style="color: orange">( Maximum Rent and Apartment Type are required fields )</font></p>
+			<ion-item padding style="background: transparent; color: white">
+			  <ion-label floating>Maximum Rent (Rands)</ion-label>
+			  <ion-input type="number" [(ngModel)]="search_object.maxPrice" required></ion-input>
+			</ion-item>
+			<ion-item padding style="background: transparent; color: white">
+			  <ion-label floating>Minimum Rent (Rands)</ion-label>
+			  <ion-input type="number" [(ngModel)]="search_object.minPrice" required></ion-input>
+			</ion-item>
+			<ion-item padding style="background: transparent; color: white">
+			  <ion-label>Apartment Type</ion-label>
+			  <ion-select [(ngModel)]="search_object.apartment_type" required>
+			    <ion-option value="2 Bedroom flat">2 Bedroom flat</ion-option>
+			    <ion-option value="1 Bedroom flat">1 Bedroom flat</ion-option>
+			    <ion-option value="Bachelor flat">Bachelor/Studio flat</ion-option>
+			    <ion-option value="Cottage">Cottage</ion-option>
+			    <ion-option value="Single Room">Single room</ion-option>
+			    <ion-option value="2 Sharing Room">2 Sharing room</ion-option>
+			    <ion-option value="3 Sharing Room">3 Sharing room</ion-option>
+			    <ion-option value="Any">Any</ion-option>
+			  </ion-select>
+			</ion-item>
+			<ion-buttons margin-vertical left>
+				<button ion-button icon-right *ngIf="!more" clear small color="secondary" (click)="showMore()">
+					More filters  &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropdown" end></ion-icon>
+				</button>
+				<button ion-button icon-right small *ngIf="more"  clear color="secondary" (click)="showMore()">
+					Less filters  &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropup" end></ion-icon>
+				</button>
+			</ion-buttons>
+			<ion-item *ngIf="more" padding style="background: transparent; color: white">
+			   <ion-label>NSFAS</ion-label>
+			   <ion-checkbox [(ngModel)]="search_object.nsfas"></ion-checkbox>
+			</ion-item>
+			<ion-item *ngIf="more" padding style="background: transparent; color: white">
+			   <ion-label>Parking</ion-label>
+			   <ion-checkbox [(ngModel)]="search_object.parking"></ion-checkbox>
+			</ion-item>
+			<ion-item *ngIf="more" padding style="background: transparent; color: white">
+			   <ion-label>wifi</ion-label>
+			   <ion-checkbox [(ngModel)]="search_object.wifi"></ion-checkbox>
+			</ion-item>
+			<ion-item *ngIf="more" padding style="background: transparent; color: white">
+			   <ion-label>Laundry machine</ion-label>
+			   <ion-checkbox [(ngModel)]="search_object.laundry"></ion-checkbox>
+			</ion-item>
+			<ion-item *ngIf="more" padding margin-vertical no-lines>
+			   <ion-textarea text-center rows="7" placeholder="Any other special needs that you may have like, wheelchair friendly, pet friendly etc." [(ngModel)]="search_object.other"></ion-textarea>
+			</ion-item>
+			<ion-buttons end>
+				<button ion-button round outline color="silver" (click)="gotoSeekPage()">
+			  		 Done &nbsp;&nbsp; <ion-icon  end name="checkmark"></ion-icon>
+			  </button>
+			</ion-buttons>
+        </ion-col>
+        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+</ion-content>

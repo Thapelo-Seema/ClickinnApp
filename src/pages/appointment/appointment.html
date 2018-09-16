@@ -1,0 +1,48 @@
+<ion-header>
+  <ion-navbar color="clickinn">
+    <ion-title style="font-family: 'Ubuntu', sans-serif;">Viewing Appointment</ion-title>
+  </ion-navbar>
+</ion-header>
+<ion-content>
+	<ion-grid>
+	    <ion-row>
+	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+	        </ion-col>
+	        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				<ion-item text-wrap text-center no-lines style="background: #000020">
+					<div text-center>
+						<img src="{{apartment?.dP?.url}}" height="200px" width="200px" imageViewer/>
+					</div>
+					<h1 margin-vertical style="color: white;">Wana go check this place out ?</h1> 
+					<p style="color: white; padding-bottom: 20px">Set an appointment below</p>
+				</ion-item>
+				<ion-item margin-bottom text-wrap text-center>
+					<h1>Apartment</h1>
+					<p>
+					    {{apartment?.room_type}}, R{{apartment?.price}}.00
+					</p>
+				</ion-item>
+				<ion-item margin-bottom text-wrap text-center>
+					<h1>Address</h1>
+					<p>
+					    {{apartment?.property?.description}}
+					</p>
+				</ion-item>
+				<ion-item margin-bottom text-wrap text-center (click)="showDatePicker()">
+					<h1>Appointment Date</h1>
+					<p style="color: #488aff">
+					    {{myDate ? myDate : 'Select appointment date'}}
+					</p>
+				</ion-item>
+				<ion-buttons padding end>
+					<button *ngIf="myDate" ion-button full margin-vertical padding (click)="makeAppointment()">Change appointment</button>
+					<button ion-button bottom-right color="secondary" (click)="book()">
+						Confirm&nbsp;&nbsp; <ion-icon  end name="checkmark"></ion-icon>
+					</button>
+				</ion-buttons>
+			</ion-col>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+	        </ion-col>
+	    </ion-row>
+	</ion-grid>
+</ion-content>

@@ -1,0 +1,56 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Messages</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+	<ion-grid no-padding>
+		<ion-row>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				
+				<div #scroller text-wrap no-lines class="chatroom_messages">
+					<ion-list>
+						<ion-card *ngFor="let msg of thread | async " style="border-radius: 7px">
+						  <ion-item>
+						    <ion-avatar item-start>
+						      <img src="{{msg?.by?.dp}}">
+						    </ion-avatar>
+						    {{msg?.by?.displayName}} 
+						  </ion-item>
+						  <ion-card-content>
+						    <p>{{msg?.text}}</p>
+						  </ion-card-content>
+						  <ion-row>
+						  	<ion-col>
+						  	</ion-col>
+						    <ion-col>
+						      <!-- <button ion-button icon-start clear small>
+						        <ion-icon name="text"></ion-icon>
+						        <div>{{message?.comments?.length}} Comments</div>
+						      </button>
+ -->						</ion-col>
+						    <ion-col center text-center>
+						      <ion-note>
+						      	{{msg?.timeStamp | timeAgo }}
+						      </ion-note>
+						    </ion-col>
+						  </ion-row>
+						</ion-card>
+					</ion-list>
+				</div>
+				<ion-item class="chatroom_input">
+          			<ion-textarea rows="2" placeholder="Type message here..." [(ngModel)]="text" 
+          			(keydown)="handleSubmit($event)"></ion-textarea>
+		            <button ion-button clear item-right (click)="send()">
+		              <ion-icon name="send" style="font-size: 30px"></ion-icon>
+		            </button>
+        		</ion-item>
+			</ion-col>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+		</ion-row>
+	</ion-grid>
+</ion-content>

@@ -1,0 +1,17 @@
+
+<ion-content padding text-center>
+	<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white" margin-vertical>
+		<p text-center style="color: white">
+			This message will go to your chats list for further conversations with this person
+		</p>
+	</ion-item>
+	<ion-textarea rows="3" [(ngModel)]="message.text" placeholder="Type message here..." style=" border: 1px solid lightgray; border-radius: 4px"></ion-textarea>
+	<ion-buttons end margin-vertical>
+		<button color="danger" ion-button (click)="close()">
+	      cancel
+	    </button>
+	    <button ion-button (click)="send()">
+	      send
+	    </button>
+    </ion-buttons>
+</ion-content>

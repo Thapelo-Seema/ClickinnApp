@@ -1,0 +1,66 @@
+<!--
+  Generated template for the SignupPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="clickinn">
+    <ion-title style="font-family: 'Ubuntu', sans-serif;">Sign up</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding class="clickinn-bg">
+  <ion-grid>
+    <ion-row>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+      <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+        <div *ngIf="loading" class="centered_on_screen" 
+  style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; border-radius: 10px;
+   padding: 20px; text-align: center; z-index: 1">
+    <ion-spinner name="ios"></ion-spinner>
+    <h1 text-center>Signing Up</h1>
+  </div>
+  <ion-item text-wrap no-lines style="background: transparent; color: white">
+    <div text-center>
+      <img src="assets/imgs/logo.png" class="round"/>
+    </div>
+  
+    <h1 text-center style="font-family: 'Ubuntu', sans-serif;">
+        Hi there, sign up below
+      </h1>
+      <p text-center>And we will take care of your accommodation needs...</p>
+    </ion-item>
+    <form margin-top margin-bottom>
+      <ion-item padding style="background: transparent; color: white">
+        <ion-label stacked>First Name</ion-label>
+        <ion-input type="text" [(ngModel)]="seeker.firstname" name="fname" autocomplete="given-name" autocorrect="off"></ion-input>
+      </ion-item>
+      <ion-item padding style="background: transparent; color: white">
+        <ion-label stacked>Last Name</ion-label>
+        <ion-input type="text" [(ngModel)]="seeker.lastname" name="lname" autocomplete="family-name" autocorrect="off"></ion-input>
+      </ion-item>
+      <ion-item padding style="background: transparent; color: white">
+        <ion-label stacked>Email</ion-label>
+        <ion-input type="email" [(ngModel)]="seeker.email" name="email" autocomplete="email" autocorrect="off"></ion-input>
+      </ion-item>
+      <ion-item padding style="background: transparent; color: white">
+        <ion-label stacked>Password</ion-label>
+        <ion-input type="password" [(ngModel)]="password" name="pword"></ion-input>
+      </ion-item>
+    </form>
+    <ion-buttons>
+      <button ion-button color="secondary" (click)="signup()">Sign Up</button>
+      <button ion-button clear (click)="signin()">Have an account ?</button>
+    </ion-buttons>
+      </ion-col>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  
+</ion-content>

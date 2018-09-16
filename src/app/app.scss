@@ -14,3 +14,94 @@
 // To declare rules for a specific mode, create a child rule
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
+@font-face {
+  font-family: 'Raleway';
+  src: url('../assets/fonts/1Ptug8zYS_SKggPNyCMIT5lu.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Raleway';
+  src: url('../assets/fonts/1Ptug8zYS_SKggPNyC0ITw.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('../assets/fonts/4iCs6KVjbNBYlgoKcg72j00.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('../assets/fonts/4iCs6KVjbNBYlgoKew72j00.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('../assets/fonts/4iCs6KVjbNBYlgoKcw72j00.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('../assets/fonts/4iCs6KVjbNBYlgoKfA72j00.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('../assets/fonts/4iCs6KVjbNBYlgoKcQ72j00.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('../assets/fonts/4iCs6KVjbNBYlgoKfw72.woff2') format('woff2');
+}
+
+ion-content{
+	font-family: 'Raleway', sans-serif;
+  padding: 0;
+  margin: 0;
+}
+
+
+ion-spinner{
+	font-size: 100px;
+}
+
+.clickinn-bg{
+	background: #000020;
+}
+
+.clickinn-bg2{
+	background: #000010;
+}
+
+.centered_on_screen{
+	position: fixed;
+ 	top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.full_width{
+	width: 90%;
+}
+
+.toast_margins{
+	position: fixed;
+	left: 50%;
+	top: 10%;
+	transform: translateX(-50%);
+	text-align: center;
+	padding: 15px;
+}
+
+.alertCtrl{
+	text-align: center;
+}
+
+.alert-title{
+	text-align: center;
+}
+
+.alert-sub-title{
+	text-align: center;
+	color: #32db64;
+}

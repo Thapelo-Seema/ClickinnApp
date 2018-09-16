@@ -1,0 +1,188 @@
+<!--
+  Generated template for the UploadAndEarnPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-navbar color="clickinn">
+    <ion-title>Upload</ion-title>
+  </ion-navbar>
+</ion-header>
+<ion-content>
+  <ion-grid>
+    <ion-row>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+      <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+        <ion-stepper #stepper mode="horizontal" (selectIndexChange)="selectChange($event)">
+    <ion-step>
+      <h3 text-center>Apartment details</h3>
+      <p text-center>Tell us about the apartment</p>
+      <ion-item>
+        <ion-label>Apartment Type</ion-label>
+        <ion-select [(ngModel)]="apartment.room_type" required>
+          <ion-option value="2 Bedroom flat">2 Bedroom flat</ion-option>
+          <ion-option value="1 Bedroom flat">1 Bedroom flat</ion-option>
+          <ion-option value="Bachelor flat">Bachelor/Studio flat</ion-option>
+          <ion-option value="Cottage">Cottage</ion-option>
+          <ion-option value="Single Room">Single room</ion-option>
+          <ion-option value="2 Sharing Room">2 Sharing room</ion-option>
+          <ion-option value="3 Sharing Room">3 Sharing room</ion-option>
+          <ion-option value="Any">Any</ion-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label floating>Monthly Rent (Rands)</ion-label>
+        <ion-input type="number" [(ngModel)]="apartment.price" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label floating>Deposit/Securing fee (Rands)</ion-label>
+        <ion-input type="number" [(ngModel)]="apartment.deposit" required></ion-input>
+      </ion-item>
+      <ion-item  margin-vertical no-lines>
+        <ion-textarea text-center rows="5" style="border: 1px solid lightgray"
+            placeholder="Descibe the apartment e.g. 'Spacious single room, fully furnished  with private bathroom etc..." 
+            [(ngModel)]="apartment.description">
+         </ion-textarea>
+      </ion-item>
+      <ion-buttons end>
+        <button ion-button round outline ionicStepperNext (click)="initialApartUpload()">Next&nbsp;&nbsp;
+          <ion-icon name="arrow-round-forward"></ion-icon>
+        </button>
+      </ion-buttons>
+      </ion-step>
+      <ion-step>
+        <h3 text-center>Apartment pictures</h3>
+        <p text-center>Pictures of only the inside of the apartment (nothing outside)</p>
+        <ion-grid>
+            <ion-row>
+              <ion-col col-md-6 col-sm-6 *ngFor="let image of apartmentImages">
+                <img src="{{image?.file}}"/>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+          <button ion-button full *ngIf="!apartmentImagesAdded" style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 1)" >
+            <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take pictures now
+          </button>
+          <button ion-button full *ngIf="apartmentImagesAdded" color="clickinn" style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 1)" >
+            <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take more pictures 
+          </button>
+        <ion-buttons text-center>
+          <button ion-button round outline small ionicStepperPrevious>
+            <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;Back
+          </button>
+          <button ion-button small round outline ionicStepperNext (click)="uploadApartPics()">Next&nbsp;&nbsp;
+          <ion-icon name="arrow-round-forward"></ion-icon>
+          </button>
+        </ion-buttons>
+      </ion-step>
+      <ion-step>
+        <h3 text-center>Building details</h3>
+        <p text-center>Select building from list or fill details about the building which the apartment belongs to</p>
+        <ion-grid>
+          <ion-row>
+            <ion-col col-12 col-md-6 col-sm-6 *ngFor="let building of buildings" 
+               (click)="selectEBuilding(building)" ionicStepperNext>
+            <ion-item text-wrap>
+              <ion-avatar item-start>
+                <img src="{{building?.dP?.url}}"/>
+              </ion-avatar>
+              <p>{{building?.address?.description}}</p>
+            </ion-item>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+        <ion-item>
+          <ion-label stacked>Building Address</ion-label>
+          <ion-input type="search" [(ngModel)]="address" placeholder="eg 79 Caroline Street..." (keyup)="getPredictionsAdd($event)">
+          </ion-input>
+        </ion-item>
+        <ion-list *ngIf="predictionsAdd">
+          <button ion-item *ngFor="let pred of predictionsAdd" (click)="selectPlace(pred)">{{pred?.description}}</button>
+        </ion-list>
+        <ion-item>
+          <ion-label stacked>Places of interest within 10 min walk</ion-label>
+          <ion-input type="search" [(ngModel)]="nearby" placeholder="eg Campus Square Mall" (keyup)="getPredictionsNby($event)">
+          </ion-input>
+        </ion-item>
+        <ion-list *ngIf="predictionsNby">
+          <button ion-item *ngFor="let pred of predictionsNby" (click)="addNearby(pred?.name)">{{pred?.description}}</button>
+        </ion-list>
+        <ion-list *ngIf="building.nearbys">
+          <ion-item *ngFor="let nearby of building.nearbys" margin-vertical no-lines style="background: lightgray" 
+          (click)="deleteNearby(nearby)">
+            <ion-icon name="close" start></ion-icon> &nbsp;&nbsp;&nbsp;{{nearby}}
+          </ion-item>
+        </ion-list>
+        <ion-item  padding>
+           <ion-label>NSFAS accredited</ion-label>
+           <ion-checkbox [(ngModel)]="building.nsfas"></ion-checkbox>
+        </ion-item>
+        <ion-item  padding>
+           <ion-label>Has secure parking</ion-label>
+           <ion-checkbox [(ngModel)]="building.parking"></ion-checkbox>
+        </ion-item>
+        <ion-item  padding >
+           <ion-label>Free WiFi</ion-label>
+           <ion-checkbox [(ngModel)]="building.wifi"></ion-checkbox>
+        </ion-item>
+        <ion-item  padding>
+           <ion-label>Has laundry machine/s</ion-label>
+           <ion-checkbox [(ngModel)]="building.laundry"></ion-checkbox>
+        </ion-item>
+        <ion-buttons text-center>
+          <button ion-button round outline small ionicStepperPrevious>
+            <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;Back
+          </button>
+          <button ion-button small round outline ionicStepperNext (click)="initialBuildinUpload()">Next&nbsp;&nbsp;
+          <ion-icon name="arrow-round-forward"></ion-icon>
+          </button>
+        </ion-buttons>
+      </ion-step>
+      <ion-step>
+        <h3 text-center *ngIf="!buildingSelected">Building pictures</h3>
+        <h3 text-center *ngIf="buildingSelected">Upload Building</h3>
+          <p text-center *ngIf="!buildingSelected">
+            Add pictures of the communal areas of the building, like bathrooms, kitchen, laundry, pool etc
+          </p>
+          <ion-item text-wrap no-lines *ngIf="buildingSelected">
+            <ion-avatar item-start>
+              <img src="{{building?.dP?.url}}"/>
+            </ion-avatar>
+            <p>{{building.address.description}}</p>
+          </ion-item>
+          <ion-grid>
+            <ion-row>
+              <ion-col col-md-6 *ngFor="let image of propertyImages">
+                <img src="{{image?.file}}"/>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+          <!-- <button ion-button full style="background: #000010; color: white; padding: 60px 20px; margin: 16px 0px" (click)="addPictures(2)">
+            <ion-icon name="image"></ion-icon> &nbsp;&nbsp; Add from gallery
+          </button> -->
+          <button ion-button full *ngIf="!propertyImagesAdded && !buildingSelected" style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 2)">
+            <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take pictures now
+          </button>
+          <button ion-button full *ngIf="propertyImagesAdded && !buildingSelected" color="clickinn" style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 2)">
+            <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take more pictures
+          </button>
+        <ion-buttons>
+          <button ion-button round outline small ionicStepperPrevious>
+            <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;Back
+          </button>
+        </ion-buttons>
+        <ion-buttons padding>
+          <button ion-button color="secondary" full padding (click)="uploadApartment()">Upload&nbsp;&nbsp;
+          <ion-icon name="ios-cloud-upload-outline"></ion-icon>
+          </button>
+        </ion-buttons>
+      </ion-step>
+    </ion-stepper>
+      </ion-col>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

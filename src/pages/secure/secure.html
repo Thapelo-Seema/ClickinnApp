@@ -1,0 +1,63 @@
+
+<ion-header>
+  <ion-navbar color="clickinn">
+    <ion-title style="font-family: 'Ubuntu', sans-serif;">Secure Place</ion-title>
+  </ion-navbar>
+</ion-header>
+
+
+<ion-content padding>
+	<ion-grid>
+    <ion-row>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+      <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+      	<ion-item text-wrap text-center no-lines>
+		<ion-thumbnail item-start>
+			<img src="{{apartment?.dP?.url}}" imageViewer/>
+		</ion-thumbnail>
+		<h3>Apartment Type</h3>
+		<p>
+		    {{apartment?.room_type}}, R{{apartment?.price}}.00
+		</p>
+		<h3>Location</h3>
+		<p>
+		    {{apartment?.property?.vicinity}}
+		</p>
+	</ion-item>
+	<ion-item margin-bottom text-wrap text-center no-lines>
+		<h1 style="font-family: 'Ubuntu', sans-serif;">Pay, Sign Lease &amp; this apartment is yours</h1>
+		<p>Select payment method below.</p>
+	</ion-item>
+	<button ion-button full margin-vertical (click)="downloadAndOpenPDF()">Get Lease</button>
+	
+	<ion-item (click)="gotoPayment('deposit')" text-wrap>
+		<ion-thumbnail item-end>
+			<img src="assets/imgs/deposit.png"/>
+		</ion-thumbnail>
+		<h1>Bank/ATM deposit</h1>
+	</ion-item>
+	<ion-item (click)="comingSoon()" text-wrap>
+		<ion-thumbnail item-end>
+			<img src="assets/imgs/instant_eft.png"/>
+		</ion-thumbnail>
+		<h1>Instant EFT</h1>
+	</ion-item>
+	<ion-item (click)="comingSoon()" text-wrap>
+		<ion-thumbnail item-end>
+			<img src="assets/imgs/debit_card.png"/>
+		</ion-thumbnail>
+		<h1>Debit Card</h1>
+	</ion-item>
+	<ion-item (click)="comingSoon()" no-lines text-wrap>
+		<ion-thumbnail item-end>
+			<img src="assets/imgs/credit_card.png"/>
+		</ion-thumbnail>
+		<h1>Credit Card</h1>
+	</ion-item>
+      </ion-col>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

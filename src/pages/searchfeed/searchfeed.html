@@ -1,0 +1,68 @@
+
+<ion-header>
+  <ion-navbar color="clickinn">
+    <ion-title text-center>Search feed</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+	<ion-grid>
+		<ion-row>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				<h1 text-center>Searches</h1>
+				<ion-card *ngFor="let search of searches | async">
+				  <ion-item>
+				    <ion-avatar item-start>
+				      <img src="assets/imgs/placeholder.png">
+				    </ion-avatar>
+				    <h2> {{search?.searcher_name != 'undefined undefined' ? search?.searcher_name : 'Anonymous'}} </h2>
+				  </ion-item>
+				  <ion-card-content>
+				    <p text-center>
+				    	Hi, I am looking for <b style="color: green">{{search?.apartment_type == 'Any' ? 'any type of room/apartment' : 
+				    	 ' a ' + search?.apartment_type}}</b> around 
+				    	<b style="color: green">{{search?.Address?.sublocality_lng}}, {{search?.Address?.locality_lng}} 
+				    	</b>.
+				    </p>
+				    <h2 text-center style="color: #488aff">The place must have the following</h2>
+				    <p text-center>
+				    	 Rent between <b style="color: green">R{{search?.minPrice}}.00</b> and <b style="color: green">R{{search?.maxPrice}}.00</b>
+				    	<b style="color: green">
+					    	{{search?.nsfas ? ' NSFAS accreditation, ': '' }}
+					    	{{search?.wifi ? ' WiFi, ': '' }}
+					    	{{search?.laundry ? ' laundry facilities, ': '' }} 
+					    	{{search?.parking ? ' secure parking ': '' }}
+				    	</b>
+				    </p>
+				  </ion-card-content>
+				  <ion-row>
+				    <ion-col>
+				      <button ion-button icon-start clear small (click)="showInput(search)" >
+				        <ion-icon name="text"></ion-icon>
+				        <div>Make offer</div>
+				      </button>
+				    </ion-col>
+				    <ion-col center text-center>
+				      <ion-note>
+				        {{search?.timeStamp | timeAgo}}
+				      </ion-note>
+				    </ion-col>
+				  </ion-row>
+				</ion-card>
+			</ion-col>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+		</ion-row>
+	</ion-grid>
+</ion-content>
+
+<!-- <ion-item *ngIf="inputVisible">
+		<ion-textarea rows="2" placeholder="Type message here..." style="border-radius: 4px"></ion-textarea>
+		<ion-buttons end margin-vertical>
+        <button ion-button>
+          send
+        </button>
+    </ion-buttons>
+</ion-item> -->

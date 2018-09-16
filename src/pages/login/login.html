@@ -1,0 +1,42 @@
+
+<ion-content class="clickinn-bg2" padding>
+	<ion-grid>
+    <ion-row>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+      <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+      	<div style="width: 100%">
+		<ion-item text-wrap no-lines style="background: transparent; color: white">
+			<div text-center>
+				<img src="assets/imgs/logo.png" class="round"/>
+			</div>
+	  	</ion-item>
+	  	<form>
+			<ion-item padding style="background: transparent; color: white">
+				<ion-label stacked>Email</ion-label>
+				<ion-input type="email" [(ngModel)]="seeker.email" name="email" autocomplete="email" autocorrect="off"></ion-input>
+			</ion-item>
+			<ion-item padding style="background: transparent; color: white">
+				<ion-label stacked>Password</ion-label>
+				<ion-input type="password" [(ngModel)]="password" name="pword"></ion-input>
+			</ion-item>
+		</form>
+	  	<ion-buttons>
+	  		<button ion-button color="secondary" (click)="signin()">Login</button>
+	  		<button ion-button clear (click)="signup()">Create An Account</button>
+	  	</ion-buttons>
+	  	<ion-buttons start>
+	  		<button ion-button small clear margin-vertical color="silver">Forgot password ?</button>
+	  	</ion-buttons>
+	</div>
+	<div *ngIf="loading" class="centered_on_screen" 
+	style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; border-radius: 10px; padding: 20px; text-align: center;">
+		<ion-spinner name="ios"></ion-spinner>
+		<h1 text-center>Signing In</h1>
+	</div>
+      </ion-col>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

@@ -1,0 +1,13 @@
+
+<ion-card padding>
+	<ion-card-header>
+		{{confirmation?.title}}
+	</ion-card-header>
+	<ion-card-content text-center>
+		<p>{{confirmation?.message}}</p>
+		<ion-buttons end>
+			<button ion-button (click)="confirm()">confirm</button>
+			<button ion-button (click)="close()">close</button>
+		</ion-buttons>
+	</ion-card-content>
+</ion-card>
