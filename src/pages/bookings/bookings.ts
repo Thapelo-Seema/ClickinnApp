@@ -9,7 +9,9 @@ import { Observable } from 'rxjs-compat';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 import { MessageInputPopupPage } from '../message-input-popup/message-input-popup';
+import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 
+ 
 @IonicPage()
 @Component({
   selector: 'page-bookings',
@@ -18,9 +20,16 @@ import { MessageInputPopupPage } from '../message-input-popup/message-input-popu
 export class BookingsPage {
   appointments: Observable<Appointment[]>;
   user: User;
-  constructor(public navCtrl: NavController, public navParams: NavParams, private appt_svc: AppointmentsProvider,
-  	private object_init: ObjectInitProvider, private storage: LocalDataProvider, private toast_svc: ToastSvcProvider,
-    private modal: ModalController){
+  constructor(
+    public navCtrl: NavController, 
+    public navParams: NavParams, 
+    private appt_svc: AppointmentsProvider,
+  	private object_init: ObjectInitProvider, 
+    private storage: LocalDataProvider, 
+    private toast_svc: ToastSvcProvider,
+    private modal: ModalController,
+    private accom_svc: AccommodationsProvider
+    ){
   	this.user = this.object_init.initializeUser();
   	this.storage.getUser().then(user =>{
   		this.user = user;
@@ -32,8 +41,31 @@ export class BookingsPage {
   	
   }
 
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad BookingsPage');
+  ionViewDidLoad(){
+  }
+
+  getProperty(prop_id){
+    let property: any = null;
+      this.accom_svc.getPropertyById(prop_id).subscribe(prop =>{
+        property = prop;
+      })
+    return property;
+  }
+
+  getAdress(prop_id){
+    let adress = '';
+    this.getProperty(prop_id).then(data =>{
+      adress = data;
+    })
+
+  }
+
+  getApart(apart_id){
+
+  }
+
+  getUser(uid){
+
   }
 
   cancelBooking(appointment: Appointment){
@@ -52,8 +84,13 @@ export class BookingsPage {
     .catch(err => console.log(err))
   }
 
-  showInput(search){
-    this.modal.create(MessageInputPopupPage, search).present();
+  showInput(appointment: Appointment){
+    let to = {
+      uid: appointment.booker_id,
+      dp : appointment.bookerDp,
+      name: appointment.booker_name 
+    }
+    this.modal.create(MessageInputPopupPage, to).present();
   }
 
 }

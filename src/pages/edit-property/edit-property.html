@@ -1,0 +1,73 @@
+<!--
+  Generated template for the EditPropertyPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-navbar color="clickinn">
+    <ion-title>Edit property</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+	<ion-grid no-padding>
+		<ion-row>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+			<ion-col col-12 col-sm-12 col-md-12 col-lg-6 style="background: #f4f4f4">
+				<div text-center>
+					<h1 text-center>Property details</h1>
+					<ion-item text-wrap>
+						<h2>Address</h2>
+						<p> {{property?.address?.description}} </p>
+					</ion-item>
+					<ion-item text-wrap>
+						<ion-label floating>Description</ion-label>
+						<ion-textarea rows="7" [(ngModel)]="property.common"></ion-textarea>
+					</ion-item>
+					<ion-item>
+					   <ion-label>Parking</ion-label>
+					   <ion-checkbox [(ngModel)]="property.parking"></ion-checkbox>
+					</ion-item>
+					<ion-item>
+					   <ion-label>WiFi</ion-label>
+					   <ion-checkbox [(ngModel)]="property.wifi"></ion-checkbox>
+					</ion-item>
+					<ion-item>
+					   <ion-label>NSFAS</ion-label>
+					   <ion-checkbox [(ngModel)]="property.nsfas"></ion-checkbox>
+					</ion-item>
+					<ion-item>
+					   <ion-label>Laundry facilities</ion-label>
+					   <ion-checkbox [(ngModel)]="property.laundry"></ion-checkbox>
+					</ion-item>
+
+					<div style="background: #000020">
+						<h2 text-center padding style="color: white">Property common area images</h2>
+						<ion-slides  loop="true" slidesPerView="2" class="image_container">
+							<ion-slide *ngFor="let image of images; let idx = index">
+								<div style="position: relative; top:0; left: 0; width:100%; height: 100%; ">	
+									<img src="{{image?.url}}" imageViewer class="thumb-img" />
+								</div>
+								
+								<button ion-button clear  style="position: absolute; top: 0; right: 0"  (click)="remove(idx)">
+	                            	<ion-icon name="close"></ion-icon>
+	                        	</button>
+								
+							</ion-slide>
+						</ion-slides>
+					</div>
+				</div>
+				<hr>
+				<ion-item padding>
+					<h1 text-center padding>Property apartments</h1>
+					<accommodations *ngFor="let apartment of apartments | async" (click)="gotoApartment(apartment)" [apartment]="apartment">
+					</accommodations>
+				</ion-item>
+			</ion-col>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+		</ion-row>
+	</ion-grid>
+</ion-content>

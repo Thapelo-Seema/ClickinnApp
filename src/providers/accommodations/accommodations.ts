@@ -1,16 +1,16 @@
 
 import { Injectable } from '@angular/core';
-import { Address } from '../../models/location/address.interface';
+//import { Address } from '../../models/location/address.interface';
 import { Observable } from 'rxjs-compat';
-import { AngularFireDatabase } from 'angularfire2/database';
+//import { AngularFireDatabase } from 'angularfire2/database';
 import { AngularFirestore } from 'angularfire2/firestore';
 //import { MapsProvider } from '../maps/maps';
 import { Property } from '../../models/properties/property.interface';
 import { Apartment } from '../../models/properties/apartment.interface';
-import { HttpClient, HttpHeaders } from '@angular/common/http'
+//import { HttpClient, HttpHeaders } from '@angular/common/http'
 import { Search } from '../../models/search.interface';
 import { Image } from '../../models/image.interface';
-import { User } from '../../models/users/user.interface';
+//import { User } from '../../models/users/user.interface';
 import { map } from 'rxjs-compat/operators/map';
 /*import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/filter';*/
@@ -18,10 +18,14 @@ import 'rxjs/add/operator/filter';*/
 @Injectable()
 export class AccommodationsProvider {
 
-  constructor( private db: AngularFireDatabase, private afs: AngularFirestore, private http: HttpClient){}
+  constructor( private afs: AngularFirestore){}
 
   getAllApartments():Observable<Apartment[]>{
-    return this.db.list<Apartment>('/Apartments').valueChanges()
+    return this.afs.collection<Apartment>('/Apartments').valueChanges()
+  }
+
+  getApartmentById(apart_id: string):Observable<Apartment>{
+    return this.afs.collection('Apartments').doc<Apartment>(apart_id).valueChanges()
   }
 
   getApartImages(apart_id: string):Observable<Image[]>{
@@ -35,6 +39,14 @@ export class AccommodationsProvider {
     .valueChanges()
   }
 
+  getUserApartments(uid: string): Observable<Apartment[]>{
+    return this.afs.collection<Apartment>('Apartments', ref => ref.where('property.user_id', '==', uid)).valueChanges()
+  }
+
+  getPropertyApartments(prop_id: string): Observable<Apartment[]>{
+    return this.afs.collection<Apartment>('Apartments', ref => ref.where('prop_id', '==', prop_id)).valueChanges()
+  }
+
   getPropertyImages(prop_id: string):Observable<Image[]>{
     const col = this.afs.collection('Properties');
     const docu = col.doc(prop_id);
@@ -45,7 +57,7 @@ export class AccommodationsProvider {
     return this.afs.collection<Apartment>('/Apartments', ref => ref.limit(9)).valueChanges();
   }
 
-  updateAccoms():Observable<Property[]>{
+  /*updateAccoms():Observable<Property[]>{
     return this.db.list<Property>('/Properties').valueChanges()
   }
 
@@ -55,18 +67,15 @@ export class AccommodationsProvider {
 
   updateApartmentProperty(apartment_id: string, property):Promise<void>{
     return this.db.object(`Apartments/${apartment_id}/property`).update(property)
-  }
+  }*/
 
   getPropertyById(property_id: string):Observable<Property>{
-    return this.db.object<Property>(`/Properties/${property_id}`).valueChanges()
-  }
-
-  getApartmentById(apartment_id: string): Observable<Apartment>{
-    return this.db.object<Apartment>(`/Apartments/${apartment_id}`).valueChanges()
+    return this.afs.collection(`/Properties`).doc<Property>(property_id).valueChanges()
   }
 
   getPropertiesByVicinity(vicinity: string):Observable<Property[]>{
-    return this.db.list<Property>('/Properties', ref => ref.orderByChild('vicinity').equalTo(vicinity)).valueChanges()
+    return this.afs.collection<Property>('/Properties', ref => 
+      ref.where('address.vicinity', '==', vicinity)).valueChanges()
   }
 
   search(search_obj: Search):Observable<Apartment[]>{

@@ -13,6 +13,8 @@ import { AgentDashboardPage } from '../pages/agent-dashboard/agent-dashboard';
 import { BursaryPlacementsPage } from '../pages/bursary-placements/bursary-placements';
 import { CaretakerManagerDashboardPage } from '../pages/caretaker-manager-dashboard/caretaker-manager-dashboard';
 import { LandlordDashboardPage } from '../pages/landlord-dashboard/landlord-dashboard';
+import { BookingsPage } from '../pages/bookings/bookings';
+import { ChatsPage } from '../pages/chats/chats';
 import { FcmProvider } from '../providers/fcm/fcm' ;
 import { tap } from 'rxjs-compat/operators/tap';
 //import { AppointmentsProvider } from '../providers/appointments/appointments';
@@ -92,6 +94,18 @@ export class MyApp {
   gotoLandlordDash(){
     this.loading = true;
     this.navCtrl.setRoot(LandlordDashboardPage);
+    this.loading = false;
+  }
+
+  gotoChats(){
+    this.loading = true;
+    this.navCtrl.push(ChatsPage);
+    this.loading = false;
+  }
+
+  gotoBookings(){
+    this.loading = true;
+    this.navCtrl.push(BookingsPage);
     this.loading = false;
   }
   //Change the users authState, remove the users local copy

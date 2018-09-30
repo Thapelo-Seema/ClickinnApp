@@ -1,0 +1,31 @@
+<!--
+  Generated template for the BuildingsPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-navbar color="clickinn">
+    <ion-title text-center>My properties</ion-title>
+  </ion-navbar>
+</ion-header>
+
+
+<ion-content padding>
+	<ion-grid>
+	  <ion-row>
+	  	<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+		</ion-col>
+	    <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+	    <ion-item text-wrap *ngFor="let building of buildings" (click)="gotoProperty(building)" >
+	      <ion-avatar item-start>
+	        <img src="{{building?.dP?.url}}" imageViewer/>
+	      </ion-avatar>
+	      <p>{{building?.address?.description}}</p>
+	    </ion-item>
+	    </ion-col>
+	    <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+		</ion-col>
+	  </ion-row>
+	</ion-grid>
+</ion-content>

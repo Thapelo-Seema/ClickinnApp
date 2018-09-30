@@ -21,17 +21,17 @@
       	<ion-buttons *ngIf="canEdit">
 			<button ion-button small>edit</button>
 		</ion-buttons>
-		<ion-item text-wrap no-lines>
-			<ion-avatar item-start>
+		<ion-item text-wrap text-center no-lines>
+			<!-- <ion-avatar item-start>
 				<img src="{{apartment?.dP?.url}}" imageViewer/>
-			</ion-avatar>
+			</ion-avatar> -->
 			<h1>{{apartment?.room_type}}</h1>
 			<p>{{apartment?.description}}</p><br/>
 			<p>{{apartment?.property?.common}}</p>
 		</ion-item>
-		<ion-slides  loop="true" slidesPerView="2">
+		<ion-slides  loop="true" slidesPerView="2" class="image_container">
 			<ion-slide *ngFor="let image of images">
-				<img src="{{image?.url}}" class="image_container" imageViewer />
+				<img src="{{image?.url}}"  imageViewer class="thumb-img" />
 			</ion-slide>
 		</ion-slides>
 		<h2 text-center>More info</h2>

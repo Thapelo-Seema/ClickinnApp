@@ -1,15 +1,17 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
 import { SearchfeedPage } from './searchfeed';
-import {TimeAgoPipe} from 'time-ago-pipe';
+import { PipesModule } from '../../pipes/pipes.module';
 
 @NgModule({
   declarations: [
-    SearchfeedPage, TimeAgoPipe
+    SearchfeedPage
   ],
   imports: [
-    IonicPageModule.forChild(SearchfeedPage),
+    IonicPageModule.forChild(SearchfeedPage), PipesModule
   ],
-  exports: [TimeAgoPipe]
+  exports: [
+  ]
+
 })
 export class SearchfeedPageModule {}

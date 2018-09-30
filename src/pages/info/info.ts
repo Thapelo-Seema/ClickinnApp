@@ -3,7 +3,7 @@ import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { Image } from '../../models/image.interface';
-import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
+//import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { Address } from '../../models/location/address.interface';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
@@ -24,11 +24,9 @@ export class InfoPage {
   canEdit: boolean = false;
   user: User;
   constructor(public navCtrl: NavController, public navParams: NavParams, private storage: LocalDataProvider, 
-  	private accom_svc: AccommodationsProvider, private errHandler: ErrorHandlerProvider, private object_init: ObjectInitProvider) {
+  	 private errHandler: ErrorHandlerProvider, private object_init: ObjectInitProvider) {
       this.apartment = this.object_init.initializeApartment();
       this.pointOfInterest = this.object_init.initializeAddress();
-      
-
   }
 
   ionViewWillLoad(){

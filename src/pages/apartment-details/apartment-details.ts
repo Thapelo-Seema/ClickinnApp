@@ -35,6 +35,7 @@ export class ApartmentDetailsPage{
       this.user_svc.getUser(data.uid).subscribe(user =>{
         if(user){
           this.user = this.obj_init.initializeUser2(user);
+          console.log('User: ', this.user);
         }
       })
       

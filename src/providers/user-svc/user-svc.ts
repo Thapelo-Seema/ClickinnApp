@@ -31,4 +31,8 @@ export class UserSvcProvider {
   	return this.afs.collection<User>('Users').doc(uid).delete();
   }
 
+  getUserThreads(uid: string){
+    return this.afs.collection(`Users/${uid}/threads`).valueChanges();
+  }
+
 }

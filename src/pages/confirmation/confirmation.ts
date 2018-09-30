@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angular';
-import { ObjectInitProvider } from '../../providers/object-init/object-init';
+//import { ObjectInitProvider } from '../../providers/object-init/object-init';
 
 @IonicPage()
 @Component({
@@ -14,7 +14,7 @@ export class ConfirmationPage {
   }
 	
   constructor(public navCtrl: NavController, public navParams: NavParams, private viewCtrl: ViewController,
-    private object_init: ObjectInitProvider) {
+    ) {
   }
 
   ionViewWillLoad() {

@@ -19,10 +19,18 @@
 		        <ion-icon name="ios-contact-outline" item-end></ion-icon>
 		       Profile
 		      </button>
-		      <button ion-item menuClose>
+		      <button ion-item menuClose (click)="gotoBookings()">
 		        <ion-icon name="ios-stopwatch-outline" item-end></ion-icon>
 		        Appointments
 		      </button>
+		      <button ion-item menuClose (click)="gotoChats()" >
+		        <ion-icon name="ios-chatboxes-outline" item-end></ion-icon>
+		        Chats
+		      </button>
+		      <!-- <button ion-item menuClose>
+		        <ion-icon name="thumbs-up" item-end></ion-icon>
+		        Liked Apartments
+		      </button> -->
 		      <!-- <button ion-item menuClose color="secondary" (click)="uploadAndEarn()" >
 		        <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon>
 		        Upload &amp; Earn

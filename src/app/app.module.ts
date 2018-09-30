@@ -25,6 +25,7 @@ import { FileTransfer } from '@ionic-native/file-transfer';
 import { Firebase } from '@ionic-native/firebase';
 
 
+
 //import custom pages
 
 import { AlertPageModule } from '../pages/alert/alert.module';
@@ -55,13 +56,15 @@ import { SearchfeedPageModule } from '../pages/searchfeed/searchfeed.module';
 import { ChatsPageModule } from '../pages/chats/chats.module';
 import { ManageBuildingsPageModule } from '../pages/manage-buildings/manage-buildings.module';
 import { ComponentsModule } from '../components/components.module';
+import { ChatThreadPageModule } from '../pages/chat-thread/chat-thread.module';
+import { MessageInputPopupPageModule } from '../pages/message-input-popup/message-input-popup.module';
+
+//Providers
 import { SearchfeedProvider } from '../providers/searchfeed/searchfeed';
 import { ObjectInitProvider } from '../providers/object-init/object-init';
 import { AppointmentsProvider } from '../providers/appointments/appointments';
 import { FcmProvider } from '../providers/fcm/fcm';
 import { ChatServiceProvider } from '../providers/chat-service/chat-service';
-import { ChatThreadPageModule } from '../pages/chat-thread/chat-thread.module';
-import { MessageInputPopupPageModule } from '../pages/message-input-popup/message-input-popup.module';
 import { UserSvcProvider } from '../providers/user-svc/user-svc';
 import { ToastSvcProvider } from '../providers/toast-svc/toast-svc';
 

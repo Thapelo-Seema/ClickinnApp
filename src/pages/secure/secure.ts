@@ -56,7 +56,7 @@ export class SecurePage {
   comingSoon(){
     let alert = this.alertCtrl.create({
       title: 'Coming Soon!',
-      subTitle: 'This feature is still under construction, please use the ATM or Bank deposits to complete payments',
+      subTitle: 'This feature is still under construction, please communicate with the advertiser about payments',
       buttons: ['OK']
     });
     alert.present();

@@ -36,8 +36,17 @@ export class AppointmentPage {
     this.loading = true;
     this.storage.getApartment().then(data =>{
       this.afs.collection("Apartments").doc<Apartment>(data.apart_id).valueChanges().subscribe(apartment =>{
-        this.storage.getUser().then(data => this.user = data).then(() =>{
+        this.storage.getUser().then(data => {
+          this.user = data;
+          this.appointment.booker_name = data.displayName ? data.displayName : data.firstname;
+          this.appointment.booker_id = data.uid;
+          this.appointment.bookerDp = data.photoURL ? data.photoURL : 'assets/imgs/placeholder.png'
+        }).then(() =>{
           this.apartment = apartment;
+          this.appointment.apart_id = apartment.apart_id;
+          this.appointment.apart_type = apartment.room_type;
+          this.appointment.room_type = apartment.room_type;
+           
           this.loading = false;
         })
       },

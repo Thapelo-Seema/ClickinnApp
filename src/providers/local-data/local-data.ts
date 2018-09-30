@@ -6,6 +6,7 @@ import { Address } from '../../models/location/address.interface';
 import { Seeker } from '../../models/users/seeker.interface';
 import { User } from '../../models/users/user.interface';
 import { Duration } from '../../models/location/duration.interface';
+import { Property } from '../../models/properties/property.interface';
 
 @Injectable()
 export class LocalDataProvider {
@@ -16,6 +17,14 @@ export class LocalDataProvider {
 
   setSearch(search: Search):Promise<Search>{
   	return this.storage.set('search_object', search)
+  }
+
+  setProperty(prop: Property):Promise<Property>{
+    return this.storage.set('property', prop)
+  }
+
+  getProperty():Promise<Property>{
+    return this.storage.get('property')
   }
 
   getSearch():Promise<Search>{

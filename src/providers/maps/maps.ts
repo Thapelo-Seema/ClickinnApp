@@ -3,13 +3,13 @@ import { ElementRef } from '@angular/core';
 //import { Geolocation } from '@ionic-native/geolocation';
 import { Address } from '../../models/location/address.interface';
 import { MarkerOptions } from '../../models/markeroptions.interface';
-import { LatLngCoordinates } from '../../models/location/latlng.interface';
+//import { LatLngCoordinates } from '../../models/location/latlng.interface';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { App } from 'ionic-angular';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 
 //import 'rxjs-compat/add/operator/map';
-import { map } from 'rxjs-compat/operators/map';
+//import { map } from 'rxjs-compat/operators/map';
 
 declare var google: any;
 /*
