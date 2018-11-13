@@ -3,10 +3,8 @@
     <ion-title text-center>Contacts</ion-title>
   </ion-navbar>
 </ion-header>
-<ion-content padding>
-	<div *ngIf="loading" class="centered_on_screen">
-	    <ion-spinner name="ios"></ion-spinner>
-	</div>
+<ion-content padding style="background: #f4f4f4;">
+	
 	<ion-grid>
 	    <ion-row>
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
@@ -25,13 +23,17 @@
 					</ion-buttons>
 				</ion-item>
 				<ion-list>
-					<ion-item *ngFor="let thread of threads | async" (click)="gotoThread(thread)">
+					<button ion-item *ngFor="let thread of chat_svc?.data | async; let i = index" (click)="gotoThread(thread)">
 					    <ion-avatar item-start>
-					      <img src="{{thread?.dp ? thread?.dp : 'assets/imgs/placeholder.png'}}">
+					      <img src="{{thread?.dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" />
+					      <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 					    </ion-avatar>
 					    <p>{{thread?.displayName ? thread?.displayName : 'Anonymous'}}</p>
-					</ion-item>
+					</button>
 				</ion-list>
+				<div *ngIf="loadingMore" style="text-align: center">
+				    <ion-spinner></ion-spinner>
+				</div>
 			</ion-col>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>

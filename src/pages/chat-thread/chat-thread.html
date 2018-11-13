@@ -5,33 +5,41 @@
 </ion-header>
 
 <ion-content padding>
+	
 	<ion-grid no-padding>
 		<ion-row>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-				
 				<div #scroller text-wrap no-lines class="chatroom_messages">
 					<ion-list>
-						<ion-card *ngFor="let msg of thread | async " style="border-radius: 7px">
-						  <ion-item>
-						    <ion-avatar item-start>
-						      <img src="{{msg?.by?.dp}}">
-						    </ion-avatar>
-						    {{msg?.by?.displayName}} 
+						<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white">
+							<p text-center style="color: white">
+								Your old messages may be deleted from this conversation after a couple of weeks 
+							</p>
+							<ion-buttons end>
+								<button ion-button small clear>
+									<div style="color: #32db64">
+										<!-- personnel ~ {{channel?.creator?.firstname}} {{channel?.creator?.lastname}} -->
+									</div>
+								</button>
+							</ion-buttons>
+						</ion-item>
+						<ion-card *ngFor="let msg of chat_svc?.data | async" style="border-radius: 7px">
+						  <ion-item *ngIf="msg?.topic" style="color: white; background: #000190">
+						    {{msg?.topic}} 
 						  </ion-item>
-						  <ion-card-content>
-						    <p>{{msg?.text}}</p>
+						  <ion-card-content padding-top *ngIf="user?.uid != msg?.by?.uid" style="background: #FCF3CF">
+						    <p style="padding-top: 7px">{{msg?.text}}</p>
 						  </ion-card-content>
-						  <ion-row>
+						  <ion-card-content *ngIf="user?.uid == msg?.by?.uid">
+						    <p style="padding-top: 7px">{{msg?.text}}</p>
+						  </ion-card-content>
+						  <ion-row *ngIf="user?.uid != msg?.by?.uid" style="background: #FCF3CF">
 						  	<ion-col>
 						  	</ion-col>
 						    <ion-col>
-						      <!-- <button ion-button icon-start clear small>
-						        <ion-icon name="text"></ion-icon>
-						        <div>{{message?.comments?.length}} Comments</div>
-						      </button>
- -->						</ion-col>
+						    </ion-col>
 						    <ion-col center text-center>
 						      <ion-note>
 						      	{{msg?.timeStamp | timeAgo | async}}
@@ -39,6 +47,9 @@
 						    </ion-col>
 						  </ion-row>
 						</ion-card>
+						<div *ngIf="loadingMore" style="text-align: center">
+						    <ion-spinner></ion-spinner>
+						</div>
 					</ion-list>
 				</div>
 				<ion-item class="chatroom_input">

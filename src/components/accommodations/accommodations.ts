@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+
 //import { Apartment } from '../../models/properties/apartment.interface';
 
 /**
@@ -14,7 +15,7 @@ import { Component, Input } from '@angular/core';
 export class AccommodationsComponent{
 
 	@Input() apartment: any;
-
+	imageLoaded: boolean = false;
 	constructor(){
 	}
 

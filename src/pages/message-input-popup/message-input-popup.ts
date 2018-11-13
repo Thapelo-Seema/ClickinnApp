@@ -5,7 +5,7 @@ import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface';
 import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
-import { ChatsPage } from '../chats/chats';
+import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 import { Thread } from '../../models/thread.interface';
 /**
  * Generated class for the MessageInputPopupPage page.
@@ -24,12 +24,17 @@ export class MessageInputPopupPage {
   message: ChatMessage;
   user: User;
   threads: Thread[];
-  constructor(public navCtrl: NavController, public navParams: NavParams, private viewCtrl: ViewController, 
-  	private objectInit: ObjectInitProvider, private storage: LocalDataProvider, private chat_svc: ChatServiceProvider){
+  constructor(
+    public navCtrl: NavController, 
+    public navParams: NavParams, 
+    private viewCtrl: ViewController, 
+  	private objectInit: ObjectInitProvider, 
+    private storage: LocalDataProvider, 
+    private chat_svc: ChatServiceProvider,
+    private toast_svc: ToastSvcProvider){
   	this.message = this.objectInit.initializeChatMessage();
   	this.user = this.objectInit.initializeUser();
-  	let to = this.navParams.data;
-    console.log('Navparams.data: ', to);
+  	
   	this.storage.getUser().then(user =>{
       this.chat_svc.getThreads(user).subscribe(threads =>{
         this.threads = threads;
@@ -39,16 +44,17 @@ export class MessageInputPopupPage {
   		this.message.by.displayName = this.user.firstname ? this.user.firstname : 'Anonymous';
   		this.message.by.dp = this.user.photoURL ?  this.user.photoURL : 'assets/imgs/placeholder.png';
   		this.message.by.uid = this.user.uid;
-  		this.message.to.displayName = to.name;
-  		this.message.to.dp = to.dp ?  to.dp : 'assets/imgs/placeholder.png';
-  		this.message.to.uid = to.uid;
-      console.log('to object: ', this.message.to);
+      this.storage.getMessageDetails().then(to =>{
+        console.log('Navparams.data: ', to);
+        this.message.to.displayName = to.name;
+        this.message.to.dp = to.dp ?  to.dp : 'assets/imgs/placeholder.png';
+        this.message.to.uid = to.uid;
+        this.message.topic = to.topic;
+        console.log('to object: ', this.message.to);
+      })
+  		
+      
   	})
-  }
-
-  ionViewDidLoad() {
-    console.log(this.navParams.data);
-    this.message.by
   }
 
   close(){
@@ -59,7 +65,7 @@ export class MessageInputPopupPage {
   	this.message.timeStamp = Date.now();
   	this.chat_svc.sendMessage(this.message, this.threads);
   	this.close();
-  	this.navCtrl.push(ChatsPage);
+  	this.toast_svc.showToast('Your message has been sent and it can be found in your chats...');
   }
 
 }

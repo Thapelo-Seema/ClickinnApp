@@ -7,12 +7,37 @@ import { Seeker } from '../../models/users/seeker.interface';
 import { User } from '../../models/users/user.interface';
 import { Duration } from '../../models/location/duration.interface';
 import { Property } from '../../models/properties/property.interface';
+import { Thread } from '../../models/thread.interface';
 
 @Injectable()
 export class LocalDataProvider {
 
   constructor(private storage: Storage) {
    
+  }
+
+  setTransactionState(state: any){
+    return this.storage.set('transaction_state', state)
+  }
+
+  getTransactionState(){
+    return this.storage.get('transaction_state')
+  }
+
+  setMessageDetails(details: any){
+    return this.storage.set('msg_details', details);
+  }
+
+  getMessageDetails(){
+    return this.storage.get('msg_details');
+  }
+
+  setThread(thread: Thread){
+    return this.storage.set('thread', thread);
+  }
+
+  getThread(){
+    return this.storage.get('thread');
   }
 
   setSearch(search: Search):Promise<Search>{
@@ -77,6 +102,14 @@ export class LocalDataProvider {
 
   getWalkingDuration():Promise<Duration>{
     return this.storage.get('walkingDuration');
+  }
+
+  setUserType(user_type: string){
+    return this.storage.set('user_type', user_type)
+  }
+
+  getUserType(){
+    return this.storage.get('user_type');
   }
 
 }

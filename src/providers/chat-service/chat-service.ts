@@ -1,16 +1,25 @@
 import { Injectable } from '@angular/core';
-import { AngularFirestore } from 'angularfire2/firestore';
-import { AngularFireDatabase } from 'angularfire2/database';
+import { AngularFirestore, AngularFirestoreCollection } from 'angularfire2/firestore';
 import { User } from '../../models/users/user.interface';
 import { Observable } from 'rxjs-compat';
 import { ChatMessage } from '../../models/chatmessage.interface';
 import { Thread } from '../../models/thread.interface';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import 'rxjs/add/operator/do';
+import 'rxjs/add/operator/scan';
+import 'rxjs/add/operator/take';
 
 @Injectable()
 export class ChatServiceProvider {
-  
-  constructor(private afs: AngularFirestore, private db: AngularFireDatabase){
-    
+  private _done = new BehaviorSubject(false);
+  private _loading = new BehaviorSubject(false);
+  private _data = new BehaviorSubject([]);
+
+  // Observable data
+  data: Observable<any>;
+  done: Observable<boolean> = this._done.asObservable();
+  loading: Observable<boolean> = this._loading.asObservable();
+  constructor(private afs: AngularFirestore){
   }
   /**This function checks if the sender has the reciever already as part of their contact list and if so it will return 
     an object that contains the thread_id on which the two users chat else the object returned will contain an empty string
@@ -38,16 +47,17 @@ export class ChatServiceProvider {
       }
     }
       return match;
-    
-    
   }
   /**
     This function creates a new chat thread between two users and pushes the message inside the thread
   */
   async createNewThread(msg: ChatMessage){
-    let thread_id = await this.db.list('Threads').push({}).key;
-    console.log('Thread id', thread_id);
-  	this.db.list(`Threads/${thread_id}`).push(msg);
+    //let thread_id = await this.db.list('Threads').push({}).key;
+    let docRef = await this.afs.collection('Threads').add({});
+    let thread_id = docRef.id;
+    this.afs.collection(`Threads/${thread_id}/chats`).add(msg);
+    /*console.log('Thread id', thread_id);
+  	this.db.list(`Threads/${thread_id}`).push(msg);*/
   	this.afs.collection(`Users`)
     .doc(msg.to.uid)
     .collection('threads')
@@ -74,18 +84,110 @@ export class ChatServiceProvider {
     let results = this.isContact(msg.to.uid, threads);
     console.log('results: ', results);
   	if(results.match){
-      this.db.list(`Threads/${results.thread_id}`).push(msg);
+      this.afs.collection(`Threads`).doc(results.thread_id).collection('chats').add(msg);
   	}else{
   		this.createNewThread(msg);
   	}
   }
 
   getThreadChats(thread_id):Observable<ChatMessage[]>{
-    return this.db.list<ChatMessage>(`Threads/${thread_id}`).valueChanges();
+    return this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref => ref.orderBy('timeStamp', 'asc'))
+    .valueChanges();
+  }
+
+  initGetThreadChats(thread_id){
+    const first = this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref => 
+      ref.orderBy('timeStamp', 'asc')
+      .limit(15)
+     )
+
+    this.mapAndUpdate(first);
+
+    this.data = this._data.asObservable()
+    .scan((acc, val) =>{
+      return acc.concat(val)
+    })
+  }
+
+  moreThreadChats(thread_id){
+    const cursor = this.getCursor();
+
+    const more = this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref => 
+      ref.orderBy('timeStamp', 'asc')
+      .limit(15)
+      .startAfter(cursor)
+     )
+
+    this.mapAndUpdate(more);
   }
 
   getThreads(user: User): Observable<Thread[]>{
 		return this.afs.collection('Users').doc(user.uid).collection<Thread>('threads').valueChanges();
+  }
+
+  initGetThreads(user: User){
+    const first = this.afs.collection('Users').doc(user.uid).collection<Thread>('threads', ref =>{
+      return ref.limit(15)
+    })
+
+    this.mapAndUpdate(first)
+
+    this.data = this._data.asObservable()
+    .scan((acc, val) =>{
+      return acc.concat(val)
+    })
+  }
+
+  moreThreads(user: User){
+    const cursor = this.getCursor();
+
+    const more = this.afs.collection('Users').doc(user.uid).collection<Thread>('threads', ref =>{
+      return ref.limit(15)
+    })
+
+    this.mapAndUpdate(more);
+  }
+
+   // Determines the doc snapshot to paginate query 
+  private getCursor() {
+    const current = this._data.value
+    if (current.length) {
+      return current[current.length - 1].doc 
+    }
+    return null
+  }
+
+
+  // Maps the snapshot to usable format the updates source
+  private mapAndUpdate(col: AngularFirestoreCollection<any>) {
+
+    if (this._done.value || this._loading.value) { return };
+
+    // loading
+    this._loading.next(true)
+
+    // Map snapshot with doc ref (needed for cursor)
+    return col.snapshotChanges()
+      .do(arr => {
+        let values = arr.map(snap => {
+          const data = snap.payload.doc.data()
+          const doc = snap.payload.doc
+          return { ...data, doc }
+        })
+  
+        // update source with new values, done loading
+        this._data.next(values)
+        this._loading.next(false)
+
+        // no more values, mark done
+        if (!values.length) {
+          console.log('done!')
+          this._done.next(true)
+        }
+    })
+    .take(1)
+    .subscribe()
+
   }
 
 

@@ -6,7 +6,12 @@
 </ion-header>
 
 
-<ion-content padding>
+<ion-content padding style="background: #f4f4f4;">
+	<div *ngIf="sendingRequest" class="centered_on_screen" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; 
+    border-radius: 10px;padding: 20px; text-align: center; z-index: 1">
+    <ion-spinner name="ios"></ion-spinner>
+    <h3 text-center>Sending deposit request...</h3>
+  </div>
 	<ion-grid>
     <ion-row>
       <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
@@ -14,7 +19,8 @@
       <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
       	<ion-item text-wrap text-center no-lines>
 		<ion-thumbnail item-start>
-			<img src="{{apartment?.dP?.url}}" imageViewer/>
+			<img src="{{apartment?.dP?.url}}" (load)="imageLoaded = true" [hidden]="!imageLoaded" imageViewer/>
+			<img src="assets/imgs/placeholder.jpg" [hidden]="imageLoaded" />
 		</ion-thumbnail>
 		<h3>Apartment Type</h3>
 		<p>
@@ -29,9 +35,9 @@
 		<h1 style="font-family: 'Ubuntu', sans-serif;">Pay, Sign Lease &amp; this apartment is yours</h1>
 		<p>Select payment method below.</p>
 	</ion-item>
-	<button ion-button full margin-vertical (click)="comingSoon()">Get Lease</button>
+	<button ion-button round full margin-vertical (click)="comingSoon()">Get Lease</button>
 	
-	<ion-item (click)="comingSoon()" text-wrap>
+	<ion-item (click)="promptConfirm()" text-wrap>
 		<ion-thumbnail item-end>
 			<img src="assets/imgs/deposit.png"/>
 		</ion-thumbnail>

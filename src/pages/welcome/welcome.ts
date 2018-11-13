@@ -1,16 +1,16 @@
 import { Component} from '@angular/core';
-import { IonicPage, NavController, ModalController, ToastController} from 'ionic-angular';
+import { IonicPage, NavController, ModalController, ToastController, Platform, AlertController} from 'ionic-angular';
 import { MapsProvider } from '../../providers/maps/maps';
 import { Address } from '../../models/location/address.interface';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-import { PrefferencesPage } from '../prefferences/prefferences';
-import { AlertPage } from '../alert/alert';
+//import { PrefferencesPage } from '../prefferences/prefferences';
+//import { AlertPage } from '../alert/alert';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 
-declare var google: any;
+
 
 @IonicPage()
 @Component({
@@ -23,30 +23,41 @@ export class WelcomePage {
   pointOfInterest: Address;
   user: User;
   loading: boolean = false;
-  service = new google.maps.places.AutocompleteService();
-  constructor(public navCtrl: NavController, private storage: LocalDataProvider,
-  private map_svc: MapsProvider, private alert: ModalController, private afs: AngularFirestore, 
-  private errHandler: ErrorHandlerProvider, private object_init: ObjectInitProvider, private toastCtrl: ToastController){
-    this.loading = true;
-    this.user = this.object_init.initializeUser();
-    this.pointOfInterest = this.object_init.initializeAddress();
-    this.pointOfInterest.description = '';
-    this.storage.getUser().then(data =>{
-        this.afs.collection('Users').doc<User>(data.uid).valueChanges().subscribe(user =>{
-          this.user = user;
-          this.loading = false;
-        }, 
-        err =>{
-          this.errHandler.handleError(err);
+  predictionLoading: boolean = false;
+  constructor(
+    public navCtrl: NavController, 
+    private storage: LocalDataProvider,
+    private map_svc: MapsProvider, 
+    private alert: ModalController, 
+    private afs: AngularFirestore, 
+    private errHandler: ErrorHandlerProvider, 
+    private object_init: ObjectInitProvider, 
+    private toastCtrl: ToastController,
+    private platform: Platform,
+    private alertCtrl: AlertController){
+    this.platform.ready().then(value =>{
+      
+      this.loading = true;
+      this.user = this.object_init.initializeUser();
+      this.pointOfInterest = this.object_init.initializeAddress();
+      this.pointOfInterest.description = '';
+      this.storage.getUser().then(data =>{
+          this.afs.collection('Users').doc<User>(data.uid).valueChanges().subscribe(user =>{
+            this.user = user;
+            this.loading = false;
+          }, 
+          err =>{
+            this.errHandler.handleError(err);
+            this.loading = false;
+          })
+        })
+        .catch(() => {
+          this.errHandler.handleError({message: "Could not find user"});
           this.loading = false;
         })
-      })
-      .catch(() => {
-        this.errHandler.handleError({message: "Could not find user"});
-        this.loading = false;
-      })
+    })
   }
-
+  
 /*Navigating to the next page, which is the PrefferencesPage and passing the pointOfInterest object along*/
   nextPage(){
     if(this.pointOfInterest.lat == 0 && this.pointOfInterest.lng == 0){
@@ -57,7 +68,7 @@ export class WelcomePage {
       return;
     }
     this.storage.setPOI(this.pointOfInterest).then(data =>{
-      this.navCtrl.push(PrefferencesPage);
+      this.navCtrl.push('PrefferencesPage');
     })
     .catch(err => {
       this.errHandler.handleError(err);
@@ -67,14 +78,14 @@ export class WelcomePage {
 
   /*Getting autocomplete predictions from the google maps place predictions service*/
   getPredictions(event){
-    this.loading = true;
+    this.predictionLoading = true;
     if(window.navigator.onLine){
       if(event.key === "Backspace" || event.code === "Backspace"){
         setTimeout(()=>{
-          this.map_svc.getPlacePredictionsSA(event.target.value, this.service).then(data => {
+          this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
             this.predictions = [];
             this.predictions = data;
-            this.loading = false;
+            this.predictionLoading = false;
           })
           .catch(err => {
             if(!window.navigator.onLine){
@@ -82,24 +93,26 @@ export class WelcomePage {
             }else{
               this.errHandler.handleError(err);
             }
-            this.loading = false;
+            this.predictionLoading = false;
           })
         }, 3000)
       }else{
-        this.map_svc.getPlacePredictionsSA(event.target.value, this.service).then(data => {
+        this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
+          if(data == null || data == undefined || data.length <=  0){
+            this.predictionLoading = false;
+          }
           this.predictions = [];
           this.predictions = data;
-          this.loading = false;
+          this.predictionLoading = false;
         })
         .catch(err => {
           this.errHandler.handleError(err);
-          this.loading = false;
+          this.predictionLoading = false;
         })
       }
     }else{
       this.showToast('You are not connected to the internet...')
     }
-    
   }
 
   showToast(message){
@@ -107,7 +120,6 @@ export class WelcomePage {
       message: message,
       duration: 3000
     })
-
     toast.present();
   }
 
@@ -129,13 +141,15 @@ export class WelcomePage {
     })
   }
 
+  
+
   showWarnig(title: string, message: string){
-    const myData = {
+    let alert = this.alertCtrl.create({
       title: title,
-      message: message
-    }
-    let warningModal = this.alert.create(AlertPage, {data: myData})
-    warningModal.present();
+      message: message,
+      buttons: ['OK']
+    })
+    alert.present();
   }
 
   returnFirst(input: string): string{

@@ -4,14 +4,12 @@
   See http://ionicframework.com/docs/components/#navigation for more info on
   Ionic pages and navigation.
 -->
-<ion-card padding-vertical style="margin: auto;">
-	<ion-card-header text-center>
-		<h1>{{warning?.title}}</h1>
-	</ion-card-header>
-	<ion-card-content text-center>
-		<p>{{warning?.message}}</p>
-		<ion-buttons end>
+<div style="margin: auto; text-align: center; background: white; padding: 15px; border-radius: 6px" class="alrt">
+	<h1 style="text-align: center;">{{warning?.title}}</h1>
+	
+		<p style="text-align: center; padding: 8px">{{warning?.message}}</p>
+		<ion-buttons text-center>
 			<button ion-button (click)="close()">close</button>
 		</ion-buttons>
-	</ion-card-content>
-</ion-card>
+	
+</div>

@@ -7,7 +7,7 @@ import { EditApartmentPage } from './edit-apartment';
     EditApartmentPage,
   ],
   imports: [
-    IonicPageModule.forChild(EditApartmentPage),
+    IonicPageModule.forChild(EditApartmentPage)
   ],
 })
 export class EditApartmentPageModule {}

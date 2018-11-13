@@ -16,6 +16,7 @@ import { Image } from '../../models/image.interface';
 import { MarkerOptions } from '../../models/markeroptions.interface';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { ChatMessage } from '../../models/chatmessage.interface';
+import { ATMDeposit } from '../../models/atmdeposit.interface';
 
 @Injectable()
 export class ObjectInitProvider {
@@ -28,6 +29,30 @@ export class ObjectInitProvider {
     
   }
 
+  initializeDeposit(){
+    let deposit: ATMDeposit = {
+      agent_goAhead: false,
+      time_initiated: null,
+      time_agent_confirm: null,
+      time_clickinn_confirm: null,
+      time_tenant_confirmed: null,
+      tenant_confirmed: false,
+      agent_confirmed: false,
+      clickinn_confirmed: false,
+      clickinn_cancel: false,
+      to: {firstname: '', lastname: '', dp: '', uid: ''},
+      by: {firstname: '', lastname: '', dp: '', uid: ''},
+      apartment: this.initializeApartment(),
+      id: '',
+      currency: 'ZAR',
+      transaction_closed: false,
+      tenant_refund_request: false,
+      landlord_credit: 0,
+      ref : ''
+    }
+    return deposit;
+  }
+
   initializeChatMessage(){
     let message: ChatMessage ={
       by: {displayName: '', dp: '', uid: ''},
@@ -36,7 +61,22 @@ export class ObjectInitProvider {
       sent: false,
       read: false,
       recieved: false,
-      text: ''
+      text: '',
+      topic: ''
+    }
+    return message;
+  }
+
+  initializeChatMessageInComp(user: User, host: User){
+    let message: ChatMessage ={
+      by: {displayName: user.displayName, dp: user.photoURL, uid: user.uid},
+      to: {displayName: host.displayName, dp: host.photoURL, uid: host.uid},
+      timeStamp: 0,
+      sent: false,
+      read: false,
+      recieved: false,
+      text: '',
+      topic: ''
     }
     return message;
   }
@@ -158,6 +198,25 @@ export class ObjectInitProvider {
   	return property;
   }
 
+  initializeProperty2(prop: Property): Property{
+    let property: Property = {
+      address: prop.address ? prop.address : this.initializeAddress(),
+      prop_id: prop.prop_id ? prop.prop_id : '',
+      common: prop.common ? prop.common : '',
+      dP: prop.dP ? prop.dP : this.initializeImage(),
+      images: prop.images ? prop.images : [this.initializeImage()],
+      laundry: prop.laundry,
+      nsfas: prop.nsfas,
+      wifi: prop.wifi,
+      parking: prop.parking,
+      prepaid_elec: prop.prepaid_elec,
+      timeStamp: prop.timeStamp ? prop.timeStamp : 0,
+      user_id: prop.user_id ? prop.user_id : '',
+      nearbys: prop.nearbys ? prop.nearbys : ['Clickinn Offices']
+    }
+    return property;
+  }
+
   initializeUser(): User{
   	let user: User = {
   		displayName: '',
@@ -239,6 +298,7 @@ export class ObjectInitProvider {
  		booker_id: this.uid,
  		prop_id: '',
  		apart_id: '',
+    apart_dp: '',
  		host_id: '',
  		host_confirms: false,
  		host_declines: false,
@@ -264,14 +324,15 @@ export class ObjectInitProvider {
      seeker_cancels: ap.seeker_cancels ? ap.seeker_cancels : false,
      timeStamp: ap.timeStamp ? ap.timeStamp : 0,
      address: ap.address ? ap.address : '',
-     room_type: ap.room_type ? ap.room_type : ''
+     room_type: ap.room_type ? ap.room_type : '',
+     apart_dp: ap.apart_dp ? ap.apart_dp : ''
    }
    return appointment;
  }
 
  initializeFileUpload(): FileUpload{
  	let fileUpload: FileUpload ={
- 		file: '',
+ 		file: null,
  		url: '',
  		name: '',
  		progress: 0,

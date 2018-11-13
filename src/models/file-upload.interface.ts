@@ -1,5 +1,5 @@
 export interface FileUpload {
-	file: string,
+	file: any,
     url: string,
     name: string,
     progress: number,

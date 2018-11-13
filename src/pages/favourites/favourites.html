@@ -1,16 +1,28 @@
 <ion-header>
-  <ion-navbar>
+  <ion-navbar color="clickinn">
     <ion-title style="font-family: 'Ubuntu', sans-serif;">Favourites</ion-title>
   </ion-navbar>
 </ion-header>
 
 
 <ion-content padding>
+	
 	<ion-grid>
 	    <ion-row>
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>
 	        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				<ion-item text-wrap *ngFor="let apartment of accom_svc?.data | async; let i = index" (click)="gotoApartment(apartment)">
+					<ion-avatar item-left>
+						<img src="{{apartment?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer>
+						<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]">
+					</ion-avatar>
+					<h1> R{{apartment?.price}}, {{apartment?.room_type}} </h1>
+					<p> {{apartment?.property?.address?.description}} </p>
+				</ion-item>
+				<div *ngIf="loadingMore" style="text-align: center">
+				    <ion-spinner></ion-spinner>
+				</div>
 	        </ion-col>
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>

@@ -1,13 +1,13 @@
 
-<ion-card padding>
-	<ion-card-header>
+<div class="cnfm" style="background: white;padding: 15px; border-radius: 6px">
+	<h1 style="text-align: center;">
 		{{confirmation?.title}}
-	</ion-card-header>
-	<ion-card-content text-center>
-		<p>{{confirmation?.message}}</p>
-		<ion-buttons end>
-			<button ion-button (click)="confirm()">confirm</button>
-			<button ion-button (click)="close()">close</button>
+	</h1>
+	
+		<p style="text-align: center;">{{confirmation?.message}}</p>
+		<ion-buttons text-center>
+			<button ion-button small (click)="confirm()">confirm</button>
+			<button ion-button small color="danger" (click)="close()">close</button>
 		</ion-buttons>
-	</ion-card-content>
-</ion-card>
+
+</div>

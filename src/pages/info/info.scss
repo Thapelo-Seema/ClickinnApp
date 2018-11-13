@@ -8,13 +8,9 @@ page-info {
 
 	}
 
-	ion-icon{
-		font-size: 30px;
-	}
-
 	.image_container{
 		width: 100%;
-		max-height: 110px;
+		max-height: 200px;
 		overflow-y: hidden;
 		padding: 10px;
 	}
@@ -24,7 +20,7 @@ page-info {
 	@media only screen and (min-width: 769px){
 		.image_container{
 			width: 100%;
-			max-height: 270px;
+			max-height: 300px;
 			overflow-y: hidden;
 			padding: 10px;
 		}
@@ -33,7 +29,7 @@ page-info {
 	@media only screen and (min-width: 850px){
 		.image_container{
 			width: 100%;
-			max-height: 300px;
+			max-height: 330px;
 			overflow-y: hidden;
 			padding: 10px;
 		}

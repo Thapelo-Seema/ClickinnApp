@@ -9,39 +9,77 @@
     <ion-title text-center>Appointments</ion-title>
   </ion-navbar>
 </ion-header>
-<ion-content padding>
+<ion-content padding style="background: #f4f4f4;">
+	
 	<ion-grid>
 	    <ion-row>
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>
-	        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-				<ion-list>
-				  <ion-item-sliding *ngFor="let app of appointments | async">
-				    <ion-item text-wrap>
-				      <ion-thumbnail item-start>
-				        <img src="{{app?.bookerDp ? app?.bookerDp : 'assets/imgs/placeholder.png'}}">
-				      </ion-thumbnail>
-				      <p style="color: #32db64; overflow-wrap: normal;">For {{app?.date?.toDate() | date : "medium" }}</p>
-				      <p> {{app?.booker_name ? app?.booker_name : 'Anonymous'}} wants to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
-				      	{{app?.address?.description}}
-				      </p>
-				    </ion-item>
-				    <ion-item-options side="right">
-				      <button ion-button color="primary" (click)="showInput(app)">
-				        <ion-icon name="text"></ion-icon>
-				        Text
-				      </button>
-				      <button ion-button color="danger" (click)="cancelBooking(app)">
-				        <ion-icon name="close"></ion-icon>
-				        decline
-				      </button>
-				      <button ion-button color="secondary" (click)="confirmBooking(app)">
-				        <ion-icon name="thumbs-up"></ion-icon>
-				        Accept
-				      </button>
-				    </ion-item-options>
-				  </ion-item-sliding>
-				</ion-list>
+		    <ion-col col-12 col-sm-12 col-md-12 col-lg-6 >
+		        
+		        	<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white">
+						<p text-center style="color: white">
+							Your appointments ( Showings if you're acting as a landlord/agent and Viewings if acting as a seeker ) 
+						</p>
+						<ion-buttons end>
+							<button ion-button small clear>
+								<div style="color: #32db64">
+									<!-- personnel ~ {{channel?.creator?.firstname}} {{channel?.creator?.lastname}} -->
+								</div>
+							</button>
+						</ion-buttons>
+					</ion-item>
+					<ion-list>
+					  <ion-item-sliding #slidingItem *ngFor="let app of appt_svc?.data | async; let i = index">
+					    <ion-item #item text-wrap *ngIf="user.uid != app.booker_id" tooltip="Slide left for actions" positionH="right" event="click" arrow>
+					      <ion-avatar item-left>
+					        <img src="{{app?.bookerDp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]"  imageViewer />
+							<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
+					      </ion-avatar>
+					      <h1 style="color: #32db64; overflow-wrap: normal;">For {{app?.date?.toDate() | date : "medium" }}</h1>
+					      <p> 
+					      	{{app?.booker_name ? app?.booker_name : 'Anonymous'}} wants to view the {{app?.apart_type ? app?.apart_type : 'room'}} at {{app?.address}}
+					      </p>
+					    </ion-item>
+					    <ion-item #item text-wrap *ngIf="user.uid == app.booker_id" tooltip="Slide left for actions" positionH="right" event="click" arrow>
+					      <ion-avatar item-start>
+					        <img src="{{app?.apart_dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer />
+					        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
+					      </ion-avatar>
+					      <h1 style="color: #32db64; overflow-wrap: normal;">For {{app?.date?.toDate() | date : "medium" }}</h1>
+					      <p *ngIf="app?.host_declines || app?.seeker_cancels" style="background: rgba(180,0,0,0.3); padding: 15px"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
+					      	{{app?.address}}
+					      </p>
+					      <p *ngIf="app?.host_confirms && !app?.seeker_cancels" style="background: rgba(0,180,0,0.3); padding: 15px"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
+					      	{{app?.address}}
+					      </p>
+					      <p *ngIf="!app?.host_confirms && !app?.host_declines && !app?.seeker_cancels"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
+					      	{{app?.address}}
+					      </p>
+					    </ion-item>
+					    <ion-item-options #item side="right">
+					      <button ion-button color="primary" (click)="showInput(app)">
+					        <ion-icon name="text"></ion-icon>
+					        Text
+					      </button>
+					      <button ion-button color="danger" (click)="declineBooking(app)" *ngIf="user.uid != app.booker_id">
+					        <ion-icon name="close"></ion-icon>
+					        decline
+					      </button>
+					      <button ion-button color="secondary" (click)="confirmBooking(app)" *ngIf="user.uid != app.booker_id">
+					        <ion-icon name="thumbs-up"></ion-icon>
+					        Accept
+					      </button>
+					      <button ion-button color="danger" (click)="seekerCancel(app)" *ngIf="user.uid == app.booker_id">
+					        <ion-icon name="close"></ion-icon>
+					        Cancel booking
+					      </button>
+					    </ion-item-options>
+					  </ion-item-sliding>
+					</ion-list>
+					<div *ngIf="loadingMore" style="text-align: center">
+					    <ion-spinner></ion-spinner>
+					</div>
 			</ion-col>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>

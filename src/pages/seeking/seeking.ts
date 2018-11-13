@@ -6,10 +6,11 @@ import { AccommodationsProvider } from '../../providers/accommodations/accommoda
 import { Search } from '../../models/search.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-import { ClickinnMapsComponent } from '../../components/clickinn-maps/clickinn-maps';
-import { AccommodationsComponent } from '../../components/accommodations/accommodations';
-import { ApartmentDetailsPage } from '../apartment-details/apartment-details';
+//import { ClickinnMapsComponent } from '../../components/clickinn-maps/clickinn-maps';
+//import { AccommodationsComponent } from '../../components/accommodations/accommodations';
+//import { ApartmentDetailsPage } from '../apartment-details/apartment-details';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
+import { take } from 'rxjs-compat/operators/take';
 
 @IonicPage()
 @Component({
@@ -58,7 +59,11 @@ export class SeekingPage {
 
   getApartments(obj: Search){
     var ratedArray: Apartment[] = [];
-    this.accom_svc.search(obj).subscribe(apartments =>{
+    this.accom_svc.search(obj)
+    .pipe(
+      take(1)
+    )
+    .subscribe(apartments =>{
       if(apartments.length > 0){
 
       ratedArray = apartments;
@@ -81,6 +86,7 @@ export class SeekingPage {
         ratedArray.splice(0, 1);
         this.apartments = ratedArray;
         this.showAlert();
+        console.log(ratedArray)
         this.dataLoaded = true;
       }
 
@@ -97,7 +103,7 @@ export class SeekingPage {
 	}
 
 	gotoApartment(apartment: Apartment){
-    this.storage.setApartment(apartment).then(data => this.navCtrl.push(ApartmentDetailsPage))
+    this.storage.setApartment(apartment).then(data => this.navCtrl.push('ApartmentDetailsPage'))
     .catch(err => {
       this.errHandler.handleError(err);
       this.dataLoaded = true;

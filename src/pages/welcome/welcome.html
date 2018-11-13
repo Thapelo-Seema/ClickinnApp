@@ -13,9 +13,9 @@
   </ion-navbar>
 </ion-header>
 <ion-content text-center class="clickinn-bg" style="font-family: 'Raleway', sans-serif;">
-  <div *ngIf="loading" class="centered_on_screen">
+  <!-- <div *ngIf="loading" class="centered_on_screen">
     <ion-spinner name="ios"></ion-spinner>
-  </div>
+  </div> -->
 	<div class="centered_on_screen full_width">
     <ion-grid>
       <ion-row>
@@ -27,6 +27,10 @@
           <ion-searchbar type="search" [(ngModel)]="pointOfInterest.description" 
             placeholder="e.g. Wits or liberty life  or  Braamfontein" (ionInput)="getPredictions($event)" mode="ios">
           </ion-searchbar>
+          <div *ngIf="predictionLoading" style="background: rgba(0, 0, 0, 0.8); color: white; padding-top: 5px; padding-bottom: 5px;  text-align: center; z-index: 1">
+            <ion-spinner name="ios"></ion-spinner> &nbsp;&nbsp;
+            Loading predictions...
+          </div>
           <ion-list *ngIf="predictions">
             <button ion-item *ngFor="let pred of predictions" (click)="selectPlace(pred)">{{pred?.description}}</button>
           </ion-list>

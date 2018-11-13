@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, AlertController } from 'ionic-angular';
 import { Address } from '../../models/location/address.interface';
 import { Search } from '../../models/search.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-import { AlertPage } from '../alert/alert';
-import { SeekingPage } from '../seeking/seeking';
-import { AngularFireAuth } from 'angularfire2/auth';
+//import { AlertPage } from '../alert/alert';
+//import { SeekingPage } from '../seeking/seeking';
+//import { AngularFireAuth } from 'angularfire2/auth';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { User } from '../../models/users/user.interface';
 
@@ -24,9 +24,15 @@ export class PrefferencesPage {
   loading: boolean = false;
   user: User;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams, private alert: ModalController,  
-  	private storage: LocalDataProvider, private afs: AngularFirestore,
-    private errHandler: ErrorHandlerProvider, private afAuth: AngularFireAuth, private object_init: ObjectInitProvider){
+  constructor(
+    public navCtrl: NavController, 
+    public navParams: NavParams, 
+    private alert: ModalController,  
+  	private storage: LocalDataProvider, 
+    private afs: AngularFirestore,
+    private errHandler: ErrorHandlerProvider,
+    private object_init: ObjectInitProvider,
+    private alertCtrl: AlertController){
     this.user = this.object_init.initializeUser();
     this.pointOfInterest = this.object_init.initializeAddress();
     this.search_object = this.object_init.initializeSearch();
@@ -75,7 +81,7 @@ export class PrefferencesPage {
     })
     this.storage.setSearch(this.search_object).then(data =>{
       this.loading = false;
-    	this.navCtrl.push(SeekingPage, {search: this.search_object, poi: this.pointOfInterest});
+    	this.navCtrl.push('SeekingPage', {search: this.search_object, poi: this.pointOfInterest});
     })
     .catch(err => {
       this.errHandler.handleError(err);
@@ -84,12 +90,12 @@ export class PrefferencesPage {
   }
 
   showWarnig(title: string, message: string){
-    const myData = {
+    let alert = this.alertCtrl.create({
       title: title,
-      message: message
-    }
-    let warningModal = this.alert.create(AlertPage, {data: myData})
-    warningModal.present();
+      message: message,
+      buttons: ['OK']
+    })
+    alert.present();
   }
 
   showMore(){

@@ -10,45 +10,59 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content>
+<ion-content style="background: #f4f4f4;">
+	
 	<ion-grid no-padding>
 		<ion-row>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
-			<ion-col col-12 col-sm-12 col-md-12 col-lg-6 style="background: #f4f4f4">
+			<ion-col col-12 col-sm-12 col-md-12 col-lg-6 style="padding: 15px 15px;">
 				<div text-center>
 					<h1 text-center>Property details</h1>
-					<ion-item text-wrap>
+					<ion-item text-wrap padding-horizontal style=" border-top-right-radius: 9px; border-top-left-radius: 9px">
 						<h2>Address</h2>
 						<p> {{property?.address?.description}} </p>
 					</ion-item>
-					<ion-item text-wrap>
+					<ion-item>
+			          <ion-label stacked>Places of interest within 10 min walk</ion-label>
+			          <ion-input type="search" [(ngModel)]="nearby" placeholder="eg Campus Square Mall" (keyup)="getPredictionsNby($event)">
+			          </ion-input>
+			        </ion-item>
+			        <ion-list *ngIf="predictionsNby">
+			          <button ion-item *ngFor="let pred of predictionsNby" (click)="addNearby(pred?.description)">{{pred?.description}}</button>
+			        </ion-list>
+			        <ion-list *ngIf="property.nearbys">
+			          <ion-item text-wrap *ngFor="let nby of property.nearbys" margin-vertical (click)="deleteNearby(nearby)">
+			            <ion-icon name="close" start></ion-icon> &nbsp;&nbsp;&nbsp;{{ nby }}
+			          </ion-item>
+			        </ion-list>
+					<ion-item text-wrap padding-horizontal>
 						<ion-label floating>Description</ion-label>
 						<ion-textarea rows="7" [(ngModel)]="property.common"></ion-textarea>
 					</ion-item>
-					<ion-item>
+					<ion-item padding-horizontal>
 					   <ion-label>Parking</ion-label>
 					   <ion-checkbox [(ngModel)]="property.parking"></ion-checkbox>
 					</ion-item>
-					<ion-item>
+					<ion-item padding-horizontal>
 					   <ion-label>WiFi</ion-label>
 					   <ion-checkbox [(ngModel)]="property.wifi"></ion-checkbox>
 					</ion-item>
-					<ion-item>
+					<ion-item padding-horizontal>
 					   <ion-label>NSFAS</ion-label>
 					   <ion-checkbox [(ngModel)]="property.nsfas"></ion-checkbox>
 					</ion-item>
-					<ion-item>
+					<ion-item padding-horizontal style=" border-bottom-right-radius: 9px; border-bottom-left-radius: 9px">
 					   <ion-label>Laundry facilities</ion-label>
 					   <ion-checkbox [(ngModel)]="property.laundry"></ion-checkbox>
 					</ion-item>
-
-					<div style="background: #000020">
-						<h2 text-center padding style="color: white">Property common area images</h2>
-						<ion-slides  loop="true" slidesPerView="2" class="image_container">
+					<div style="background: #000020; border-radius: 10px">
+						<h4 text-center padding style="color: white">Property common area images</h4>
+						<ion-slides  loop="true" slidesPerView="2" class="image_container" [pager]="true">
 							<ion-slide *ngFor="let image of images; let idx = index">
 								<div style="position: relative; top:0; left: 0; width:100%; height: 100%; ">	
-									<img src="{{image?.url}}" imageViewer class="thumb-img" />
+									<img src="{{image?.url}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" imageViewer class="thumb-img" />
+									<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[idx]" />
 								</div>
 								
 								<button ion-button clear  style="position: absolute; top: 0; right: 0"  (click)="remove(idx)">
@@ -57,14 +71,35 @@
 								
 							</ion-slide>
 						</ion-slides>
+						<div *ngIf="propertyImagesAdded && showAddedImages">
+							<h5>Added picture</h5>
+							<div *ngFor="let pic of fileUploads; let idex = index">
+								<div style="position: relative; top:0; left: 0; width:100%; height: 100%; ">
+									<img src="{{pic?.file}}" width="90px" height="90px" imageViewer>
+									<button ion-button clear color="danger" style="position: absolute; top: 0; right: 0"  (click)="cancelPic(idex)">
+		                            	<ion-icon name="close"></ion-icon>
+		                        	</button>
+		                        </div>
+							</div>
+						</div>
+						<ion-buttons>
+							<button ion-button clear small (click)="addPicture()" >Add more images</button>
+						</ion-buttons>
 					</div>
 				</div>
+
+				<ion-buttons padding-vertical>
+					<button ion-button clear (click)="save()">Save changes &nbsp;&nbsp;&nbsp; <ion-icon name="cloud-upload"></ion-icon> </button>
+				</ion-buttons>
 				<hr>
-				<ion-item padding>
+				
 					<h1 text-center padding>Property apartments</h1>
-					<accommodations *ngFor="let apartment of apartments | async" (click)="gotoApartment(apartment)" [apartment]="apartment">
+					<accommodations *ngFor="let apartment of accom_svc?.data | async" (click)="gotoApartment(apartment)" [apartment]="apartment">
 					</accommodations>
-				</ion-item>
+					<div *ngIf="loadingMore" style="text-align: center">
+					    <ion-spinner></ion-spinner>
+					</div>
+				
 			</ion-col>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>

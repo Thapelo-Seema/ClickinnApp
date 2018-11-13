@@ -6,7 +6,8 @@
 	<ion-content>
 		<ion-item text-wrap no-lines style="background: #000030; color: white">
 		    <ion-avatar item-left>
-		      <img src="{{user?.photoURL ? user?.photoURL: 'assets/imgs/placeholder.png'}}" class="round"/>
+		      <img src="{{ user?.photoURL }}" (load)="dpLoaded = true" [hidden]="!dpLoaded" class="round" imageViewer/>
+		      <img src="assets/imgs/placeholder.png" [hidden]="dpLoaded" imageViewer />
 		    </ion-avatar>
 		    <h1 text-center>
 		        {{user?.displayName}}
@@ -23,19 +24,19 @@
 		        <ion-icon name="ios-stopwatch-outline" item-end></ion-icon>
 		        Appointments
 		      </button>
-		      <button ion-item menuClose (click)="gotoChats()" >
+		      <button ion-item  menuClose (click)="gotoChats()" >
 		        <ion-icon name="ios-chatboxes-outline" item-end></ion-icon>
 		        Chats
 		      </button>
-		      <!-- <button ion-item menuClose>
-		        <ion-icon name="thumbs-up" item-end></ion-icon>
+		      <button ion-item no-lines menuClose (click)="gotoLiked()" >
+		        <ion-icon name="ios-heart-outline" item-end></ion-icon>
 		        Liked Apartments
-		      </button> -->
+		      </button>
 		      <!-- <button ion-item menuClose color="secondary" (click)="uploadAndEarn()" >
 		        <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon>
 		        Upload &amp; Earn
 		      </button> -->
-		      <button ion-item menuClose color="secondary" (click)="gotoLandlordDash()" >
+		      <button ion-item no-lines menuClose color="secondary" (click)="gotoLandlordDash()" >
 		        <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon>
 		        Landlord/Caretaker 
 		      </button>

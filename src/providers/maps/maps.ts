@@ -168,7 +168,8 @@ at the DOM element referenced by mapRefA reference to the map is also returned*/
   	 })
   }*/
 /*Returns an array of place predictions from the google place engine, given a textbox (customized for places in South Africa only)*/
-  getPlacePredictionsSA(searchText: string, service: any):Promise<any[]>{
+  getPlacePredictionsSA(searchText: string):Promise<any[]>{
+    var service = new google.maps.places.AutocompleteService();
     if(searchText != undefined && searchText != null && searchText.length > 1){
         return new Promise<any>((resolve, reject) =>{
           service.getPlacePredictions({ input: searchText, componentRestrictions: {country: 'za'} }, 

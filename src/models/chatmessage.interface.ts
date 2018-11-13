@@ -6,4 +6,5 @@ export interface ChatMessage{
 	recieved: boolean;
 	read: boolean;
 	text: string;
+	topic?: string;
 }

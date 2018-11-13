@@ -1,0 +1,1 @@
+//# sourceMappingURL=tenant.interface.js.map

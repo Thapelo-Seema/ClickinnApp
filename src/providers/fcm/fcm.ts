@@ -1,43 +1,30 @@
 //import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Firebase } from '@ionic-native/firebase';
 import { Platform } from 'ionic-angular';
-import { AngularFireDatabase } from 'angularfire2/database';
+import { AngularFirestore } from 'angularfire2/firestore';
 import { LocalDataProvider } from '../local-data/local-data';
 import { User } from '../../models/users/user.interface'
 
 @Injectable()
 export class FcmProvider {
   user:User; 
-  constructor(private firebaseNative: Firebase, private platform: Platform, private db: AngularFireDatabase,
+  constructor(
+    private platform: Platform, 
+    private db: AngularFirestore,
   	private local_db: LocalDataProvider) {
   }
 
-  async getToken(){
-      let token;
-      if (this.platform.is('android')){
-        token = await this.firebaseNative.getToken();
-      } 
-      if (this.platform.is('ios')) {
-        this.firebaseNative.grantPermission();
-        this.firebaseNative.getToken();
-      } 
-      return this.saveTokenToFirestore(token)
-    }
-
-    private saveTokenToFirestore(token) {
+    saveTokenToFirestore(token){
       if (!token) return;
       return this.local_db.getUser().then(user =>{
-        if(user){
-          return this.db.object(`Tokens/${user.uid}`).set({token: token})
+        if(!user) return;
+        else if(user){
+          let obj = {
+            token: token,
+            uid: user.uid
+          }
+          return this.db.collection('Tokens').doc(token).set(obj)
         }
       })
-      
     }
-
-    listenToNotifications() {
-      this.firebaseNative.grantPermission();
-      return this.firebaseNative.onNotificationOpen()
-    }
-
 }

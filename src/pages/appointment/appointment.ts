@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, ToastController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, ToastController, AlertController } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { DatePicker } from '@ionic-native/date-picker';
 import { Calendar } from '@ionic-native/calendar';
@@ -9,10 +9,10 @@ import { AngularFirestore } from 'angularfire2/firestore';
 import { Appointment } from '../../models/appointment.interface';
 import { User } from '../../models/users/user.interface';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-import { ConfirmationPage } from '../confirmation/confirmation';
+//import { ConfirmationPage } from '../confirmation/confirmation';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { AppointmentsProvider } from '../../providers/appointments/appointments';
-
+import { take } from 'rxjs-compat/operators/take';
 
 @IonicPage()
 @Component({
@@ -25,17 +25,31 @@ export class AppointmentPage {
   loading: boolean = false;
   appointment: Appointment;
   user: User;
+  imageLoaded: boolean = false;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams, private datePicker: DatePicker, 
-  	private calender: Calendar, private confirmtCtrl: ModalController, private storage: LocalDataProvider,
-    private toast: ToastController, private afs: AngularFirestore, private errHandler: ErrorHandlerProvider,
-    private object_init: ObjectInitProvider, private appointment_svc: AppointmentsProvider){	
+  constructor(
+    public navCtrl: NavController, 
+    public navParams: NavParams, 
+    private datePicker: DatePicker, 
+  	private calender: Calendar, 
+    private confirmtCtrl: ModalController, 
+    private storage: LocalDataProvider,
+    private toast: ToastController, 
+    private afs: AngularFirestore, 
+    private errHandler: ErrorHandlerProvider,
+    private object_init: ObjectInitProvider, 
+    private appointment_svc: AppointmentsProvider,
+    private alertCtrl: AlertController){	
     this.apartment = this.object_init.initializeApartment();
     this.appointment = this.object_init.initializeAppointment();
     this.user = this.object_init.initializeUser();
     this.loading = true;
     this.storage.getApartment().then(data =>{
-      this.afs.collection("Apartments").doc<Apartment>(data.apart_id).valueChanges().subscribe(apartment =>{
+      this.afs.collection("Apartments").doc<Apartment>(data.apart_id).valueChanges()
+      .pipe(
+        take(1)
+      )
+      .subscribe(apartment =>{
         this.storage.getUser().then(data => {
           this.user = data;
           this.appointment.booker_name = data.displayName ? data.displayName : data.firstname;
@@ -46,7 +60,6 @@ export class AppointmentPage {
           this.appointment.apart_id = apartment.apart_id;
           this.appointment.apart_type = apartment.room_type;
           this.appointment.room_type = apartment.room_type;
-           
           this.loading = false;
         })
       },
@@ -54,7 +67,6 @@ export class AppointmentPage {
         this.errHandler.handleError(err);
         this.loading = false;
       })
-      
     }).catch(err => {
       this.errHandler.handleError(err);
       this.loading = false;
@@ -67,14 +79,29 @@ export class AppointmentPage {
   }
 
   promptConfirmation(){
-    const myData = {
-      title: "Confirm appointment",
-      message: "Please confirm that your viewing appointment details are correct"
-    }
-    let warningModal = this.confirmtCtrl.create(ConfirmationPage, {data: myData})
-    warningModal.present();
-    warningModal.onDidDismiss(data =>{
-      if(data == true){
+    let confirm: boolean = false;
+    let alert = this.alertCtrl.create({
+      title: "Confirm intention",
+      message: "Are you sure you want to make this appointment and all the details are correct ?",
+      buttons: [
+        {
+          text: 'Confirm',
+          handler: data =>{
+            confirm = true;
+          }
+        },
+        {
+          role: 'cancel',
+          text: 'Cancel',
+          handler: data =>{
+            confirm = false;
+          }
+        }
+      ]
+    })
+    alert.present();
+    alert.onDidDismiss(data =>{
+      if(confirm){
         this.createCalenderEvent();
         this.updateAppointmentVals();
         this.appointment_svc.createBooking(this.appointment).then(data =>{
@@ -113,6 +140,8 @@ export class AppointmentPage {
     this.appointment.booker_name = this.user.displayName ? this.user.displayName : this.user.firstname;
     this.appointment.host_id = this.apartment.property.user_id;
     this.appointment.date = this.myDate;
+    this.appointment.address = this.apartment.property.address.description;
+    this.appointment.apart_dp = this.apartment.dP.url;
     this.appointment.timeStamp = Date.now();
   }
 

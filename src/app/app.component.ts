@@ -1,26 +1,19 @@
 import { Component, ViewChild } from '@angular/core';
-import { Platform, ToastController } from 'ionic-angular';
+import { Platform, ToastController, AlertController } from 'ionic-angular';
+import { SplashScreen } from '@ionic-native/splash-screen';
+import { StatusBar } from '@ionic-native/status-bar';
 import { LocalDataProvider } from '../providers/local-data/local-data';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { User } from '../models/users/user.interface';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { ErrorHandlerProvider } from '../providers/error-handler/error-handler';
-import { LoginPage } from '../pages/login/login';
-import { ProfilePage } from '../pages/profile/profile';
-import { UploadAndEarnPage } from '../pages/upload-and-earn/upload-and-earn';
-import { WelcomePage } from '../pages/welcome/welcome';
-import { AgentDashboardPage } from '../pages/agent-dashboard/agent-dashboard';
-import { BursaryPlacementsPage } from '../pages/bursary-placements/bursary-placements';
-import { CaretakerManagerDashboardPage } from '../pages/caretaker-manager-dashboard/caretaker-manager-dashboard';
-import { LandlordDashboardPage } from '../pages/landlord-dashboard/landlord-dashboard';
-import { BookingsPage } from '../pages/bookings/bookings';
-import { ChatsPage } from '../pages/chats/chats';
 import { FcmProvider } from '../providers/fcm/fcm' ;
-import { tap } from 'rxjs-compat/operators/tap';
-//import { AppointmentsProvider } from '../providers/appointments/appointments';
 import { ObjectInitProvider } from '../providers/object-init/object-init';
-
-import 'rxjs/add/operator/take';
+import { take } from 'rxjs-compat/operators/take';
+import { Push, PushOptions, PushObject } from '@ionic-native/push';
+import { Thread } from '../models/thread.interface';
+import { DepositProvider } from '../providers/deposit/deposit';
+import { Network } from '@ionic-native/network';
 
 @Component({
   templateUrl: 'app.html'
@@ -31,6 +24,8 @@ export class MyApp {
   user: User;
   authState: any;
   online: boolean = false;
+  dpLoaded: boolean = false;
+  notificationObject: any = null;
   @ViewChild('content') navCtrl;
 
   //Check network status
@@ -45,10 +40,23 @@ export class MyApp {
         //else if seeker -->welcome
       //else --> login
 
-  constructor(private storage: LocalDataProvider, private afs: AngularFirestore, private afAuth: AngularFireAuth, 
-    private platform: Platform, private errHandler: ErrorHandlerProvider, private fcm: FcmProvider, 
+  constructor(
+    private storage: LocalDataProvider, 
+    private afs: AngularFirestore, 
+    private afAuth: AngularFireAuth, 
+    private platform: Platform, 
+    private errHandler: ErrorHandlerProvider, 
+    private fcm: FcmProvider, 
     private toastCtrl: ToastController,
-    private object_init: ObjectInitProvider){
+    private object_init: ObjectInitProvider,
+    private statusBar: StatusBar,
+    private splashScreen: SplashScreen,
+    private push: Push,
+    private alertCtrl: AlertController,
+    private deposit_svc: DepositProvider,
+    private network: Network,
+    //private events: Events
+    ){
     this.loading = true;
     //Check for platform readiness before doing anything
     this.platform.ready()
@@ -57,9 +65,13 @@ export class MyApp {
       //firestore required setting
       afs.firestore.settings({timestampsInSnapshots: true});
       this.initializeUser();
+      //this.initializeApp();
     })
     .then(() => this.monitorAuthState())
-    .then(() => this.monitorConnectionState())
+    .then(() => {
+      this.monitorConnectionState();
+      this.monitorOfflineState();
+    })
     .catch(err =>{
       this.errHandler.handleError(err);
       this.loading = false;
@@ -68,121 +80,317 @@ export class MyApp {
   //Navigate to the users profile
   gotoProfile(){
     this.loading = true;
-    this.navCtrl.push(ProfilePage).then(() =>{
+    this.navCtrl.push('ProfilePage').then(() =>{
       this.loading = false;
     });
   }
 
   gotoAgentDash(){
     this.loading = true;
-    this.navCtrl.push(AgentDashboardPage)
+    this.navCtrl.push('AgentDashboardPage')
     this.loading = false;
   }
 
   gotoBursaryDash(){
     this.loading = true;
-    this.navCtrl.push(BursaryPlacementsPage);
+    this.navCtrl.push('BursaryPlacementsPage');
     this.loading = false;
   }
 
   gotoCaretakerDash(){
     this.loading = true;
-    this.navCtrl.push(CaretakerManagerDashboardPage);
+    this.navCtrl.push('CaretakerManagerDashboardPage');
     this.loading = false;
   }
 
   gotoLandlordDash(){
     this.loading = true;
-    this.navCtrl.setRoot(LandlordDashboardPage);
-    this.loading = false;
+    this.storage.setUserType('Landlord')
+    .then(val =>{
+      this.navCtrl.push('LandlordDashboardPage');
+      this.loading = false;
+    })
   }
 
   gotoChats(){
     this.loading = true;
-    this.navCtrl.push(ChatsPage);
+    this.navCtrl.push('ChatsPage');
     this.loading = false;
   }
 
   gotoBookings(){
     this.loading = true;
-    this.navCtrl.push(BookingsPage);
+    this.navCtrl.push('BookingsPage');
     this.loading = false;
   }
   //Change the users authState, remove the users local copy
   logout(){
     this.afAuth.auth.signOut().then(() =>{
-      this.navCtrl.setRoot(LoginPage);  
+      this.navCtrl.setRoot('LoginPage');  
     }) 
   }
   //Navigate to the upload and earn page
   uploadAndEarn(){
-    this.navCtrl.push(UploadAndEarnPage);
+    this.navCtrl.push('UploadAndEarnPage');
   }
 //Function that handles notifications
-  onNotifications(){
-    if(this.platform.is('cordova')){
-      this.fcm.getToken();
-      this.fcm.listenToNotifications().pipe(tap(msg =>{
-        const toast = this.toastCtrl.create({
-          message: msg.body,
-          duration: 3000
-        })
-        toast.present();
-      }))
-    } 
+  
+  initNotifications(){
+    const options: PushOptions = {
+     android: {
+       senderID: '882290923419'
+     },
+     ios: {
+         alert: 'true',
+         badge: true,
+         sound: 'false'
+     },
+     windows: {},
+     browser: {
+         pushServiceURL: 'http://push.api.phonegap.com/v1/push'
+     }
+    };
+    const pushObject: PushObject = this.push.init(options);
+    
+    pushObject.on('notification').subscribe((notification: any) => {
+     // alert(notification.additionalData.deposit_id) 
+      if(this.notificationObject !== null){
+        if(!this.compareNotification(notification, this.notificationObject)){
+          this.notificationObject = notification; 
+          if (notification.additionalData.foreground) {
+              // if application open, show popup
+              let notifAlert = this.alertCtrl.create({
+                  title: notification.title,
+                  message: notification.message,
+                  cssClass: "notification",
+                  buttons: [{
+                      text: 'View',
+                      role: 'cancel',
+                      handler: () => {
+                        //TODO: Your logic here
+                        this.routeToNotificationSource(notification.additionalData.key_code, 
+                          notification.additionalData.thread_id,
+                          notification.additionalData.deposit_id);  
+                      }
+                  }]
+              });
+              notifAlert.present();
+
+              setTimeout(function () {
+                  notifAlert.dismiss()
+              }, 5000);
+
+          }else {
+              //if user NOT using app and push notification comes - NOT working, redirect to default rootPage
+              this.routeToNotificationSource(notification.additionalData.key_code, 
+                notification.additionalData.thread_id, notification.additionalData.deposit_id);
+          }
+        }
+      }else{
+        this.notificationObject = notification; 
+        if (notification.additionalData.foreground) {
+            // if application open, show popup
+            let notifAlert = this.alertCtrl.create({
+                title: notification.title,
+                message: notification.message,
+                cssClass: "notification",
+                buttons: [{
+                    text: 'View',
+                    role: 'cancel',
+                    handler: () => {
+                      //TODO: Your logic here
+                      this.routeToNotificationSource(notification.additionalData.key_code, 
+                        notification.additionalData.thread_id,
+                        notification.additionalData.deposit_id);  
+                    }
+                }]
+            });
+            notifAlert.present();
+        }else {
+            //if user NOT using app and push notification comes - NOT working, redirect to default rootPage
+            this.routeToNotificationSource(notification.additionalData.key_code, 
+              notification.additionalData.thread_id, notification.additionalData.deposit_id);
+        }
+      }
+      
+    });
+
+    pushObject.on('registration').subscribe((registration: any) => {
+      this.fcm.saveTokenToFirestore(registration.registrationId)
+    });
+
+    pushObject.on('error').subscribe(error => console.log(error));
   }
+
+  routeToNotificationSource(key_code: string, thread_id?: string, deposit_id?: string){
+      switch (key_code) {
+        case "new_message":
+          this.gotoThread(thread_id)
+          break;
+        case "seeker_appointment":
+          this.gotoHostBookings()
+          break;
+        case "host_confirmed":
+          this.gotoBookings()
+          break;
+        case "host_declined":
+          this.gotoBookings()
+          break;
+        case "seeker_cancelled":
+          this.gotoHostBookings()
+          break;
+        case "agent_deposit_goAhead":
+          this.gotoSeekerConfirmDeposit(deposit_id)
+          break;
+        case "host_accept_deposit":
+          this.gotoHostAcceptDeposit(deposit_id)
+          break;
+        case "clickinn_confirmed_deposit":
+          this.gotoDepositInfo(deposit_id, key_code)
+          break;
+        case "tenant_confirmed_deposit":
+          this.gotoDepositInfo(deposit_id, key_code)
+          break;
+        case "tenant_cancelled_deposit":
+          this.gotoDepositInfo(deposit_id, key_code)
+          break;
+        case "agent_confirmed_deposit":
+          this.gotoDepositInfo(deposit_id, key_code)
+          break;
+      }
+  }
+
+  compareNotification(noti1, noti2): boolean{
+    if((noti1.title == noti2.title) && 
+      (noti1.message == noti2.message) &&
+      (noti1.additionalData.key_code == noti2.additionalData.key_code)) return true
+      else return false;
+  }
+
+  gotoHostAcceptDeposit(deposit_id: string){
+    this.storage.setTransactionState({type: 'host_accept_deposit', id: deposit_id})
+    .then(dat =>{
+      this.navCtrl.push('DepositConfirmationPage')
+    })
+  }
+
+  gotoSeekerConfirmDeposit(deposit_id: string){
+    this.storage.setTransactionState({type: 'seeker_confirm_deposit', id: deposit_id})
+    .then(dat =>{
+      this.navCtrl.push('DepositConfirmationPage')
+    })
+  }
+
+  gotoDepositInfo(deposit_id: string, code: string){
+    let message: string = '';
+    let title: string = '';
+    this.deposit_svc.getDepositById(deposit_id)
+    .pipe(
+      take(1)
+    )
+    .subscribe(dep =>{
+        switch (code) {
+          case "clickinn_confirmed_deposit":
+            message = `Clickinn has confirmed payment of ${dep.apartment.deposit} for the ${dep.apartment.room_type} by ${dep.by.firstname}.`
+            title = 'Deposit payment confirmation'
+            break;
+          case "tenant_confirmed_deposit":
+            message = `${dep.by.firstname} confirmed a deposit payment of ${dep.apartment.deposit} for the ${dep.apartment.room_type}, please await confirmation of reciept from Clickinn and ALLOW the tenant to move in once you've recieved confirmation.`
+            title = 'Deposit payment claim'
+            break;
+          case "tenant_cancelled_deposit":
+            message = `${dep.by.firstname} cancelled the deposit payment of ${dep.apartment.deposit} for the ${dep.apartment.room_type}.`
+            title = 'Deposit payment cancellation'
+            break;
+          case "agent_confirmed_deposit":
+            message = `Your deposit for the ${dep.apartment.room_type} at ${dep.apartment.property.address.description} has been confirmed. You can chat with the landlord for further move-in arrangements.`
+            title = 'Deposit payment recieved'
+            break;
+        }
+        let notifAlert = this.alertCtrl.create({
+            title: title,
+            message: message,
+            cssClass: "notification",
+            buttons: [{
+                text: 'View',
+                role: 'cancel',
+            }]
+        });
+        notifAlert.present();
+    })
+  }
+
+  gotoThread(thread_id: string){
+    let thread: Thread = {
+      uid: '',
+      thread_id: thread_id,
+      dp: '',
+      displayName: ''
+    }
+    this.storage.setThread(thread).then(val =>{
+      this.navCtrl.push('ChatThreadPage', thread);
+    })
+    .catch(err => console.log(err))
+  }
+
+  gotoHostBookings(){
+    this.loading = true;
+    this.navCtrl.push('BookingsPage', {selectedTab: 2});
+    this.loading = false;
+  }
+
   //Navigates the user their appropriate homepage at startup
   navigateUser(user: User){
     if(user.user_type){ //check i user_type property exists in user
       switch(user.user_type){
         case 'seeker':{
           //Navigate to welcome page
-          this.rootPage = WelcomePage;
+          this.rootPage = 'WelcomePage';
           break;
         }
         case 'host':{
           //Navigate to host dashboard
-          this.rootPage = WelcomePage;
+          this.rootPage = 'WelcomePage';
           break;
         }
         case 'support':{
           //Navigate to support interface
-          this.rootPage = WelcomePage;
+          this.rootPage = 'WelcomePage';
           break;
         }
         case 'tenant':{
           //Navigate to home
-          this.rootPage = WelcomePage;
+          this.rootPage = 'WelcomePage';
           break;
         }
         case 'Thapelo':{
           //Navigate to master
-          this.rootPage = WelcomePage;
+          this.rootPage = 'WelcomePage';
           break;
         }
       }
     }else{
       //Navigate to welcome page
-      this.rootPage = WelcomePage;
+      this.rootPage = 'WelcomePage';
     }
+    this.appViewReady();
   }
   //Check for authState and sync user data if possible
   initializeAuthenticatedUser(){
     if(this.afAuth.auth.currentUser){
       this.afs.collection('Users').doc<User>(this.afAuth.auth.currentUser.uid).valueChanges()
-      .take(1)
       .subscribe(user =>{
         if(user){
           this.user = user;
           this.storage.setUser(user)
           .then(() =>{
-            this.onNotifications();
             this.navigateUser(user);
+            this.initNotifications();
             this.loading = false;
             return;
           })
           .catch(err =>{
-            this.errHandler.handleError({errCode: 'SET_OFFLINE_USER', message: `Error persisting offline user`});
+            this.errHandler.handleError({errCode: 'SET_OFFLINE_USER', message: `Error caching user`});
             this.loading = false;
             return;
           })
@@ -190,8 +398,9 @@ export class MyApp {
       })
     }
     else{
-      this.rootPage = LoginPage;
+      this.rootPage = 'LoginPage';
       this.loading = false;
+      this.appViewReady();
       return;
     }
   }
@@ -199,12 +408,14 @@ export class MyApp {
   InitializeOfflineUser(){
     this.storage.getUser().then(user =>{
       if(user){
-        this.onNotifications();
+        this.user = user;
         this.navigateUser(user);
+        this.initNotifications();
         this.loading = false;
       }
       else{
-        this.rootPage = LoginPage;
+        this.rootPage = 'LoginPage';
+        this.appViewReady()
         this.loading = false;
         return;
       }
@@ -237,7 +448,8 @@ export class MyApp {
   }
 
   monitorAuthState(){
-    this.authState = this.afAuth.authState.subscribe(user =>{
+    this.authState = this.afAuth.authState
+    .subscribe(user =>{
       console.log('MonitorAuthState running....')
       if(user || this.afAuth.auth.currentUser){
         console.log('Firebase user found...')
@@ -269,21 +481,50 @@ export class MyApp {
         }
       }
       else if(user == null){
-        this.navCtrl.setRoot(LoginPage);
+        this.navCtrl.setRoot('LoginPage');
+        this.appViewReady();
         this.loading = false;  
       }else{
-        this.loading = false;
+        this.navCtrl.setRoot('LoginPage');
+        this.appViewReady();
+        this.loading = false; 
         console.log('I dunno')
       }
     })
+  }
+
+  gotoLiked(){
+    this.navCtrl.push('FavouritesPage')
+  }
+
+  appViewReady(){
+    if(this.platform.is('cordova')){
+      this.statusBar.styleDefault();
+      this.splashScreen.hide();
+    }
   }
   //Update the offine user data when an internet connection is established
   monitorConnectionState(){
     console.log('MonitorConnectionState running....')
       window.addEventListener('online', () =>{
-        this.online = true;
-        this.showToast('You are back online!')
-        this.syncAuthenticatedUser();
+        if(!this.online){
+          this.online = true;
+          this.showToast('You are back online!')
+        }
+        this.afs.firestore.enableNetwork().then(() =>{
+          this.syncAuthenticatedUser();
+        })
+        .catch(err => console.log(err))
+      })
+  }
+
+  monitorOfflineState(){
+    console.log('MonitorConnectionState running....')
+      window.addEventListener('offline', () =>{
+        this.online = false;
+        this.showToast('You are offline...')
+        this.afs.firestore.disableNetwork()
+        .catch(err => console.log(err))
       })
   }
 
@@ -298,5 +539,7 @@ export class MyApp {
     })
     toast.present();
   }
+
+
 }
 

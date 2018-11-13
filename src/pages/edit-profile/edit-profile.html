@@ -10,7 +10,7 @@
   </ion-navbar>
 </ion-header>
 <ion-content>
-	<ion-grid>
+	<ion-grid no-padding>
 	    <ion-row>
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>
@@ -20,12 +20,15 @@
 					  	<button ion-button style="background: #000010; color: white" (click)="changeDp()" ><ion-icon name="image"></ion-icon> &nbsp;&nbsp; Photo</button>
 					</ion-buttons>
 					<div text-center>
-						<img src="{{image}}" class="round" width="200px" height="200px" alt="User display picture" />
+						<img src="{{user?.photoURL}}" (load)="imageLoaded = true" [hidden]="!imageLoaded" class="round" width="200px" height="200px" alt="User display picture" />
+
+						<img src="assets/imgs/placeholder.png" [hidden]="imageLoaded" class="round" width="200px" height="200px" alt="User display picture" />
 					</div>
 					<h1 text-center>	
 				  		{{user?.displayName}}  
 				  	</h1>
-				</ion-item>  	
+				</ion-item>
+				 	
 				<div padding>
 			    	<h2 text-center>Edit details</h2>
 				    <ion-item >
@@ -49,6 +52,8 @@
 			  			<ion-input type="number" [(ngModel)]="user.phoneNumber"></ion-input>
 					</ion-item>
 				</div>
+				<progress-bar *ngIf="uploading" [progress]="progress" [color]="'#488aff'">
+				</progress-bar> 
 				<ion-buttons end padding>
 					<button ion-button (click)="save()"><ion-icon name="cloud-upload" start></ion-icon> &nbsp;&nbsp; Save</button>
 				</ion-buttons>

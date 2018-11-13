@@ -5,20 +5,18 @@ import { Property } from '../../models/properties/property.interface';
 import { Camera, CameraOptions } from '@ionic-native/camera';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 import { Image } from '../../models/image.interface';
-import { storage } from 'firebase';
+//import { storage } from 'firebase';
 import { AngularFireStorage } from 'angularfire2/storage';
 import { FileUpload } from '../../models/file-upload.interface';
 import { AngularFirestore } from 'angularfire2/firestore';
-import { AngularFireAuth } from 'angularfire2/auth';
+//import { AngularFireAuth } from 'angularfire2/auth';
 import { MapsProvider } from '../../providers/maps/maps';
-import { Address } from '../../models/location/address.interface';
 import { User } from '../../models/users/user.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
-import { InfoPage } from '../info/info';
 
-declare var google: any;
+
 
 @IonicPage()
 @Component({
@@ -26,7 +24,7 @@ declare var google: any;
   templateUrl: 'upload-and-earn.html',
 })
 export class UploadAndEarnPage{
-  service = new google.maps.places.AutocompleteService();
+  
   apartment: Apartment  = {
     available: true,
     dP: {name: 'placeholder', path: 'path', progress: 0,url: "assets/imgs/placeholder.jpg"},
@@ -70,17 +68,44 @@ export class UploadAndEarnPage{
   predictionsNby: any[] = [];
   user: User;
   buildingSelected: boolean = false;
-  constructor(private alertCtrl: AlertController, public navCtrl: NavController, public navParams: NavParams,
-    private camera: Camera, private errHandler: ErrorHandlerProvider, private platform: Platform,
-    private afs: AngularFirestore, private afstorage: AngularFireStorage, private toast: ToastController,
-    private map_svc: MapsProvider, private storage: LocalDataProvider, private accom_svc: AccommodationsProvider, 
+  image: any = "assets/imgs/placeholder.png";
+  dpChanged: boolean = false;
+  recentDp: FileUpload;
+  openList: boolean = false;
+  onMobile: boolean = false;
+  uploading: boolean = false;
+  progss: number = 0;
+  imagesLoaded: boolean[] = 
+      [false, false, false, false, false, false, false, false, false, false,
+       false, false, false, false, false, false, false, false, false, false, 
+       false,false, false, false, false, false, false, false, false, false,
+       false,false, false, false, false, false, false, false, false, false,
+       false,false, false, false, false, false, false, false, false, false
+       ];
+  constructor(
+    private alertCtrl: AlertController, 
+    public navCtrl: NavController, 
+    public navParams: NavParams,
+    private camera: Camera, 
+    private errHandler: ErrorHandlerProvider, 
+    private platform: Platform,
+    private afs: AngularFirestore, 
+    private afstorage: AngularFireStorage, 
+    private toast: ToastController,
+    private map_svc: MapsProvider, 
+    private storage: LocalDataProvider, 
+    private accom_svc: AccommodationsProvider, 
     private object_init: ObjectInitProvider){
     this.platform.ready().then(val =>{
+      if(platform.is('cordova')) this.onMobile = true;
       this.storage.getUser().then(user =>{ //getting user from local storage
         this.user = user;
         this.building.user_id = user.uid;
         this.accom_svc.getUsersProperties(user.uid).subscribe(buildings =>{
           this.buildings = buildings;
+          buildings.forEach(bld =>{
+            this.imagesLoaded.push(false);
+          })
         })
       })
     })
@@ -94,8 +119,18 @@ export class UploadAndEarnPage{
     console.log(e);
   }
 
+  showList(){
+    this.openList = true;
+  }
+
+  closeList(){
+    this.openList = false;
+  }
+
   selectEBuilding(building: Property){
     this.building = building;
+    this.apartment.property = building;
+    this.apartment.prop_id = building.prop_id;
     this.buildings = [];
     this.buildings.push(building);
     this.buildingSelected = true;
@@ -158,48 +193,70 @@ export class UploadAndEarnPage{
 
   uploadApartment(){
     console.log('Uploading apartment...');
-    this.loading = true;
-    this.apartment.property = this.building;
-    this.uploadBuildingPics();
-      this.afs.collection('Apartments').doc(this.apartment.apart_id).update(this.apartment).then(() =>{
-        console.log('Updating apartment...');
-        this.afs.collection('Properties').doc(this.building.prop_id).update(this.building).then(() =>{
-          console.log('Updating building...');
-          this.storage.setApartment(this.apartment).then(apart =>{
-            this.successful()
-            setTimeout(() =>{this.navCtrl.push(InfoPage)}, 3000)
-          })
-          .catch(err => console.log(err))
-          
-          this.loading = false;
-        })
-        .catch(err =>{
-          this.errHandler.handleError(err);
-          this.loading = false;
+    this.uploading = true;
+    
+    if(this.buildingSelected){
+      this.accom_svc.updateApartment(this.apartment).then(() =>{
+        this.storage.setApartment(this.apartment)
+        .then(apart =>{
+          this.successful()
+          this.uploading = false;
+          this.navCtrl.push('InfoPage')
         })
       })
       .catch(err =>{
         this.errHandler.handleError(err);
-        this.loading = false;
+        this.uploading = false;
       })
+    }else{
+      this.uploadBuildingPics().then(() =>{
+        console.log('Uploaded building pics...', this.building.images)
+        this.apartment.property = this.building;
+        this.accom_svc.updateProperty(this.building)
+        this.accom_svc.updateApartment(this.apartment).then(() =>{
+          this.storage.setApartment(this.apartment)
+          .then(apart =>{
+            this.successful()
+            this.uploading = false;
+            this.navCtrl.push('InfoPage')
+          })
+        })
+        .catch(err =>{
+          this.errHandler.handleError(err);
+          this.uploading = false;
+        })
+      })
+      .catch(err =>{
+        this.uploading = false;
+        console.log(err)
+      })
+    }
   }
 
-  selectBuilding(property: Property, images: Image[]){
+  selectBuilding(property: Property){
     this.apartment.property = property; //adding the building profile to the apartment
-    images.forEach(image =>{
+    property.images.forEach(image =>{
       this.apartment.property.images.push(image);
     })
   }
 
   uploadPic(image: FileUpload): Promise<Image>{
+    this.loading = true;
+    console.log('Uploading pic... ', image)
     const storageRef =   this.afstorage.ref(`${image.path}/${image.name}`);
-     const uploadTask = storageRef.putString(image.file, 'data_url');
+    let uploadTask: any;
+    if(image.file.lastModified){
+      uploadTask = storageRef.put(image.file);
+    }else{
+      uploadTask = storageRef.putString(image.file, 'data_url');
+    }
      return new Promise<Image>((resolve, reject) => {
       uploadTask.snapshotChanges().subscribe(
         (snapshot) =>{
           //update the progress property of the upload object
           uploadTask.percentageChanges().subscribe(progress =>{
             image.progress = progress;
+            this.progss = progress;
             console.log('progress... ', image.progress);
           })
         },
@@ -234,22 +291,26 @@ export class UploadAndEarnPage{
   }
 
   uploadPics(pics: FileUpload[]): Promise<Image[]>{
+    this.loading = true;
     let images: Image[] = [];
     return new Promise<Image[]>((resolve, reject) =>{
       if(pics){
           pics.forEach(pic =>{
-          this.uploadPic(pic).then(image => images.push(image)).catch(err =>{
-            this.errHandler.handleError(err);
+          this.uploadPic(pic).then(image => {
+            images.push(image);
+            if(images.length == pics.length){
+              resolve(images);
+              this.loading = false;
+            }
+          }).catch(err =>{
             this.loading = false;
+            this.errHandler.handleError(err);
           });
-          if(images.length == pics.length){
-            resolve(images);
-          }
         })
       }else{
         reject('No images selected');
+        this.loading = false;
       }
-      
     })
   }
 
@@ -259,12 +320,16 @@ export class UploadAndEarnPage{
       this.apartment.apart_id = apartRef.id
       this.loading = false;    
     })
-    .catch(err => this.errHandler.handleError(err))
+    .catch(err => {
+      this.errHandler.handleError(err);
+      this.loading = false;
+    })
   }
 
   initialBuildinUpload(){
     this.loading = true;
     this.afs.collection('Properties').add(this.building).then(buildingRef =>{
+      console.log('This is the building id: ', buildingRef.id)
       this.building.prop_id = buildingRef.id;
       this.loading = false;    
     })
@@ -272,22 +337,57 @@ export class UploadAndEarnPage{
   }
 
   uploadApartPics(): Promise<void>{
+    if(this.apartmentImages.length <= 0){
+      console.log('No apartment images... ', this.apartmentImages);
+      return;
+    } 
     return this.uploadPics(this.apartmentImages).then(images =>{
       this.apartment.images = images;
+      console.log('Apartment pics uploaded');
     })
     .catch(err => this.errHandler.handleError(err))
   }
 
+  updateApartmentPics(event){
+    console.log('Pics: ', event.target.files);
+    let pic = event.target.files[0];
+   
+      let image: FileUpload = {
+        file: pic,
+        name: pic.name,
+        url: '',
+        path: 'ApartmentImages',
+        progress: 0
+      }
+      this.apartmentImages.push(image);
+  
+  }
+
+  updateBuildingPics(event){
+    console.log('Pics: ', event.target.files);
+    let pic = event.target.files[0];
+    
+      let image: FileUpload = {
+        file: pic,
+        name: pic.name,
+        url: '',
+        path: 'PropertyImages',
+        progress: 0
+      }
+      this.propertyImages.push(image);
+    
+  }
+
   uploadBuildingPics(): Promise<void>{
+    if(!(this.propertyImages.length > 0)) return
     return new Promise<void>((resolve, reject) =>{
       this.uploadPics(this.propertyImages).then(images =>{
       this.building.images = images;
       console.log('Building pics uploaded...')
+      console.log('Building.prop_id = ', this.building.prop_id);
       this.apartment.prop_id = this.building.prop_id;
-      this.apartment.property = this.building;
       resolve();
     })
-    .catch(err => this.errHandler.handleError(err))
     }) 
   }
   /*Getting autocomplete predictions from the google maps place predictions service*/
@@ -295,7 +395,7 @@ export class UploadAndEarnPage{
     this.loading = true;
     if(event.key === "Backspace" || event.code === "Backspace"){
       setTimeout(()=>{
-        this.map_svc.getPlacePredictionsSA(event.target.value, this.service).then(data => {
+        this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
           console.log(data);
           this.predictionsAdd = [];
           this.predictionsAdd = data;
@@ -307,7 +407,7 @@ export class UploadAndEarnPage{
         })
       }, 3000)
     }else{
-      this.map_svc.getPlacePredictionsSA(event.target.value, this.service).then(data => {
+      this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
         console.log(data);
         this.predictionsAdd = [];
         this.predictionsAdd = data;
@@ -324,7 +424,7 @@ export class UploadAndEarnPage{
     this.loading = true;
     if(event.key === "Backspace" || event.code === "Backspace"){
       setTimeout(()=>{
-        this.map_svc.getPlacePredictionsSA(event.target.value, this.service).then(data => {
+        this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
           console.log(data);
           this.predictionsNby = [];
           this.predictionsNby = data;
@@ -336,7 +436,7 @@ export class UploadAndEarnPage{
         })
       }, 3000)
     }else{
-      this.map_svc.getPlacePredictionsSA(event.target.value, this.service).then(data => {
+      this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
         console.log(data);
         this.predictionsNby = [];
         this.predictionsNby = data;

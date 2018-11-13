@@ -1,3 +1,11 @@
 page-confirmation {
 
+	.cnfm{
+		position: fixed;
+		width: 90%;
+ 		top: 50%;
+  		left: 50%;
+  		transform: translate(-50%, -50%);
+	}
+
 }

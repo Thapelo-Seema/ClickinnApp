@@ -10,6 +10,16 @@
   </ion-navbar>
 </ion-header>
 <ion-content>
+  <div *ngIf="loading" class="centered_on_screen" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; 
+    border-radius: 10px;padding: 20px; text-align: center; z-index: 1">
+    <ion-spinner name="ios"></ion-spinner>
+    <h3 text-center>Saving progress...</h3>
+  </div>
+  <!-- <div *ngIf="uploading" class="centered_on_screen" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; 
+    border-radius: 10px;padding: 20px; text-align: center; z-index: 1">
+    <ion-spinner name="ios"></ion-spinner>
+    <h3 text-center>Uploading apartment advert...</h3>
+  </div> -->
   <ion-grid>
     <ion-row>
       <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
@@ -18,7 +28,7 @@
         <ion-stepper #stepper mode="horizontal" (selectIndexChange)="selectChange($event)">
     <ion-step>
       <h3 text-center>Apartment details</h3>
-      <p text-center>Tell us about the apartment</p>
+      <p text-center style="color: lightgray">Tell us about the apartment</p>
       <ion-item>
         <ion-label>Apartment Type</ion-label>
         <ion-select [(ngModel)]="apartment.room_type" required>
@@ -37,7 +47,7 @@
         <ion-input type="number" [(ngModel)]="apartment.price" required></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label floating>Deposit/Securing fee (Rands)</ion-label>
+        <ion-label floating>Deposit/Securing fee (incl 1st month rent) (Rands)</ion-label>
         <ion-input type="number" [(ngModel)]="apartment.deposit" required></ion-input>
       </ion-item>
       <ion-item  margin-vertical no-lines>
@@ -54,20 +64,38 @@
       </ion-step>
       <ion-step>
         <h3 text-center>Apartment pictures</h3>
-        <p text-center>Pictures of only the inside of the apartment (nothing outside)</p>
+        <p text-center style="color: lightgray">Pictures of only the inside of the apartment (nothing outside)</p>
         <ion-grid>
-            <ion-row>
-              <ion-col col-md-6 col-sm-6 *ngFor="let image of apartmentImages">
-                <img src="{{image?.file}}"/>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-          <button ion-button full *ngIf="!apartmentImagesAdded" style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 1)" >
-            <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take pictures now
-          </button>
-          <button ion-button full *ngIf="apartmentImagesAdded" color="clickinn" style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 1)" >
-            <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take more pictures 
-          </button>
+          <ion-row style="border-bottom: 1px solid lightgray">
+            <ion-col col-md-6 col-sm-6 *ngFor="let image of apartmentImages">
+              <img *ngIf="onMobile" src="{{image?.file}}"/>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+          <!-- <input type="file" accept="image/*"  (change)="updateApartmentPics($event)"> -->
+          <ion-row>
+            <ion-col col-6 *ngIf="!apartmentImagesAdded">
+              <button ion-item text-wrap no-lines  style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 1)" >
+                <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take pictures now
+              </button>
+            </ion-col>
+            <ion-col col-6 *ngIf="!apartmentImagesAdded">
+              <button ion-item text-wrap no-lines   style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(2, 1)" >
+                <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Get from gallery
+              </button>
+            </ion-col>
+            <ion-col col-6 *ngIf="apartmentImagesAdded">
+                <button ion-item text-wrap no-lines style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 1)">
+                  <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take more pictures 
+                </button>
+            </ion-col>
+            <ion-col col-6 *ngIf="apartmentImagesAdded">
+              <button ion-item text-wrap no-lines   style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(2, 1)" >
+                <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Get more from gallery
+              </button>
+            </ion-col>
+          </ion-row>
+          
         <ion-buttons text-center>
           <button ion-button round outline small ionicStepperPrevious>
             <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;Back
@@ -79,14 +107,25 @@
       </ion-step>
       <ion-step>
         <h3 text-center>Building details</h3>
-        <p text-center>Select building from list or fill details about the building which the apartment belongs to</p>
-        <ion-grid>
+        <p text-center style="color: lightgray">
+          Select building from list or fill details about the building which the apartment belongs to
+        </p>
+        <ion-buttons>
+          <button ion-button clear small icon-right *ngIf="openList" (click)="closeList()" >
+            Close list &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropup" end></ion-icon>
+          </button>
+          <button ion-button clear small icon-right *ngIf="!openList" (click)="showList()">
+            Select building from list &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropdown" end></ion-icon>
+          </button>
+        </ion-buttons>
+        <ion-grid *ngIf="openList">
           <ion-row>
-            <ion-col col-12 col-md-6 col-sm-6 *ngFor="let building of buildings" 
+            <ion-col col-12 col-md-6 col-sm-6 *ngFor="let building of buildings; let i = index" 
                (click)="selectEBuilding(building)" ionicStepperNext>
             <ion-item text-wrap>
               <ion-avatar item-start>
-                <img src="{{building?.dP?.url}}"/>
+                <img src="{{building?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" />
+                <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
               </ion-avatar>
               <p>{{building?.address?.description}}</p>
             </ion-item>
@@ -107,12 +146,11 @@
           </ion-input>
         </ion-item>
         <ion-list *ngIf="predictionsNby">
-          <button ion-item *ngFor="let pred of predictionsNby" (click)="addNearby(pred?.name)">{{pred?.description}}</button>
+          <button ion-item *ngFor="let pred of predictionsNby" (click)="addNearby(pred?.description)">{{pred?.description}}</button>
         </ion-list>
         <ion-list *ngIf="building.nearbys">
-          <ion-item *ngFor="let nearby of building.nearbys" margin-vertical no-lines style="background: lightgray" 
-          (click)="deleteNearby(nearby)">
-            <ion-icon name="close" start></ion-icon> &nbsp;&nbsp;&nbsp;{{nearby}}
+          <ion-item text-wrap *ngFor="let nby of building.nearbys" margin-vertical (click)="deleteNearby(nearby)">
+            <ion-icon name="close" start></ion-icon> &nbsp;&nbsp;&nbsp;{{ nby }}
           </ion-item>
         </ion-list>
         <ion-item  padding>
@@ -143,36 +181,54 @@
       <ion-step>
         <h3 text-center *ngIf="!buildingSelected">Building pictures</h3>
         <h3 text-center *ngIf="buildingSelected">Upload Building</h3>
-          <p text-center *ngIf="!buildingSelected">
+          <p text-center *ngIf="!buildingSelected" style="color: lightgray">
             Add pictures of the communal areas of the building, like bathrooms, kitchen, laundry, pool etc
           </p>
           <ion-item text-wrap no-lines *ngIf="buildingSelected">
             <ion-avatar item-start>
-              <img src="{{building?.dP?.url}}"/>
+              <img src="{{building?.dP?.url ? building?.dP?.url : 'assets/imgs/placeholder.jpg'}}"/>
             </ion-avatar>
             <p>{{building.address.description}}</p>
           </ion-item>
           <ion-grid>
-            <ion-row>
+            <ion-row style="border-bottom: 1px solid lightgray">
               <ion-col col-md-6 *ngFor="let image of propertyImages">
-                <img src="{{image?.file}}"/>
+                <img src="{{image?.file ? image?.file : 'assets/imgs/placeholder.jpg'}}"/>
               </ion-col>
             </ion-row>
           </ion-grid>
-          <!-- <button ion-button full style="background: #000010; color: white; padding: 60px 20px; margin: 16px 0px" (click)="addPictures(2)">
-            <ion-icon name="image"></ion-icon> &nbsp;&nbsp; Add from gallery
-          </button> -->
-          <button ion-button full *ngIf="!propertyImagesAdded && !buildingSelected" style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 2)">
-            <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take pictures now
-          </button>
-          <button ion-button full *ngIf="propertyImagesAdded && !buildingSelected" color="clickinn" style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 2)">
-            <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take more pictures
-          </button>
+          
+          <ion-row>
+            <!-- <input type="file" accept="image/*"  (change)="updateBuildingPics($event)"> -->
+            <ion-col col-6 *ngIf="!propertyImagesAdded && !buildingSelected">
+              <button ion-item text-wrap no-lines style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 2)">
+                <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take pictures now
+              </button>
+            </ion-col>
+            <ion-col col-6 *ngIf="!propertyImagesAdded && !buildingSelected">
+              <button ion-item text-wrap no-lines style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(2, 2)">
+                <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Get from gallery
+              </button>
+            </ion-col>
+            <ion-col col-6 *ngIf="propertyImagesAdded && !buildingSelected">
+              <button ion-item text-wrap no-lines color="clickinn" style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(1, 2)">
+                <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Take more pictures
+              </button>
+            </ion-col>
+            <ion-col col-6 *ngIf="propertyImagesAdded && !buildingSelected">
+              <button ion-item text-wrap no-lines style="padding: 60px 20px; margin: 16px 0px" (click)="addPictures(2, 2)">
+                <ion-icon name="camera"></ion-icon> &nbsp;&nbsp; Get more from gallery
+              </button>
+            </ion-col>
+          </ion-row>
+          
         <ion-buttons>
           <button ion-button round outline small ionicStepperPrevious>
             <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;Back
           </button>
         </ion-buttons>
+        <progress-bar *ngIf="uploading" [progress]="progss" [color]="'#488aff'">
+        </progress-bar> 
         <ion-buttons padding>
           <button ion-button color="secondary" full padding (click)="uploadApartment()">Upload&nbsp;&nbsp;
           <ion-icon name="ios-cloud-upload-outline"></ion-icon>

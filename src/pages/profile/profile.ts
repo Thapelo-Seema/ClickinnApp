@@ -4,7 +4,7 @@ import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-import { EditProfilePage } from '../edit-profile/edit-profile';
+//import { EditProfilePage } from '../edit-profile/edit-profile';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 
 @IonicPage()
@@ -17,6 +17,7 @@ export class ProfilePage {
   user: User;	//the current user
   image: string = "assets/imgs/placeholder.png";
   loading: boolean = false;
+  imageLoaded: boolean = false; 
 
   constructor(public navCtrl: NavController, private storage: LocalDataProvider,
   	 private afs: AngularFirestore, private errHandler: ErrorHandlerProvider, private object_init: ObjectInitProvider){
@@ -41,7 +42,7 @@ export class ProfilePage {
   }
 
   gotoEdit(){
-    this.navCtrl.push(EditProfilePage);
+    this.navCtrl.push('EditProfilePage');
   }
 
 }

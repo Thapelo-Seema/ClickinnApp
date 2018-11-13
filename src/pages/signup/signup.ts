@@ -1,13 +1,14 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController} from 'ionic-angular';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface'
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-import { LoginPage } from '../login/login';
-import { WelcomePage } from '../welcome/welcome';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
+import { FcmProvider } from '../../providers/fcm/fcm';
+import { Push, PushOptions, PushObject } from '@ionic-native/push';
+//import { Thread } from '../../models/thread.interface';
 
 @IonicPage()
 @Component({
@@ -20,9 +21,16 @@ export class SignupPage {
 	password: string;
   loading: boolean = false;
 
-  constructor(public navCtrl: NavController,
-    private afs: AngularFirestore, private afAuth: AngularFireAuth, private storage: LocalDataProvider,
-     private errHandler: ErrorHandlerProvider, private object_init: ObjectInitProvider) {
+  constructor(
+    public navCtrl: NavController,
+    private afs: AngularFirestore, 
+    private afAuth: AngularFireAuth, 
+    private storage: LocalDataProvider,
+     private errHandler: ErrorHandlerProvider, 
+     private object_init: ObjectInitProvider,
+     private fcm: FcmProvider,
+     //private platform: Platform,
+     private push: Push) {
   	this.seeker = this.object_init.initializeUser();
   }
 
@@ -30,12 +38,16 @@ export class SignupPage {
     this.loading = true;
     this.afAuth.auth.createUserWithEmailAndPassword(this.seeker.email, this.password)
     .then(data =>{
-      //alert('signed in!')
       this.seeker.uid = data.user.uid;
       this.seeker.displayName = this.seeker.firstname + ' ' + this.seeker.lastname;
       if(this.seeker.uid !== ''){
-        //alert('persisting user...');
         this.persistUser(data.user.uid);
+      }else{
+        this.loading = false;
+        this.errHandler.handleError({
+          code: 'no uid',
+          message: 'Something went wrong, please try again'
+        })
       }
     })
     .catch(err => {
@@ -45,7 +57,29 @@ export class SignupPage {
   }
 
   signin(){
-    this.navCtrl.setRoot(LoginPage);
+    this.navCtrl.setRoot('LoginPage');
+  }
+
+  onNotifications(){
+    const options: PushOptions = {
+     android: {
+       senderID: '882290923419'
+     },
+     ios: {
+         alert: 'true',
+         badge: true,
+         sound: 'false'
+     },
+     windows: {},
+     browser: {
+         pushServiceURL: 'http://push.api.phonegap.com/v1/push'
+     }
+    };
+    const pushObject: PushObject = this.push.init(options);
+    pushObject.on('registration').subscribe((registration: any) => {
+      this.fcm.saveTokenToFirestore(registration.registrationId)
+    });
+    pushObject.on('error').subscribe(error => alert(error));
   }
 
   persistUser(uid: string){
@@ -53,11 +87,11 @@ export class SignupPage {
       this.afs.collection('Users').doc(uid).set(this.seeker)
       .then(() =>{
           //alert('stored in collection!');
-          this.storage.setUser(this.seeker).then(() =>{
+          this.storage.setUser(this.seeker).then(val =>{
            // alert('local storage!');
-            this.navCtrl.setRoot(WelcomePage).then(() =>{
-              //alert('navigated');
+            this.navCtrl.setRoot('WelcomePage').then(() =>{
               this.loading = false;
+              this.onNotifications();
             })
             .catch(err => {
               this.errHandler.handleError(err);

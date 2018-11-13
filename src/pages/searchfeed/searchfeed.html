@@ -5,55 +5,56 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content>
-	<div *ngIf="loading" class="centered_on_screen">
-	    <ion-spinner name="ios"></ion-spinner>
-	</div>
+<ion-content style="background: #f4f4f4;">
 	<ion-grid>
 		<ion-row>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-				<h1 text-center>Searches</h1>
-				<ion-card *ngFor="let search of searches | async">
+				
+				<ion-card *ngFor="let srch of searchfeed_svc?.data | async; let idx = index">
 				  <ion-item>
 				    <ion-avatar item-start>
-				      <img src="assets/imgs/placeholder.png">
+				      <img src="{{srch?.searcher_dp}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" />
+				      <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[idx]" />
 				    </ion-avatar>
-				    <h2> {{search?.searcher_name != 'undefined undefined' ? search?.searcher_name : 'Anonymous'}} </h2>
+				    <h2> {{srch?.searcher_name != 'undefined undefined' ? srch?.searcher_name : 'Anonymous'}} </h2>
 				  </ion-item>
 				  <ion-card-content>
 				    <p text-center>
-				    	Hi, I am looking for <b style="color: green">{{search?.apartment_type == 'Any' ? 'any type of room/apartment' : 
-				    	 ' a ' + search?.apartment_type}}</b> around 
-				    	<b style="color: green">{{search?.Address?.sublocality_lng}}, {{search?.Address?.locality_lng}} 
+				    	Hi, I am looking for <b style="color: green">{{srch?.apartment_type == 'Any' ? 'any type of room/apartment' : 
+				    	 ' a ' + srch?.apartment_type}}</b> around 
+				    	<b style="color: green">{{srch?.Address?.sublocality_lng}}, {{srch?.Address?.locality_lng}} 
 				    	</b>.
 				    </p>
-				    <h2 text-center style="color: #488aff">The place must have the following</h2>
+				    <h2 text-center style="color: #488aff">The place meet have the following requirements</h2>
 				    <p text-center>
-				    	 Rent between <b style="color: green">R{{search?.minPrice}}.00</b> and <b style="color: green">R{{search?.maxPrice}}.00</b>
+				    	 Rent between <b style="color: green">R{{srch?.minPrice}}.00</b> and <b style="color: green">R{{srch?.maxPrice}}.00</b>
 				    	<b style="color: green">
-					    	{{search?.nsfas ? ' NSFAS accreditation, ': '' }}
-					    	{{search?.wifi ? ' WiFi, ': '' }}
-					    	{{search?.laundry ? ' laundry facilities, ': '' }} 
-					    	{{search?.parking ? ' secure parking ': '' }}
+					    	{{srch?.nsfas ? ' NSFAS accreditation, ': '' }}
+					    	{{srch?.wifi ? ' WiFi, ': '' }}
+					    	{{srch?.laundry ? ' laundry facilities, ': '' }} 
+					    	{{srch?.parking ? ' secure parking ': '' }}
 				    	</b>
 				    </p>
 				  </ion-card-content>
 				  <ion-row>
-				    <ion-col *ngIf="search.searcher_id != user.uid">
-				      <button ion-button icon-start clear small (click)="showInput(search)" >
+				    <ion-col *ngIf="srch.searcher_id != user.uid">
+				      <button ion-button icon-start clear small (click)="showInput(srch)" >
 				        <ion-icon name="text"></ion-icon>
 				        <div>Make offer</div>
 				      </button>
 				    </ion-col>
 				    <ion-col center text-center>
 				      <ion-note>
-				        {{search?.timeStamp | timeAgo | async}}
+				        {{srch?.timeStamp | timeAgo | async}}
 				      </ion-note>
 				    </ion-col>
 				  </ion-row>
 				</ion-card>
+				<div *ngIf="loadingMore" style="text-align: center;">
+				    <ion-spinner></ion-spinner>
+				</div>
 			</ion-col>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
