@@ -31,7 +31,9 @@ export class AppointmentsProvider {
   data: Observable<any>;
   done: Observable<boolean> = this._done.asObservable();
   loading: Observable<boolean> = this._loading.asObservable();
-  constructor(private afstorage: AngularFirestore, private object_init: ObjectInitProvider){}
+  constructor(
+    private afstorage: AngularFirestore, 
+    private object_init: ObjectInitProvider){}
 
   createBooking(appointment: Appointment){
     return this.afstorage.collection<Appointment>('Viewings').add(appointment)
@@ -45,6 +47,7 @@ export class AppointmentsProvider {
   }
 
   initUserBookings(uid: string){
+    console.log('Init user bookings...')
     const first =  this.afstorage.collection<Appointment>('Viewings', ref => 
       ref.where('booker_id', '==', uid)
       .orderBy('timeStamp', 'desc')
@@ -79,6 +82,7 @@ export class AppointmentsProvider {
   }
 
   initHostBookings(uid: string){
+    console.log('Init host bookings...')
     const first = this.afstorage.collection<Appointment>('Viewings', ref => 
       ref.where('host_id', '==', uid)
          .orderBy('timeStamp', 'desc')
@@ -136,8 +140,8 @@ export class AppointmentsProvider {
   }
 
   reset(){
-    this._data = null;
-    this.data = null;
+    console.log('reseting...')
+    this._data.next([])
   }
 
    // Determines the doc snapshot to paginate query 
@@ -170,7 +174,7 @@ export class AppointmentsProvider {
         // update source with new values, done loading
         this._data.next(values)
         this._loading.next(false)
-
+        console.log('mapAndUpdate running...')
         // no more values, mark done
         if (!values.length) {
           console.log('done!')

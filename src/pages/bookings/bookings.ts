@@ -126,6 +126,7 @@ export class BookingsPage {
 
   ionViewDidLeave(){
     this.bookingsSub.unsubscribe();
+    this.appt_svc.reset();
   }
 
   ionViewDidLoad(){
