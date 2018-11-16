@@ -1,5 +1,7 @@
 import { Component} from '@angular/core';
 import { IonicPage, NavController, NavParams, App } from 'ionic-angular';
+import { AppointmentsProvider } from '../../providers/appointments/appointments'
+
 @IonicPage()
 @Component({
   selector: 'page-landlord-dashboard',
@@ -11,7 +13,11 @@ export class LandlordDashboardPage {
   tab2Root: any = 'ManageBuildingsPage';
   tab3Root: any = 'BookingsPage';
   tab4Root: any = 'ChatsPage';
-  constructor(public navCtrl: NavController, public navParams: NavParams, private app: App) {
+  constructor(
+    public navCtrl: NavController, 
+    public navParams: NavParams, 
+    private app: App,
+    private appt_svc: AppointmentsProvider) {
     
   }
 
@@ -20,7 +26,8 @@ export class LandlordDashboardPage {
   }
 
   gotoHome(){
-    this.app.getRootNav().setRoot('WelcomePage');
+    this.appt_svc.reset();
+    this.navCtrl.setRoot('WelcomePage');
   }
 
 }

@@ -34,6 +34,7 @@ export class ChatsPage {
   	private chat_svc: ChatServiceProvider, 
     private storage: LocalDataProvider,
     private toastCtrl: ToastController){
+
     this.chat_svc.loading.subscribe(data =>{
       this.loadingMore = data;
     })
@@ -73,14 +74,28 @@ export class ChatsPage {
   }
 
   ionViewDidLoad(){
+    console.log('chats loaded')
     this.monitorEnd();
   }
 
-  gotoThread(thread: Thread){
-    this.storage.setThread(thread).then(val =>{
-      this.navCtrl.push('ChatThreadPage', thread);
+  gotoThread(thread: any){
+
+    console.log('thread: ', thread)
+    let shapedThread: Thread = {
+      thread_id: thread.thread_id,
+      uid: thread.uid,
+      dp: thread.dp,
+      displayName: thread.displayName
+    }
+    this.storage.setThread(shapedThread).then(val =>{
+      this.navCtrl.push('ChatThreadPage', shapedThread);
+      this.chat_svc.reset();
     })
   	.catch(err => console.log(err))
+  }
+
+  ionViewDidLeave(){
+    this.chat_svc.reset();
   }
 
   showToast(text: string){

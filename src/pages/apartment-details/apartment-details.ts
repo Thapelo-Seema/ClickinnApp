@@ -7,6 +7,7 @@ import { User } from '../../models/users/user.interface';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 //import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 import { take } from 'rxjs-compat/operators/take';
+import { AppointmentsProvider } from '../../providers/appointments/appointments'
 
 @IonicPage()
 @Component({
@@ -20,8 +21,13 @@ export class ApartmentDetailsPage{
   currentApartment: Apartment;
   user: User;
  
-  constructor(public navCtrl: NavController, private app: App, private local_data: LocalDataProvider, 
-    private obj_init: ObjectInitProvider, private user_svc: UserSvcProvider){
+  constructor(
+    public navCtrl: NavController, 
+    private app: App, 
+    private local_data: LocalDataProvider, 
+    private obj_init: ObjectInitProvider, 
+    private user_svc: UserSvcProvider,
+    private appt_svc: AppointmentsProvider){
     this.currentApartment = this.obj_init.initializeApartment();
     this.user = this.obj_init.initializeUser();
     this.local_data.getApartment().then(data =>{
@@ -42,7 +48,7 @@ export class ApartmentDetailsPage{
   }
 
   gotoHome(){
-    this.app.getRootNav().setRoot('WelcomePage');
+    this.navCtrl.setRoot('WelcomePage');
   }
 
   

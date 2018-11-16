@@ -96,6 +96,7 @@ export class ChatServiceProvider {
   }
 
   initGetThreadChats(thread_id){
+    console.log('initGetThreadChats...')
     const first = this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref => 
       ref.orderBy('timeStamp', 'asc')
       .limit(15)
@@ -105,6 +106,7 @@ export class ChatServiceProvider {
 
     this.data = this._data.asObservable()
     .scan((acc, val) =>{
+      console.log('chats: ', acc)
       return acc.concat(val)
     })
   }
@@ -126,6 +128,7 @@ export class ChatServiceProvider {
   }
 
   initGetThreads(user: User){
+    console.log('initGetThreads...')
     const first = this.afs.collection('Users').doc(user.uid).collection<Thread>('threads', ref =>{
       return ref.limit(15)
     })
@@ -140,9 +143,10 @@ export class ChatServiceProvider {
 
   moreThreads(user: User){
     const cursor = this.getCursor();
-
+    if(cursor == null) return;
     const more = this.afs.collection('Users').doc(user.uid).collection<Thread>('threads', ref =>{
       return ref.limit(15)
+                .startAfter(cursor)
     })
 
     this.mapAndUpdate(more);
@@ -151,10 +155,18 @@ export class ChatServiceProvider {
    // Determines the doc snapshot to paginate query 
   private getCursor() {
     const current = this._data.value
+    console.log('current: ', current)
     if (current.length) {
+      console.log('cursor: ', current[current.length - 1].doc)
       return current[current.length - 1].doc 
     }
     return null
+  }
+
+  reset(){
+    console.log('reseting...')
+    this._data.next([])
+    this._done.next(false);
   }
 
 

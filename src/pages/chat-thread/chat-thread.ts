@@ -42,7 +42,7 @@ export class ChatThreadPage {
     private storage: LocalDataProvider, 
     private user_svc: UserSvcProvider,
     private toast_svc: ToastSvcProvider){
-    this.loading = true;
+    
   	this.threadInfo = this.navParams.data;
     console.log('navParams  ', this.navParams.data.thread_id);
     
@@ -88,8 +88,14 @@ export class ChatThreadPage {
   }
 
   ionViewDidLoad() {
+    console.log('chat thread loaded')
     this.monitorEnd()
     this.scrollToBottom();
+  }
+
+  ionViewDidLeave(){
+    this.chat_svc.reset();
+    this.chat_svc.initGetThreads(this.user);
   }
 
   scrollToBottom(){

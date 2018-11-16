@@ -8,7 +8,6 @@ import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { Observable } from 'rxjs-compat';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
-//import { MessageInputPopupPage } from '../message-input-popup/message-input-popup';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { Subscription } from 'rxjs-compat/Subscription';
 import { Calendar } from '@ionic-native/calendar';

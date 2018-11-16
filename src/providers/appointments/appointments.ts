@@ -58,6 +58,7 @@ export class AppointmentsProvider {
 
     this.data = this._data.asObservable()
     .scan((acc, val) =>{
+
       return acc.concat(val)
     })
   }
@@ -142,6 +143,7 @@ export class AppointmentsProvider {
   reset(){
     console.log('reseting...')
     this._data.next([])
+    this._done.next(false);
   }
 
    // Determines the doc snapshot to paginate query 
@@ -156,7 +158,7 @@ export class AppointmentsProvider {
 
   // Maps the snapshot to usable format the updates source
   private mapAndUpdate(col: AngularFirestoreCollection<any>) {
-
+    
     if (this._done.value || this._loading.value) { return };
 
     // loading
@@ -174,6 +176,8 @@ export class AppointmentsProvider {
         // update source with new values, done loading
         this._data.next(values)
         this._loading.next(false)
+        console.log('_data: ', this._data.value)
+        console.log('data: ', this.data);
         console.log('mapAndUpdate running...')
         // no more values, mark done
         if (!values.length) {

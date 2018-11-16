@@ -32,7 +32,7 @@ export class LocalDataProvider {
     return this.storage.get('msg_details');
   }
 
-  setThread(thread: Thread){
+  setThread(thread: any){
     return this.storage.set('thread', thread);
   }
 
