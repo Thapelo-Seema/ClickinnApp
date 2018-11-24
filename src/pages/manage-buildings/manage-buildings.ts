@@ -32,4 +32,8 @@ export class ManageBuildingsPage {
   	this.navCtrl.push('BuildingsPage');
   }
 
+  gotoAparts(){
+    this.navCtrl.push('SavedApartmentsPage')
+  }
+
 }

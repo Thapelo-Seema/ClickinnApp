@@ -40,8 +40,17 @@ export class EditPropertyPage {
   propertyImagesAdded: boolean = false;
   showAddedImages: boolean = false;
   nearby: string = '';
+  predictionLoading: boolean = false;
+  connectionError: boolean = false;
   predictionsNby: any[] = [];
   imagesLoaded: boolean[] = 
+      [false, false, false, false, false, false, false, false, false, false,
+       false, false, false, false, false, false, false, false, false, false, 
+       false,false, false, false, false, false, false, false, false, false,
+       false,false, false, false, false, false, false, false, false, false,
+       false,false, false, false, false, false, false, false, false, false
+       ];
+  imagesLoaded2: boolean[] = 
       [false, false, false, false, false, false, false, false, false, false,
        false, false, false, false, false, false, false, false, false, false, 
        false,false, false, false, false, false, false, false, false, false,
@@ -60,14 +69,14 @@ export class EditPropertyPage {
     private file_upload_svc: FileUploadSvcProvider,
     private map_svc: MapsProvider,
     private alertCtrl: AlertController) {
-    this.accom_svc.loading.subscribe(data =>{
+    /*this.accom_svc.loading.subscribe(data =>{
       this.loadingMore = data;
     })
 
     this.accom_svc.done.subscribe(data =>{
       this.done = data;
       if(this.done == true) this.loadingMore = false;
-    })
+    })*/
   	this.property = this.object_init.initializeProperty();
   	this.local_db.getProperty().then(prop =>{
   		if(prop){
@@ -78,28 +87,41 @@ export class EditPropertyPage {
             this.imagesLoaded.push(false);
   		      return prop.images[imageId]
   		    })
+          this.loading = false;
         }else{
           console.log('apart images: ', prop.images)
           this.images = prop.images;
           this.propImgCount = prop.images.length;
+          this.loading = false;
         }
-		    console.log(this.images);
-  			//this.apartments = this.accom_svc.getPropertyApartments(prop.prop_id);
+  			this.apartments = this.accom_svc.getPropertyApartments(prop.prop_id);
   			this.accom_svc.getPropertyApartments(prop.prop_id)
-  			
+        .pipe(take(1))
+        .subscribe(aparts =>{
+          aparts.forEach(apart =>{
+            this.imagesLoaded2.push(false)
+          })
+        })
   			this.accom_svc.getPropertyById(prop.prop_id)
   			.pipe(
   				take(1)
   			)
   			.subscribe(ppty =>{
   				this.property = this.object_init.initializeProperty2(ppty);
-  			})
+  			},
+        err =>{
+          this.toastCtrl.create({
+            message: err.message,
+            duration: 3000
+          })
+          .present()
+        })
   		}
   	})
   }
 
   ionViewDidLoad() {
-    this.monitorEnd();
+   // this.monitorEnd();
   }
 
   gotoApartment(apartment: Apartment){
@@ -176,7 +198,11 @@ export class EditPropertyPage {
           this.showAddedImages = false;
         })
         .catch(err =>{
-          console.log(err);
+          this.toastCtrl.create({
+            message: 'Property not updated...please check your connection and try again',
+            duration: 4000
+          })
+          .present()
         })
       }
     })
@@ -220,7 +246,11 @@ export class EditPropertyPage {
           .present()
         })
         .catch(err =>{
-          console.log(err);
+          this.toastCtrl.create({
+            message: 'Please check your internet connection and try again...images not ulploaded',
+            duration: 4000
+          })
+          .present()
           this.loading = false;
         })
       }
@@ -282,18 +312,21 @@ export class EditPropertyPage {
   }
 
   getPredictionsNby(event){
-    this.loading = true;
+    this.predictionLoading = true;
     if(event.key === "Backspace" || event.code === "Backspace"){
       setTimeout(()=>{
         this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
           console.log(data);
           this.predictionsNby = [];
           this.predictionsNby = data;
-          this.loading = false;
+          this.predictionLoading = false;
         })
         .catch(err => {
-          this.errHandler.handleError(err);
-          this.loading = false;
+          console.log('Error 1')
+           if(this.connectionError == false)
+            this.errHandler.handleError({message: 'Your internet connection is faulty please try again once a proper connection is established'});
+            this.predictionLoading = false;
+            this.connectionError = true;
         })
       }, 3000)
     }else{
@@ -301,16 +334,19 @@ export class EditPropertyPage {
         console.log(data);
         this.predictionsNby = [];
         this.predictionsNby = data;
-        this.loading = false;
+        this.predictionLoading = false;
       })
       .catch(err => {
-        this.errHandler.handleError(err);
-        this.loading = false;
+        console.log('Error 1')
+           if(this.connectionError == false)
+            this.errHandler.handleError({message: 'Your internet connection is faulty please try again once a proper connection is established'});
+            this.predictionLoading = false;
+            this.connectionError = true;
       })
     }
   }
 
-  monitorEnd(){
+  /*monitorEnd(){
     //console.log('Content scrollHeight = ', this.content.scrollHeight)
     this.content.ionScrollEnd.subscribe(ev =>{
     let height = ev.scrollElement.scrollHeight;
@@ -320,6 +356,6 @@ export class EditPropertyPage {
         this.accom_svc.morePropertyApartments(this.property)
       }
     })
-  }
+  }*/
 
 }

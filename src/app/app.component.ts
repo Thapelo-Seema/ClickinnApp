@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnDestroy } from '@angular/core';
 import { Platform, ToastController, AlertController } from 'ionic-angular';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { StatusBar } from '@ionic-native/status-bar';
@@ -14,6 +14,7 @@ import { Push, PushOptions, PushObject } from '@ionic-native/push';
 import { Thread } from '../models/thread.interface';
 import { DepositProvider } from '../providers/deposit/deposit';
 import { Network } from '@ionic-native/network';
+import { Subscription } from 'rxjs-compat/Subscription'
 
 @Component({
   templateUrl: 'app.html'
@@ -22,7 +23,8 @@ export class MyApp {
   rootPage:any;
   loading: boolean = true;
   user: User;
-  authState: any;
+  userSubs: Subscription;
+  authState: Subscription;
   online: boolean = false;
   dpLoaded: boolean = false;
   notificationObject: any = null;
@@ -73,9 +75,14 @@ export class MyApp {
       this.monitorOfflineState();
     })
     .catch(err =>{
+      console.log('theres an error...')
       this.errHandler.handleError(err);
       this.loading = false;
     })
+  }
+
+  ngOnDestroy(){
+
   }
   //Navigate to the users profile
   gotoProfile(){
@@ -112,6 +119,12 @@ export class MyApp {
     })
   }
 
+  gotoDeposits(){
+    this.loading = true;
+    this.navCtrl.push('DepositsPage');
+    this.loading = false;
+  }
+
   gotoChats(){
     this.loading = true;
     this.navCtrl.push('ChatsPage');
@@ -125,6 +138,8 @@ export class MyApp {
   }
   //Change the users authState, remove the users local copy
   logout(){
+    this.userSubs.unsubscribe();
+    this.authState.unsubscribe();
     this.afAuth.auth.signOut().then(() =>{
       this.navCtrl.setRoot('LoginPage');  
     }) 
@@ -176,10 +191,6 @@ export class MyApp {
               });
               notifAlert.present();
 
-              setTimeout(function () {
-                  notifAlert.dismiss()
-              }, 5000);
-
           }else {
               //if user NOT using app and push notification comes - NOT working, redirect to default rootPage
               this.routeToNotificationSource(notification.additionalData.key_code, 
@@ -209,7 +220,7 @@ export class MyApp {
         }else {
             //if user NOT using app and push notification comes - NOT working, redirect to default rootPage
             this.routeToNotificationSource(notification.additionalData.key_code, 
-              notification.additionalData.thread_id, notification.additionalData.deposit_id);
+            notification.additionalData.thread_id, notification.additionalData.deposit_id);
         }
       }
       
@@ -292,19 +303,19 @@ export class MyApp {
         switch (code) {
           case "clickinn_confirmed_deposit":
             message = `Clickinn has confirmed payment of ${dep.apartment.deposit} for the ${dep.apartment.room_type} by ${dep.by.firstname}.`
-            title = 'Deposit payment confirmation'
+            title = 'DEPOSIT PAYMENT CONFIRMATION'
             break;
           case "tenant_confirmed_deposit":
             message = `${dep.by.firstname} confirmed a deposit payment of ${dep.apartment.deposit} for the ${dep.apartment.room_type}, please await confirmation of reciept from Clickinn and ALLOW the tenant to move in once you've recieved confirmation.`
-            title = 'Deposit payment claim'
+            title = 'DEPOSIT PAYMENT CLAIM'
             break;
           case "tenant_cancelled_deposit":
             message = `${dep.by.firstname} cancelled the deposit payment of ${dep.apartment.deposit} for the ${dep.apartment.room_type}.`
-            title = 'Deposit payment cancellation'
+            title = 'DEPOSIT PAYMENT CANCELLATION'
             break;
           case "agent_confirmed_deposit":
             message = `Your deposit for the ${dep.apartment.room_type} at ${dep.apartment.property.address.description} has been confirmed. You can chat with the landlord for further move-in arrangements.`
-            title = 'Deposit payment recieved'
+            title = 'DEPOSIT PAYMENT RECIEVED'
             break;
         }
         let notifAlert = this.alertCtrl.create({
@@ -378,7 +389,7 @@ export class MyApp {
   //Check for authState and sync user data if possible
   initializeAuthenticatedUser(){
     if(this.afAuth.auth.currentUser){
-      this.afs.collection('Users').doc<User>(this.afAuth.auth.currentUser.uid).valueChanges()
+      this.userSubs = this.afs.collection('Users').doc<User>(this.afAuth.auth.currentUser.uid).valueChanges()
       .subscribe(user =>{
         if(user){
           this.user = user;
@@ -428,7 +439,7 @@ export class MyApp {
 
   syncAuthenticatedUser(){
     if(this.afAuth.auth.currentUser){
-      this.afs.collection('Users').doc<User>(this.afAuth.auth.currentUser.uid).valueChanges()
+      this.userSubs = this.afs.collection('Users').doc<User>(this.afAuth.auth.currentUser.uid).valueChanges()
       .subscribe(user =>{
         if(user){
           this.user = user;

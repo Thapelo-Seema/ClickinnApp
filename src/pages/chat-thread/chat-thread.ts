@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { IonicPage, NavController, NavParams, Content } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, Content , List} from 'ionic-angular';
 import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
 import { ChatMessage } from '../../models/chatmessage.interface';
 import { Observable } from 'rxjs-compat';
@@ -26,6 +26,7 @@ export class ChatThreadPage {
   thread: Observable<ChatMessage[]>;
   @ViewChild('scroller') feedContainer: ElementRef;
   @ViewChild(Content) content: Content;
+  @ViewChild(List, {read: ElementRef}) chatList: ElementRef;
   message: ChatMessage;
   text: string = '';
   user: User;
@@ -34,6 +35,7 @@ export class ChatThreadPage {
   threadInfo: Thread; 
   threads: Thread[] = [];
   loading: boolean = false;
+  mutationObserver: MutationObserver;
   constructor(
     public navCtrl: NavController, 
     public navParams: NavParams, 
@@ -43,21 +45,19 @@ export class ChatThreadPage {
     private user_svc: UserSvcProvider,
     private toast_svc: ToastSvcProvider){
     
-  	this.threadInfo = this.navParams.data;
-    console.log('navParams  ', this.navParams.data.thread_id);
     
   	this.user = this.object_init.initializeUser();
     this.storage.getThread().then(thread =>{
       this.threadInfo = thread;
-      this.chat_svc.initGetThreadChats(thread.thread_id)
-      this.chat_svc.loading.subscribe(data =>{
+      //this.chat_svc.initGetThreadChats(thread.thread_id)
+      /*this.chat_svc.loading.subscribe(data =>{
       this.loadingMore = data;
     })
 
     this.chat_svc.done.subscribe(data =>{
       this.done = data;
       if(this.done == true) this.loadingMore = false;
-    })
+    })*/
       this.thread = this.chat_svc.getThreadChats(thread.thread_id);
       this.chat_svc.getThreadChats(thread.thread_id)
       .pipe(
@@ -69,18 +69,24 @@ export class ChatThreadPage {
           this.toast_svc.showToast('You have no messages from this chat, they may have been deleted...');
           this.loading = false;
         }
-        console.log('chats ', threadd)
+      },
+      err =>{
+        this.toast_svc.showToast(err.message);
+        this.loading = false;
       })
     })
   	.catch(err => console.log(err))
   	this.message = this.object_init.initializeChatMessage();
 
   	this.storage.getUser().then(user =>{
-      this.chat_svc.getThreads(user).subscribe(threads =>{
+      this.chat_svc.getThreads(user).pipe(take(1)).subscribe(threads =>{
         console.log('Threads: ', threads);
         this.threads = threads;
+        threads.forEach(th =>{
+          if(th.thread_id == this.threadInfo.thread_id) this.threadInfo = th;
+        })
       })
-      this.user_svc.getUser(user.uid).subscribe(synced_user =>{
+      this.user_svc.getUser(user.uid).pipe(take(1)).subscribe(synced_user =>{
         console.log('user changed...', synced_user.threads);
         this.user = this.object_init.initializeUser2(synced_user);
       })
@@ -88,24 +94,29 @@ export class ChatThreadPage {
   }
 
   ionViewDidLoad() {
-    console.log('chat thread loaded')
-    this.monitorEnd()
-    this.scrollToBottom();
+    this.mutationObserver = new MutationObserver((mutations) => {
+            this.content.scrollToBottom();
+        });
+ 
+        this.mutationObserver.observe(this.chatList.nativeElement, {
+            childList: true
+        });
   }
 
   ionViewDidLeave(){
-    this.chat_svc.reset();
-    this.chat_svc.initGetThreads(this.user);
+   // this.chat_svc.reset();
+   // this.chat_svc.initGetThreads(this.user);
   }
 
   scrollToBottom(){
+    console.log('scrolling...')
     this.content.scrollToBottom();
   }
 
   handleSubmit(event){
     if(event.keyCode === 13){
       this.send();
-      this.scrollToBottom();
+      //this.scrollToBottom();
     }
   }
 
@@ -120,10 +131,10 @@ export class ChatThreadPage {
   	this.message.to.uid = this.threadInfo.uid;
   	this.chat_svc.sendMessage(this.message, this.threads);
   	this.text = '';
-  	this.scrollToBottom();
+  	//this.scrollToBottom();
   }
 
-  monitorEnd(){
+  /*monitorEnd(){
     //console.log('Content scrollHeight = ', this.content.scrollHeight)
     this.content.ionScrollEnd.subscribe(ev =>{
     let height = ev.scrollElement.scrollHeight;
@@ -133,6 +144,6 @@ export class ChatThreadPage {
         this.chat_svc.moreThreadChats(this.threadInfo.thread_id)
       }
     })
-  }
+  }*/
 
 }

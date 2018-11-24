@@ -17,5 +17,8 @@ export interface Apartment{
 	search_rating?: number;
 	type: string;
 	timeStamp: number;
+	complete?: boolean;
+	timeStampModified?: number;
+	user_id?: string;
 
 }

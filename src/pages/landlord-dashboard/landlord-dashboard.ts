@@ -26,7 +26,7 @@ export class LandlordDashboardPage {
   }
 
   gotoHome(){
-    this.appt_svc.reset();
+    //this.appt_svc.reset();
     this.navCtrl.setRoot('WelcomePage');
   }
 

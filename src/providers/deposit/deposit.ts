@@ -6,6 +6,10 @@ import { Observable } from 'rxjs-compat';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/merge';
+import { map } from 'rxjs-compat/operators/map';
+import { take } from 'rxjs/operators/take';
+import { User } from '../../models/users/user.interface';
 
 
 /*
@@ -35,6 +39,16 @@ export class DepositProvider {
   	return this.afs.collection('Deposits').doc(id.id).set(lDep);
   }
 
+  updateUserBalance(uid: string, amount: number){
+    return this.afs.collection('Users').doc<User>(uid).valueChanges()
+    .pipe(take(1))
+    .subscribe(user =>{
+      let newUser = user;
+      newUser.balance = user.balance + amount;
+     return this.afs.collection('Users').doc<User>(uid).set(newUser)
+    })
+  }
+
   updateDeposit(deposit: ATMDeposit): Promise<void>{
   	return this.afs.collection('Deposits').doc(deposit.id).set(deposit);
   }
@@ -49,7 +63,23 @@ export class DepositProvider {
   }
 
   getHostDeposits(uid: string){
-  	return this.afs.collection('Deposits', ref => ref.where('to.uid', '==', uid))
+  	return this.afs.collection<ATMDeposit>('Deposits', ref => 
+      ref.where('to.uid', '==', uid)
+      ).valueChanges()
+  }
+
+  getTenantDeposits(uid: string){
+    return this.afs.collection<ATMDeposit>('Deposits', ref => 
+      ref.where('by.uid', '==', uid)
+      ).valueChanges()
+  }
+
+  getUserDeposits(uid: string){
+    return this.afs.collection<ATMDeposit>('Deposits', ref => ref.orderBy('time_initiated', 'desc')
+      ).valueChanges()
+    .pipe(
+      map(deps => deps.filter(dep => (dep.by.uid == uid) || (dep.to.uid == uid)))
+    )
   }
 
   initGetHostDeposits(uid: string){

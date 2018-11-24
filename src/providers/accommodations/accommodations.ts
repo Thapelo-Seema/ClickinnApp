@@ -42,6 +42,11 @@ export class AccommodationsProvider {
     return null
   }
 
+  reset(){
+    console.log('reseting...')
+    this._data.next([])
+    this._done.next(false);
+  }
 
   // Maps the snapshot to usable format the updates source
   private mapAndUpdate(col: AngularFirestoreCollection<any>) {
@@ -146,18 +151,18 @@ export class AccommodationsProvider {
   }
 
   getUserApartments(uid: string){
-    let first = this.afs.collection<Apartment>('Apartments', ref => 
+    return this.afs.collection<Apartment>('Apartments', ref => 
       ref.where('property.user_id', '==', uid)
       .orderBy('timeStamp', 'desc')
-      .limit(10)
-      )
+      ).valueChanges()
+  }
 
-    this.mapAndUpdate(first);
-
-    this.data = this._data.asObservable()
-    .scan((acc, val) =>{
-      return acc.concat(val)
-    })
+  getUserUnfinishedApartments(uid: string): Observable<Apartment[]>{
+    return this.afs.collection<Apartment>('Apartments', ref =>
+      ref.where('property.user_id', '==', uid)
+         .where('complete', '==', false)
+         .orderBy('timeStampModified', 'desc'))
+         .valueChanges()
   }
 
   moreUserApartments(uid: string) {
@@ -212,14 +217,10 @@ export class AccommodationsProvider {
   }
 
   initUserFavs(favs: string[]){
-     if (this._done.value || this._loading.value) { return };
-
-    // loading
-    this._loading.next(true)
 
     const first = this.afs.collection<Apartment>('Apartments', ref =>{
-       return ref.orderBy('timeStamp', 'desc')
-       .limit(10)
+      return ref.orderBy('timeStamp', 'desc')
+      .limit(10)
      })
 
     this.mapAndUpdateFavs(first, favs);
@@ -243,18 +244,13 @@ export class AccommodationsProvider {
   }
 
   getPropertyApartments(prop_id: string){
-    const first = this.afs.collection<Apartment>('Apartments', ref => 
+    return this.afs.collection<Apartment>('Apartments', ref => 
       ref.where('prop_id', '==', prop_id)
       .orderBy('timeStamp', 'desc')
-      .limit(10)
-    )
+      
+    ).valueChanges()
 
-    this.mapAndUpdate(first);
-
-    this.data = this._data.asObservable()
-    .scan((acc, val) =>{
-      return acc.concat(val)
-    })
+ 
   }
 
   morePropertyApartments(prop_id){
@@ -322,6 +318,7 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 2');
@@ -334,6 +331,7 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 3');
@@ -345,6 +343,7 @@ export class AccommodationsProvider {
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 4');
@@ -355,6 +354,7 @@ export class AccommodationsProvider {
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 5');
@@ -364,6 +364,7 @@ export class AccommodationsProvider {
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 6');
@@ -372,6 +373,7 @@ export class AccommodationsProvider {
            .where('available', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 7');
@@ -384,6 +386,7 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 8');
@@ -395,6 +398,7 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 9');
@@ -405,6 +409,7 @@ export class AccommodationsProvider {
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 10');
@@ -414,6 +419,7 @@ export class AccommodationsProvider {
            .where('price', "<=", search_obj.maxPrice)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 11');
@@ -426,6 +432,7 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 12');
@@ -437,6 +444,7 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }
    else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
@@ -457,6 +465,7 @@ export class AccommodationsProvider {
            .where('price', "<=", search_obj.maxPrice)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }
    else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking){
@@ -470,6 +479,7 @@ export class AccommodationsProvider {
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 16');
@@ -480,6 +490,7 @@ export class AccommodationsProvider {
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.nsfas', '==', search_obj.nsfas)
+           .limit(15)
            .orderBy('price', 'asc')
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking){
@@ -491,6 +502,7 @@ export class AccommodationsProvider {
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 18');
@@ -500,6 +512,7 @@ export class AccommodationsProvider {
            .where('price', "<=", search_obj.maxPrice)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 19');
@@ -512,6 +525,7 @@ export class AccommodationsProvider {
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 20');
@@ -523,6 +537,7 @@ export class AccommodationsProvider {
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 21');
@@ -533,6 +548,7 @@ export class AccommodationsProvider {
            .where('property.parking', '==', search_obj.parking)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 22');
@@ -542,6 +558,7 @@ export class AccommodationsProvider {
            .where('price', "<=", search_obj.maxPrice)
            .where('property.parking', '==', search_obj.parking)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 23');
@@ -552,6 +569,7 @@ export class AccommodationsProvider {
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 24');
@@ -562,6 +580,7 @@ export class AccommodationsProvider {
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.parking', '==', search_obj.parking)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 24');
@@ -573,6 +592,7 @@ export class AccommodationsProvider {
            .where('property.parking', '==', search_obj.parking)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 25');
@@ -584,6 +604,7 @@ export class AccommodationsProvider {
            .where('property.parking', '==', search_obj.parking)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 26');
@@ -594,6 +615,7 @@ export class AccommodationsProvider {
            .where('property.parking', '==', search_obj.parking)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 27');
@@ -604,6 +626,7 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 28');
@@ -615,6 +638,7 @@ export class AccommodationsProvider {
            .where('property.laundry', '==', search_obj.laundry)
            .where('property.parking', '==', search_obj.parking)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 29');
@@ -625,6 +649,7 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.parking', '==', search_obj.parking)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 30');
@@ -635,6 +660,7 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 31');
@@ -646,6 +672,7 @@ export class AccommodationsProvider {
            .where('property.parking', '==', search_obj.parking)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
+           .limit(15)
           ).valueChanges()
    }else{
       console.log('case 32');
@@ -653,6 +680,7 @@ export class AccommodationsProvider {
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
            .orderBy('price', 'asc')
+           .limit(15)
         ).valueChanges()
     } 
   }

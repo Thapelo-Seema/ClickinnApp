@@ -164,9 +164,35 @@ export class ObjectInitProvider {
   		room_type: '',
   		search_rating: 0,
   		type: '',
-  		timeStamp: 0
+  		timeStamp: 0,
+      user_id: '',
+      complete: false,
+      timeStampModified: 0
   	}
   	return apartment;
+  }
+
+  initializeApartment2(apart: Apartment): Apartment{
+    let apartment: Apartment ={
+      available: apart.available ? apart.available : true,
+      dP: apart.dP ? apart.dP : this.initializeImage(),
+      deposit: apart.deposit ? apart.deposit: 0,
+      description: apart.description,
+      apart_id: apart.apart_id ? apart.apart_id: '',
+      images: apart.images ? apart.images : [this.initializeImage()],
+      occupiedBy: apart.occupiedBy ? apart.occupiedBy : this.initializeTenant(),
+      price: apart.price ? apart.price : 0,
+      prop_id: apart.prop_id ? apart.prop_id : '',
+      property: apart.property ? apart.property : this.initializeProperty(),
+      room_type: apart.room_type ? apart.room_type : '',
+      search_rating: apart.search_rating ? apart.search_rating : 0,
+      type: apart.type ? apart.type : '',
+      timeStamp: apart.timeStamp ? apart.timeStamp : 0,
+      user_id: apart.user_id ? apart.user_id: '',
+      complete: apart.complete ? apart.complete : false,
+      timeStampModified: apart.timeStampModified ? apart.timeStampModified : 0
+    }
+    return apartment;
   }
 
   initializeImage(): Image{
@@ -193,7 +219,9 @@ export class ObjectInitProvider {
   		prepaid_elec: false,
   		timeStamp: 0,
   		user_id: '',
-  		nearbys: ['Clickinn Offices']
+  		nearbys: ['Clickinn Offices'],
+      complete: false,
+      timeStampModified: 0
   	}
   	return property;
   }
@@ -212,7 +240,9 @@ export class ObjectInitProvider {
       prepaid_elec: prop.prepaid_elec,
       timeStamp: prop.timeStamp ? prop.timeStamp : 0,
       user_id: prop.user_id ? prop.user_id : '',
-      nearbys: prop.nearbys ? prop.nearbys : ['Clickinn Offices']
+      nearbys: prop.nearbys ? prop.nearbys : ['Clickinn Offices'],
+      complete: prop.complete,
+      timeStampModified: prop.timeStampModified
     }
     return property;
   }
@@ -237,7 +267,8 @@ export class ObjectInitProvider {
   		age: 0,
   		dob: new Date(),
   		id_no: '',
-  		gender: ''
+  		gender: '',
+      balance: 0
   	}
   	return user;
   }
@@ -262,7 +293,8 @@ export class ObjectInitProvider {
       age: userIn.age ? userIn.age: 0,
       dob: userIn.dob ? userIn.dob : new Date(),
       id_no: userIn.id_no ? userIn.id_no : '',
-      gender: userIn.gender ? userIn.gender : ''
+      gender: userIn.gender ? userIn.gender : '',
+      balance: userIn.balance
     }
     return user;
   }

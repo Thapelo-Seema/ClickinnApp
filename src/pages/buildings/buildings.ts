@@ -6,6 +6,8 @@ import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { Subscription } from 'rxjs-compat/Subscription';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 import { User } from '../../models/users/user.interface';
+import { Observable } from 'rxjs-compat/Observable';
+import { take } from 'rxjs-compat/operators/take';
 
 /**
  * Generated class for the BuildingsPage page.
@@ -21,7 +23,7 @@ import { User } from '../../models/users/user.interface';
 })
 export class BuildingsPage {
   @ViewChild(Content) content: Content;
-  buildings: Property[] = [];
+  buildings: Observable<Property[]> ;
   loading: boolean = true;
   loadingMore: boolean = false;
   done: boolean = false;
@@ -41,21 +43,21 @@ export class BuildingsPage {
   	private local_db: LocalDataProvider,
     private toast_svc: ToastSvcProvider){
 
-    this.accom_svc.loading.subscribe(data =>{
+    /*this.accom_svc.loading.subscribe(data =>{
       this.loadingMore = data;
     })
 
     this.accom_svc.done.subscribe(data =>{
       this.done = data;
       if(this.done == true) this.loadingMore = false;
-    })
+    })*/
   	this.local_db.getUser().then(user =>{
       this.user = user;
-      this.accom_svc.initUserProperties(user.uid)
-  		this.buildingSub =  this.accom_svc.getUsersProperties(user.uid)
+      this.buildings = this.accom_svc.getUsersProperties(user.uid)
+  		this.accom_svc.getUsersProperties(user.uid)
+      .pipe(take(1))
       .subscribe(props =>{
         if(props.length > 0){
-          this.buildings = props;
           props.forEach(prop =>{
             this.imagesLoaded.push(false);
           })
@@ -64,16 +66,19 @@ export class BuildingsPage {
           this.loading = false;
           this.toast_svc.showToast('You have no properties registered on Clickinn, go ahead and upload properties before using this feature.')
         }
-  		})
+  		},
+      err =>{
+        this.toast_svc.showToast(err.message);
+        this.loading = false;
+      })
   	})
   }
 
   ionViewDidLoad() {
-    this.monitorEnd()
+   // this.monitorEnd()
   }
 
   ionViewDidLeave(){
-    if(this.buildingSub) this.buildingSub.unsubscribe();
   }
 
   gotoProperty(prop: Property){
@@ -85,7 +90,7 @@ export class BuildingsPage {
     })
   }
 
-  monitorEnd(){
+ /* monitorEnd(){
     //console.log('Content scrollHeight = ', this.content.scrollHeight)
     this.content.ionScrollEnd.subscribe(ev =>{
     let height = ev.scrollElement.scrollHeight;
@@ -95,6 +100,6 @@ export class BuildingsPage {
         this.accom_svc.moreUserProperties(this.user.uid)
       }
     })
-  }
+  }*/
 
 }

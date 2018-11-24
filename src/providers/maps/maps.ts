@@ -175,7 +175,8 @@ at the DOM element referenced by mapRefA reference to the map is also returned*/
           service.getPlacePredictions({ input: searchText, componentRestrictions: {country: 'za'} }, 
           (predictions, status) =>{
             if (status != google.maps.places.PlacesServiceStatus.OK){
-              reject(new Error(status));
+              console.log('Error: ', status)
+              reject(status);
             }
               resolve(predictions);
           });

@@ -8,6 +8,7 @@ import { ErrorHandlerProvider } from '../../providers/error-handler/error-handle
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { FcmProvider } from '../../providers/fcm/fcm';
 import { Push, PushOptions, PushObject } from '@ionic-native/push';
+import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 //import { Thread } from '../../models/thread.interface';
 
 @IonicPage()
@@ -29,7 +30,7 @@ export class SignupPage {
      private errHandler: ErrorHandlerProvider, 
      private object_init: ObjectInitProvider,
      private fcm: FcmProvider,
-     //private platform: Platform,
+     private toast_svc: ToastSvcProvider,
      private push: Push) {
   	this.seeker = this.object_init.initializeUser();
   }
@@ -58,6 +59,13 @@ export class SignupPage {
 
   signin(){
     this.navCtrl.setRoot('LoginPage');
+  }
+
+  resetPassword(email: string){
+    this.afAuth.auth.sendPasswordResetEmail(email)
+    .then(() => {
+      this.toast_svc.showToast('Reset instructions sent to your email')
+    })
   }
 
   onNotifications(){

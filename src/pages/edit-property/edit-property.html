@@ -10,7 +10,7 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content style="background: #f4f4f4;">
+<ion-content>
 	
 	<ion-grid no-padding>
 		<ion-row>
@@ -18,16 +18,20 @@
 			</ion-col>
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6 style="padding: 15px 15px;">
 				<div text-center>
-					<h1 text-center>Property details</h1>
+					<h1 text-center>Property Details</h1>
 					<ion-item text-wrap padding-horizontal style=" border-top-right-radius: 9px; border-top-left-radius: 9px">
-						<h2>Address</h2>
-						<p> {{property?.address?.description}} </p>
+						<ion-label floating style="letter-spacing: 2px">Address</ion-label>
+						<ion-input type="text" [(ngModel)]="property.address.description"> </ion-input>
 					</ion-item>
-					<ion-item>
-			          <ion-label stacked>Places of interest within 10 min walk</ion-label>
+					<ion-item margin-top>
+			          <ion-label stacked style="letter-spacing: 2px">Places of interest within 10 min walk</ion-label>
 			          <ion-input type="search" [(ngModel)]="nearby" placeholder="eg Campus Square Mall" (keyup)="getPredictionsNby($event)">
 			          </ion-input>
 			        </ion-item>
+			        <div *ngIf="predictionLoading" style="background: rgba(0, 0, 0, 0.8); color: white; padding-top: 5px; padding-bottom: 5px;  text-align: center; z-index: 1">
+			            <ion-spinner name="ios"></ion-spinner> &nbsp;&nbsp;
+			            Loading predictions...
+			          </div>
 			        <ion-list *ngIf="predictionsNby">
 			          <button ion-item *ngFor="let pred of predictionsNby" (click)="addNearby(pred?.description)">{{pred?.description}}</button>
 			        </ion-list>
@@ -36,23 +40,23 @@
 			            <ion-icon name="close" start></ion-icon> &nbsp;&nbsp;&nbsp;{{ nby }}
 			          </ion-item>
 			        </ion-list>
-					<ion-item text-wrap padding-horizontal>
-						<ion-label floating>Description</ion-label>
+					<ion-item text-wrap padding-horizontal no-lines>
+						<ion-label style="letter-spacing: 2px" floating>Description</ion-label>
 						<ion-textarea rows="7" [(ngModel)]="property.common"></ion-textarea>
 					</ion-item>
-					<ion-item padding-horizontal>
+					<ion-item padding-horizontal no-lines>
 					   <ion-label>Parking</ion-label>
 					   <ion-checkbox [(ngModel)]="property.parking"></ion-checkbox>
 					</ion-item>
-					<ion-item padding-horizontal>
+					<ion-item padding-horizontal no-lines>
 					   <ion-label>WiFi</ion-label>
 					   <ion-checkbox [(ngModel)]="property.wifi"></ion-checkbox>
 					</ion-item>
-					<ion-item padding-horizontal>
+					<ion-item padding-horizontal no-lines>
 					   <ion-label>NSFAS</ion-label>
 					   <ion-checkbox [(ngModel)]="property.nsfas"></ion-checkbox>
 					</ion-item>
-					<ion-item padding-horizontal style=" border-bottom-right-radius: 9px; border-bottom-left-radius: 9px">
+					<ion-item padding-horizontal no-lines style=" border-bottom-right-radius: 9px; border-bottom-left-radius: 9px">
 					   <ion-label>Laundry facilities</ion-label>
 					   <ion-checkbox [(ngModel)]="property.laundry"></ion-checkbox>
 					</ion-item>
@@ -88,15 +92,21 @@
 					</div>
 				</div>
 
-				<ion-buttons padding-vertical>
-					<button ion-button clear (click)="save()">Save changes &nbsp;&nbsp;&nbsp; <ion-icon name="cloud-upload"></ion-icon> </button>
+				<ion-buttons text-center padding-vertical>
+					<button ion-button color="clickinn" outline (click)="save()">Save changes &nbsp;&nbsp;&nbsp; <ion-icon name="cloud-upload"></ion-icon> </button>
 				</ion-buttons>
 				<hr>
 				
-					<h1 text-center padding>Property apartments</h1>
-					<accommodations *ngFor="let apartment of accom_svc?.data | async" (click)="gotoApartment(apartment)" [apartment]="apartment">
-					</accommodations>
-					<div *ngIf="loadingMore" style="text-align: center">
+					<h1 text-center padding>Property Apartments</h1>
+					<button ion-item margin-vertical text-wrap *ngFor="let apartment of apartments | async; let i = index" (click)="gotoApartment(apartment)" >
+				      <ion-avatar item-start>
+				        <img src="{{apartment?.dP?.url}}" (load)="imagesLoaded2[i] = true" [hidden]="!imagesLoaded2[i]" imageViewer/>
+				        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded2[i]" />
+				      </ion-avatar>
+				      <p>{{apartment?.room_type}}, R{{apartment?.price}}</p>
+				      <p>{{apartment?.property?.vicinity}}</p>
+				    </button>
+					<div *ngIf="loading" style="text-align: center">
 					    <ion-spinner></ion-spinner>
 					</div>
 				

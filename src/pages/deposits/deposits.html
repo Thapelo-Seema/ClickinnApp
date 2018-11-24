@@ -5,14 +5,31 @@
   Ionic pages and navigation.
 -->
 <ion-header>
-
-  <ion-navbar>
-    <ion-title>deposits</ion-title>
+  <ion-navbar color="clickinn">
+    <ion-title text-wrap style="font-family: 'Ubuntu', sans-serif;">Deposits &nbsp;&nbsp;&nbsp;&nbsp;
+    	|<font style="color:#32db64">&nbsp;&nbsp;R{{balance}}</font></ion-title>
   </ion-navbar>
-
 </ion-header>
 
 
-<ion-content padding>
+<ion-content>
+	<ion-grid no-padding>
+	    <ion-row>
+	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+	        </ion-col>
+	        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				<ion-item *ngFor="let deposit of deposits | async" text-wrap (click)="gotoDeposit(deposit)" >
+					<strong> R{{deposit?.apartment?.deposit}} </strong>
+					<p> {{deposit?.apartment?.room_type}} </p>
+					<p> {{deposit?.apartment?.property?.address?.description}} </p>
+				</ion-item>
+				<div *ngIf="loading" style="text-align: center;">
+					<ion-spinner></ion-spinner>
+				</div>
+			</ion-col>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+	        </ion-col>
+	    </ion-row>
+	</ion-grid>
 
 </ion-content>

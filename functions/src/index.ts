@@ -29,7 +29,7 @@ exports.bookingNotification = functions.firestore.document(`Viewings/{viewing_id
 	
 	const payload = {
 		data: {
-			title: `Clickinn viewing appointment`,
+			title: `CLICKINN VIEWING APPOINTMENT`,
           	body: `${booker.displayName} wants to view the ${room_type} at ${address}`,
           	icon: booker.dp ? booker.dp : clickinn_icon,
           	sound: 'default',
@@ -68,7 +68,7 @@ exports.depositNotification = functions.firestore.document(`Deposits/{deposit_id
 	
 	const payload = {
 		data: {
-			title: `Clickinn deposit alert`,
+			title: `CLICKINN DEPOSIT ALERT`,
           	body: `${tenant.firstname} wants to deposit the ${room_type} at ${address}, should they go ahead ?`,
           	icon: tenant.dp ? tenant.dp : clickinn_icon,
           	sound: 'default',
@@ -125,7 +125,7 @@ exports.bookingConfirmation = functions.firestore.document(`Viewings/{viewing_id
 
 	const payload = {
 		data: {
-			title: `Clickinn viewing appointment`,
+			title: `ClICKINN APPOINTMENT`,
           	body: notifyObject.message,
           	icon: clickinn_icon,
           	sound: 'default',
@@ -204,7 +204,7 @@ exports.depositConfirmation = functions.firestore.document(`Deposits/{deposit_id
 
 	const payload = {
 		data: {
-			title: `Clickinn Deposit Info`,
+			title: `CLICKINN DEPOSIT`,
           	body: notifyObject.message,
           	icon: clickinn_icon,
           	sound: 'default',
@@ -242,7 +242,7 @@ exports.newThreadNotification = functions.firestore.document(`Threads/{thread_id
     alt=media&token=6c24891a-8e7d-43f6-ab84-5f196fdf4ed5`;
 	const payload = {
 		data : {
-		 	title: `New message from ${by.displayName}`,
+		 	title: `NEW MESSAGE FROM ${by.displayName}`,
           	body: text,
           	icon: by.dp ? by.dp : clickinn_icon,
           	sound: 'default',
@@ -275,7 +275,7 @@ exports.chatMessageNotification = functions.firestore.document(`Threads/{thread_
     alt=media&token=6c24891a-8e7d-43f6-ab84-5f196fdf4ed5`;
 	const payload = {
 		data : {
-		 	title: `New message from ${by.displayName}`,
+		 	title: `NEW MESSAGE FROM ${by.displayName}`,
           	body: text,
           	icon: by.dp ? by.dp : clickinn_icon,
           	sound: 'default',

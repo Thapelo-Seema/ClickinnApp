@@ -16,4 +16,6 @@ export interface Property{
 	timeStamp: number;
 	user_id: string
 	nearbys?: string[];
+	complete?: boolean;
+	timeStampModified?: number;
 }

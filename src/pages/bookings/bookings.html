@@ -9,7 +9,7 @@
     <ion-title text-center>Appointments</ion-title>
   </ion-navbar>
 </ion-header>
-<ion-content padding style="background: #f4f4f4;">
+<ion-content style="background: #f4f4f4;">
 	
 	<ion-grid>
 	    <ion-row>
@@ -36,8 +36,19 @@
 					        <img src="{{app?.bookerDp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]"  imageViewer />
 							<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 					      </ion-avatar>
-					      <h1 style="color: #32db64; overflow-wrap: normal;">For {{app?.date?.toDate() | date : "medium" }}</h1>
-					      <p> 
+					      <p style="text-align: center">
+					      	<strong style="overflow-wrap: normal">For {{app?.date?.toDate() | date : "medium" }}</strong>
+					      </p>
+					      <p *ngIf="app?.host_declines && !app?.seeker_cancels && !app?.host_confirms" style="background: rgba(180,0,0,0.3); padding: 15px"> 
+					      	{{app?.booker_name ? app?.booker_name : 'Anonymous'}} wants to view the {{app?.apart_type ? app?.apart_type : 'room'}} at {{app?.address}}
+					      </p>
+					      <p *ngIf="app?.host_confirms && !app?.seeker_cancels && !app?.host_declines" style="background: rgba(0,180,0,0.3); padding: 15px"> 
+					      	{{app?.booker_name ? app?.booker_name : 'Anonymous'}} wants to view the {{app?.apart_type ? app?.apart_type : 'room'}} at {{app?.address}}
+					      </p>
+					      <p *ngIf="!app?.host_confirms && app?.seeker_cancels && !app?.host_declines" style="background: rgba(180,0,0,0.3); padding: 15px"> 
+					      	{{app?.booker_name ? app?.booker_name : 'Anonymous'}} wants to view the {{app?.apart_type ? app?.apart_type : 'room'}} at {{app?.address}}
+					      </p>
+					      <p *ngIf="!app?.host_confirms && !app?.host_declines && !app?.seeker_cancels"> 
 					      	{{app?.booker_name ? app?.booker_name : 'Anonymous'}} wants to view the {{app?.apart_type ? app?.apart_type : 'room'}} at {{app?.address}}
 					      </p>
 					    </ion-item>
@@ -46,11 +57,16 @@
 					        <img src="{{app?.apart_dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer />
 					        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 					      </ion-avatar>
-					      <h1 style="color: #32db64; overflow-wrap: normal;">For {{app?.date?.toDate() | date : "medium" }}</h1>
-					      <p *ngIf="app?.host_declines || app?.seeker_cancels" style="background: rgba(180,0,0,0.3); padding: 15px"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
+					      <p style="text-align: center">
+					      	<strong style="overflow-wrap: normal;">For {{app?.date?.toDate() | date : "medium" }}</strong>
+					      </p>
+					      <p *ngIf="app?.host_declines && !app?.seeker_cancels && !app?.host_confirms" style="background: rgba(180,0,0,0.3); padding: 15px"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
 					      	{{app?.address}}
 					      </p>
-					      <p *ngIf="app?.host_confirms && !app?.seeker_cancels" style="background: rgba(0,180,0,0.3); padding: 15px"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
+					      <p *ngIf="app?.host_confirms && !app?.seeker_cancels && !app?.host_declines" style="background: rgba(0,180,0,0.3); padding: 15px"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
+					      	{{app?.address}}
+					      </p>
+					      <p *ngIf="!app?.host_declines && app?.seeker_cancels && !app?.host_confirms" style="background: rgba(180,0,0,0.3); padding: 15px"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
 					      	{{app?.address}}
 					      </p>
 					      <p *ngIf="!app?.host_confirms && !app?.host_declines && !app?.seeker_cancels"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at

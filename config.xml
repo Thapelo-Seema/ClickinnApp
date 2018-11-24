@@ -15,9 +15,9 @@
     <preference name="android-minSdkVersion" value="19" />
     <preference name="multiDexEnabled " value="true" />
     <preference name="BackupWebStorage" value="none" />
+    <preference name="SplashShowOnlyFirstTime" value="true" />
     <preference name="SplashMaintainAspectRatio" value="true" />
     <preference name="FadeSplashScreenDuration" value="300" />
-    <preference name="SplashShowOnlyFirstTime" value="true" />
     <preference name="SplashScreen" value="screen" />
     <preference name="FadeSplashScreen" value="false" />
     <preference name="AutoHideSplashScreen" value="false" />
@@ -94,4 +94,5 @@
     <plugin name="phonegap-plugin-push" spec="2.2.3" />
     <plugin name="cordova-plugin-network-information" spec="2.0.1" />
     <engine name="android" spec="7.1.1" />
+    <preference name="SplashScreenDelay" value="3000" />
 </widget>

@@ -7,7 +7,7 @@
 	<div *ngIf="loading" class="centered_on_screen">
 	    <ion-spinner name="ios"></ion-spinner>
 	</div>
-	<ion-grid>
+	<ion-grid no-padding>
       <ion-row>
         <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
         </ion-col>
@@ -26,6 +26,7 @@
 			<ion-item padding style="background: transparent; color: white">
 			  <ion-label>Apartment Type</ion-label>
 			  <ion-select [(ngModel)]="search_object.apartment_type" required>
+			  	<ion-option value="Back room">Back room</ion-option>
 			    <ion-option value="2 Bedroom flat">2 Bedroom flat</ion-option>
 			    <ion-option value="1 Bedroom flat">1 Bedroom flat</ion-option>
 			    <ion-option value="Bachelor flat">Bachelor/Studio flat</ion-option>

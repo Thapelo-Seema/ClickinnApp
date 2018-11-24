@@ -3,4 +3,5 @@ export interface Thread{
 	uid: string; 
 	displayName: string;
 	dp: string;
+	timeStampModified?: number;
 }

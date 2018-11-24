@@ -35,19 +35,19 @@ export class ChatsPage {
     private storage: LocalDataProvider,
     private toastCtrl: ToastController){
 
-    this.chat_svc.loading.subscribe(data =>{
+    /*this.chat_svc.loading.subscribe(data =>{
       this.loadingMore = data;
     })
 
     this.chat_svc.done.subscribe(data =>{
       this.done = data;
       if(this.done == true) this.loadingMore = false;
-    })
+    })*/
     
   	this.storage.getUser().then(user =>{
       if(user){
         this.user = user;
-        this.chat_svc.initGetThreads(user)
+        //this.chat_svc.initGetThreads(user)
         this.threads = this.chat_svc.getThreads(user)
         this.chat_svc.getThreads(user)
         .pipe(
@@ -61,12 +61,12 @@ export class ChatsPage {
             this.loading = false;
           }else{
             this.loading = false;
-            this.showToast('You currently have no chats, if you had some previous chats, they may have been deleted')
+            this.showToast('You currently have no chats')
           }
         },
         (err) =>{
           this.loading = false;
-          this.showToast('There was an error fecthing your chats, if error persists please contact clickinn support');
+          this.showToast(err.message);
         }
         )
       }
@@ -74,8 +74,7 @@ export class ChatsPage {
   }
 
   ionViewDidLoad(){
-    console.log('chats loaded')
-    this.monitorEnd();
+   
   }
 
   gotoThread(thread: any){
@@ -89,13 +88,12 @@ export class ChatsPage {
     }
     this.storage.setThread(shapedThread).then(val =>{
       this.navCtrl.push('ChatThreadPage', shapedThread);
-      this.chat_svc.reset();
     })
   	.catch(err => console.log(err))
   }
 
   ionViewDidLeave(){
-    this.chat_svc.reset();
+    //this.chat_svc.reset();
   }
 
   showToast(text: string){
@@ -106,7 +104,7 @@ export class ChatsPage {
     toast.present()
   }
 
-  monitorEnd(){
+  /*monitorEnd(){
     //console.log('Content scrollHeight = ', this.content.scrollHeight)
     this.content.ionScrollEnd.subscribe(ev =>{
     let height = ev.scrollElement.scrollHeight;
@@ -116,6 +114,6 @@ export class ChatsPage {
         this.chat_svc.moreThreads(this.user)
       }
     })
-  }
+  }*/
 
 }

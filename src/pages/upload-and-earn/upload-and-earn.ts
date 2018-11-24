@@ -15,7 +15,7 @@ import { User } from '../../models/users/user.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
-
+import { Subscription } from 'rxjs-compat/Subscription';
 
 
 @IonicPage()
@@ -37,7 +37,10 @@ export class UploadAndEarnPage{
     room_type: '',
     type: 'loading...',
     timeStamp: 0,
-    occupiedBy: this.object_init.initializeTenant()
+    occupiedBy: this.object_init.initializeTenant(),
+    user_id: '',
+    complete: false,
+    timeStampModified: 0
   }
   building: Property ={
   	address: null,
@@ -52,7 +55,9 @@ export class UploadAndEarnPage{
   	timeStamp: 0,
   	user_id: '',
   	parking: false,
-  	prepaid_elec: false
+  	prepaid_elec: false,
+    complete: false,
+    timeStampModified: 0
   }
   buildings: Property[] = [];
   address: string = '';
@@ -74,7 +79,11 @@ export class UploadAndEarnPage{
   openList: boolean = false;
   onMobile: boolean = false;
   uploading: boolean = false;
+  existing: boolean = false;
   progss: number = 0;
+  apartments: Apartment[] = [];
+  apartmentsSub: Subscription;
+  propertySubs: Subscription;
   imagesLoaded: boolean[] = 
       [false, false, false, false, false, false, false, false, false, false,
        false, false, false, false, false, false, false, false, false, false, 
@@ -101,18 +110,39 @@ export class UploadAndEarnPage{
       this.storage.getUser().then(user =>{ //getting user from local storage
         this.user = user;
         this.building.user_id = user.uid;
-        this.accom_svc.getUsersProperties(user.uid).subscribe(buildings =>{
+        this.apartmentsSub = this.accom_svc.getUserApartments(user.uid)
+        .subscribe(aparts =>{
+          this.apartments = aparts;
+        })
+        this.propertySubs = this.accom_svc.getUsersProperties(user.uid).subscribe(buildings =>{
           this.buildings = buildings;
           buildings.forEach(bld =>{
             this.imagesLoaded.push(false);
           })
         })
+        if(this.navParams.data.prop_id != undefined){
+          console.log(this.navParams.data)
+          this.initializeExisting(this.navParams.data)
+        }
       })
     })
   }
 
   ionViewDidLoad() {
     //this.showAlert();
+  }
+
+  initializeExisting(apartment: Apartment){
+    this.existing = true;
+    this.storage.setApartment(apartment)
+    this.apartment = this.object_init.initializeApartment2(apartment);
+    this.building = this.object_init.initializeProperty2(apartment.property);
+  }
+
+  ionViewWillLeave(){
+    console.log('uplaod page unsubscrinbing...')
+    this.propertySubs.unsubscribe();
+    this.apartmentsSub.unsubscribe();
   }
 
   selectChange(e) {
@@ -194,14 +224,22 @@ export class UploadAndEarnPage{
   uploadApartment(){
     console.log('Uploading apartment...');
     this.uploading = true;
-    
+    if(this.apartment.dP.url == "assets/imgs/placeholder.jpg") this.apartment.dP = this.apartmentImages[0]
+      if(this.building.dP.url == "assets/imgs/placeholder.jpg") this.building.dP = this.propertyImages[0]
     if(this.buildingSelected){
+      this.apartment.complete = true;
+      this.apartment.timeStampModified = Date.now();
+      this.apartment.property.timeStampModified = Date.now();
       this.accom_svc.updateApartment(this.apartment).then(() =>{
         this.storage.setApartment(this.apartment)
         .then(apart =>{
           this.successful()
           this.uploading = false;
           this.navCtrl.push('InfoPage')
+        })
+        .catch(err =>{
+          this.errHandler.handleError(err);
+          this.uploading = false;
         })
       })
       .catch(err =>{
@@ -211,6 +249,10 @@ export class UploadAndEarnPage{
     }else{
       this.uploadBuildingPics().then(() =>{
         console.log('Uploaded building pics...', this.building.images)
+        this.building.timeStampModified = Date.now();
+        this.building.complete = true;
+        this.apartment.complete = true;
+        this.apartment.timeStampModified = Date.now();
         this.apartment.property = this.building;
         this.accom_svc.updateProperty(this.building)
         this.accom_svc.updateApartment(this.apartment).then(() =>{
@@ -220,6 +262,10 @@ export class UploadAndEarnPage{
             this.uploading = false;
             this.navCtrl.push('InfoPage')
           })
+          .catch(err =>{
+            this.errHandler.handleError(err);
+            this.uploading = false;
+          })
         })
         .catch(err =>{
           this.errHandler.handleError(err);
@@ -228,7 +274,7 @@ export class UploadAndEarnPage{
       })
       .catch(err =>{
         this.uploading = false;
-        console.log(err)
+        this.errHandler.handleError({message: 'Please check your connection and try uploading again'})
       })
     }
   }
@@ -262,7 +308,7 @@ export class UploadAndEarnPage{
         },
         (err) =>{
           //if there's an error log it in the console
-          this.errHandler.handleError(err);
+          reject(err.message)
           this.loading = false;
         },
         () =>{
@@ -272,7 +318,7 @@ export class UploadAndEarnPage{
             tempUrl = down_url;
             }, 
             err =>{
-              this.errHandler.handleError(err);
+              reject(err.message)
               this.loading = false;
             },
             () =>{
@@ -304,7 +350,7 @@ export class UploadAndEarnPage{
             }
           }).catch(err =>{
             this.loading = false;
-            this.errHandler.handleError(err);
+            reject(err)
           });
         })
       }else{
@@ -314,6 +360,22 @@ export class UploadAndEarnPage{
     })
   }
 
+  apartmentUpdateOrInit(){
+    if(this.existing){
+      this.initialApartUpdate();
+    }else{
+      this.initialApartUpload();
+    }
+  }
+
+  buildingUpdateOrInit(){
+    if(this.existing){
+      this.initialBuildinUpdate();
+    }else{
+      this.initialBuildinUpload();
+    }
+  }
+
   initialApartUpload(){
     this.loading = true;
     this.afs.collection('Apartments').add(this.apartment).then(apartRef =>{
@@ -321,7 +383,18 @@ export class UploadAndEarnPage{
       this.loading = false;    
     })
     .catch(err => {
-      this.errHandler.handleError(err);
+      this.errHandler.handleError({message: 'Progress not saved, please check your connection and try again'});
+      this.loading = false;
+    })
+  }
+
+  initialApartUpdate(){
+    this.loading = true;
+    this.afs.collection('Apartments').doc(this.apartment.apart_id).set(this.apartment).then(() =>{
+      this.loading = false;    
+    })
+    .catch(err => {
+      this.errHandler.handleError({message: 'Progress not saved, please check your connection and try again'});
       this.loading = false;
     })
   }
@@ -333,7 +406,21 @@ export class UploadAndEarnPage{
       this.building.prop_id = buildingRef.id;
       this.loading = false;    
     })
-    .catch(err => this.errHandler.handleError(err))
+    .catch(err => {
+      this.loading = false;
+      this.errHandler.handleError({message: 'Progress not saved, please check your connection and try again'})
+    })
+  }
+
+  initialBuildinUpdate(){
+    this.loading = true;
+    this.afs.collection('Properties').doc(this.building.prop_id).set(this.building).then(() =>{
+      this.loading = false;    
+    })
+    .catch(err => {
+      this.loading = false;
+      this.errHandler.handleError({message: 'Progress not saved, please check your connection and try again'})
+    })
   }
 
   uploadApartPics(): Promise<void>{
@@ -345,7 +432,10 @@ export class UploadAndEarnPage{
       this.apartment.images = images;
       console.log('Apartment pics uploaded');
     })
-    .catch(err => this.errHandler.handleError(err))
+    .catch(err => {
+      this.loading = false;
+      this.errHandler.handleError({message: 'Please check your connection...progress not saved'})
+    })
   }
 
   updateApartmentPics(event){
@@ -388,6 +478,9 @@ export class UploadAndEarnPage{
       this.apartment.prop_id = this.building.prop_id;
       resolve();
     })
+      .catch(err =>{
+        reject(err);
+      })
     }) 
   }
   /*Getting autocomplete predictions from the google maps place predictions service*/
@@ -437,10 +530,15 @@ export class UploadAndEarnPage{
       }, 3000)
     }else{
       this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
-        console.log(data);
-        this.predictionsNby = [];
-        this.predictionsNby = data;
-        this.loading = false;
+        if(data){
+          console.log(data);
+          this.predictionsNby = [];
+          this.predictionsNby = data;
+          this.loading = false;
+        }else{
+          this.loading = false;
+          this.errHandler.handleError({message: 'Your internet connection is faulty'})
+        }
       })
       .catch(err => {
         this.errHandler.handleError(err);

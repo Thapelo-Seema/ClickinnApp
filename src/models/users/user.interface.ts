@@ -18,4 +18,5 @@ export interface User{
 	id_no?: string;
 	gender?: string;
 	liked_apartments?: string[];
+	balance?: number;
 }

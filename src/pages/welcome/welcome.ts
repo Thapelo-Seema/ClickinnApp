@@ -9,6 +9,7 @@ import { ErrorHandlerProvider } from '../../providers/error-handler/error-handle
 //import { PrefferencesPage } from '../prefferences/prefferences';
 //import { AlertPage } from '../alert/alert';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
+import { Subscription } from 'rxjs-compat/Subscription';
 
 
 
@@ -22,8 +23,10 @@ export class WelcomePage {
   predictions: any[] = [];
   pointOfInterest: Address;
   user: User;
+  userSubs: Subscription;
   loading: boolean = false;
   predictionLoading: boolean = false;
+  connectionError: boolean = false;
   constructor(
     public navCtrl: NavController, 
     private storage: LocalDataProvider,
@@ -42,7 +45,7 @@ export class WelcomePage {
       this.pointOfInterest = this.object_init.initializeAddress();
       this.pointOfInterest.description = '';
       this.storage.getUser().then(data =>{
-          this.afs.collection('Users').doc<User>(data.uid).valueChanges().subscribe(user =>{
+          this.userSubs = this.afs.collection('Users').doc<User>(data.uid).valueChanges().subscribe(user =>{
             this.user = user;
             this.loading = false;
           }, 
@@ -56,6 +59,18 @@ export class WelcomePage {
           this.loading = false;
         })
     })
+  }
+
+  ionViewWillLeave(){
+    console.log('Welcome page unsubscrinbing...')
+    this.userSubs.unsubscribe();
+  }
+
+
+  gotoChats(){
+    this.loading = true;
+    this.navCtrl.push('ChatsPage');
+    this.loading = false;
   }
   
 /*Navigating to the next page, which is the PrefferencesPage and passing the pointOfInterest object along*/
@@ -83,31 +98,40 @@ export class WelcomePage {
       if(event.key === "Backspace" || event.code === "Backspace"){
         setTimeout(()=>{
           this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
+            this.connectionError = false;
             this.predictions = [];
             this.predictions = data;
             this.predictionLoading = false;
           })
           .catch(err => {
-            if(!window.navigator.onLine){
-              this.errHandler.handleError({code: 'no connection', message: 'You do not have an internect connection...'})
-            }else{
-              this.errHandler.handleError(err);
-            }
+            console.log('Error 1')
+           if(this.connectionError == false)
+            this.errHandler.handleError({message: 'Your internet connection is faulty please try again once a proper connection is established'});
             this.predictionLoading = false;
+            this.connectionError = true;
           })
         }, 3000)
       }else{
         this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
-          if(data == null || data == undefined || data.length <=  0){
+          if(data == null || data == undefined ){
+            console.log('Error 2')
+            if(this.connectionError == false)
+          this.errHandler.handleError({message: 'Your internet connection is faulty please try again once a proper connection is established'});
+          this.predictionLoading = false;
+          this.connectionError = true;
+          }else{
+            this.connectionError = false;
+            this.predictions = [];
+            this.predictions = data;
             this.predictionLoading = false;
           }
-          this.predictions = [];
-          this.predictions = data;
-          this.predictionLoading = false;
         })
         .catch(err => {
-          this.errHandler.handleError(err);
+          console.log('Error 3')
+          if(this.connectionError == false)
+          this.errHandler.handleError({message: 'Your internet connection is faulty please try again once a proper connection is established'});
           this.predictionLoading = false;
+          this.connectionError = true;
         })
       }
     }else{

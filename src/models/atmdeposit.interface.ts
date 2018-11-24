@@ -20,5 +20,6 @@ export interface ATMDeposit{
 	landlord_credit: number;
 	id: string;
 	ref: string;
+	timeStampModified?: number;
 
 }

@@ -29,6 +29,7 @@ export class EditApartmentPage {
   fileUpload: FileUpload;
   apartImgCount: number = 0;
   apartmentImagesAdded: boolean = false;
+  connectionError: boolean = false;
   imagesLoaded: boolean[] = 
       [false, false, false, false, false, false, false, false, false, false,
        false, false, false, false, false, false, false, false, false, false, 
@@ -147,7 +148,12 @@ export class EditApartmentPage {
           .present()
         })
         .catch(err =>{
-          console.log(err);
+          this.loading = false;
+          this.toastCtrl.create({
+            message: err.message,
+            duration: 4000
+          })
+          .present()
         })
       }
     })
@@ -182,11 +188,22 @@ export class EditApartmentPage {
         .then(imag =>{
           this.images.push(imag);
           this.loading = false;
+          this.connectionError = false;
           this.toastCtrl.create({
             message: 'Picture added !',
             duration: 3000
           })
           .present()
+        })
+        .catch(err =>{
+          this.loading = false;
+          if(this.connectionError == true)
+          this.toastCtrl.create({
+            message: 'Please check your internet connection...images could not be uploaded',
+            duration: 4000
+          })
+          .present()
+          this.connectionError = true;
         })
       }
     })

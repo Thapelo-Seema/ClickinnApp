@@ -13,9 +13,12 @@
   </ion-navbar>
 </ion-header>
 <ion-content text-center class="clickinn-bg" style="font-family: 'Raleway', sans-serif;">
-  <!-- <div *ngIf="loading" class="centered_on_screen">
-    <ion-spinner name="ios"></ion-spinner>
-  </div> -->
+  <ion-fab bottom right>
+    <button ion-fab color="secondary" (click)="gotoChats()">
+      <ion-icon name="ios-chatboxes-outline">
+      </ion-icon>
+    </button>
+  </ion-fab>
 	<div class="centered_on_screen full_width">
     <ion-grid>
       <ion-row>

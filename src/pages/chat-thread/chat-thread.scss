@@ -1,18 +1,13 @@
 page-chat-thread {
 
 	.chatroom_messages{
-		margin-bottom: 15%;
+		
 	}
 
-	.chatroom_input{
-		position: fixed;
-		 bottom: 0; 
-		 left: 0; 
-		 right: 0; 
-		 height: 10%; 
+	.chatroom_input{ 
+		 height: 100%; 
 		 width: 100%; 
 		 background: #EBF5FB;
-		 z-index: 100000;
 	}
 
 	@media (min-width: 800px){
@@ -25,15 +20,13 @@ page-chat-thread {
 			
 		}
 
-		.chatroom_input{
-			position: fixed;
-			 bottom: 0; 
-			 left: 20%; 
-			 right: 20%; 
-			 height: 12%; 
+		.chatroom_input{ 
+			 margin-left: 20%; 
+			 margin-right: 20%; 
+			 height: 100%; 
 			 width: 60%;
 			 background: #EBF5FB;
-			 z-index: 100000;
+			 
 		}
 
 	}

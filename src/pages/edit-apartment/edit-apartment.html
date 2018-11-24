@@ -11,7 +11,7 @@
 </ion-header>
 
 
-<ion-content padding style="background: #f4f4f4;">
+<ion-content>
 	<div *ngIf="loading" class="centered_on_screen">
 	    <ion-spinner name="ios"></ion-spinner>
 	</div>
@@ -21,8 +21,8 @@
 			</ion-col>
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6 style="padding: 15px 15px;">
 				<div text-center>
-					<h1 text-center>Apartment details</h1>
-					<ion-item padding-horizontal style=" border-top-right-radius: 9px; border-top-left-radius: 9px">
+					<h1 text-center>Apartment Details</h1>
+					<ion-item padding-horizontal text-wrap style=" border-top-right-radius: 9px; border-top-left-radius: 9px">
 				        <ion-label>Apartment Type</ion-label>
 				        <ion-select [(ngModel)]="apartment.room_type" required>
 				          <ion-option value="2 Bedroom flat">2 Bedroom flat</ion-option>
@@ -35,12 +35,12 @@
 				          <ion-option value="Any">Any</ion-option>
 				        </ion-select>
 				    </ion-item>
-				    <ion-item padding-horizontal>
-				        <ion-label floating>Monthly Rent (Rands)</ion-label>
+				    <ion-item padding-horizontal text-wrap>
+				        <ion-label floating style="letter-spacing: 2px">Monthly Rent (Rands)</ion-label>
 				        <ion-input type="number" [(ngModel)]="apartment.price" required></ion-input>
 				    </ion-item>
-				    <ion-item padding-horizontal>
-				        <ion-label floating>Deposit/Securing fee (Rands)</ion-label>
+				    <ion-item padding-horizontal text-wrap>
+				        <ion-label floating style="letter-spacing: 2px">Deposit/Securing fee (including 1st month rent) (Rands)</ion-label>
 				        <ion-input type="number" [(ngModel)]="apartment.deposit" required></ion-input>
 				    </ion-item>
 				    <ion-item padding-horizontal>
@@ -48,7 +48,7 @@
 					   <ion-checkbox [(ngModel)]="apartment.available"></ion-checkbox>
 					</ion-item>
 					<ion-item text-wrap margin-bottom padding-horizontal style=" border-bottom-right-radius: 9px; border-bottom-left-radius: 9px">
-						<ion-label floating>Description</ion-label>
+						<ion-label floating style="letter-spacing: 2px">Description</ion-label>
 						<ion-textarea rows="7" [(ngModel)]="apartment.description"></ion-textarea>
 					</ion-item>
 
@@ -80,8 +80,8 @@
 							<button ion-button clear small (click)="addPicture()" >Add more images</button>
 						</ion-buttons>
 					</div>
-					<ion-buttons padding-vertical>
-						<button ion-button clear (click)="save()">Save changes&nbsp;&nbsp;&nbsp; <ion-icon name="cloud-upload"></ion-icon></button>
+					<ion-buttons text-center padding-vertical>
+						<button ion-button outline color="clickinn" (click)="save()">Save changes&nbsp;&nbsp;&nbsp; <ion-icon name="cloud-upload"></ion-icon></button>
 					</ion-buttons>
 				</div>
 			</ion-col>

@@ -96,7 +96,7 @@ export class EditProfilePage {
             this.uploading = false;
           })
           .catch(err => {
-              this.errHandler.handleError(err);
+              this.errHandler.handleError({message: 'Please check your internet connection...picture not uploaded'});
               this.uploading = false;
           })
         }
@@ -144,8 +144,9 @@ export class EditProfilePage {
         },
         (err) =>{
           //if there's an error log it in the console
-          this.errHandler.handleError(err);
+          
           this.loading = false;
+          reject(err.message)
         },
         () =>{
           let tempUrl = '';
@@ -154,7 +155,7 @@ export class EditProfilePage {
             tempUrl = down_url;
             }, 
             err =>{
-              this.errHandler.handleError(err);
+              reject(err.message)
               this.loading = false;
             },
             () =>{

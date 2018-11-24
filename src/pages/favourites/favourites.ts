@@ -3,11 +3,14 @@ import { IonicPage, NavController, NavParams, Content } from 'ionic-angular';
 //import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 //import { AccommodationsComponent } from '../../components/accommodations/accommodations';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
-//import { Observable } from 'rxjs-compat/Observable';
+import { Observable } from 'rxjs-compat/Observable';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { Subscription } from 'rxjs-compat/Subscription';
 import { User } from '../../models/users/user.interface';
+import { take } from 'rxjs-compat/operators/take';
+import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
+
 /**
  * Generated class for the FavouritesPage page.
  *
@@ -21,7 +24,7 @@ import { User } from '../../models/users/user.interface';
   templateUrl: 'favourites.html',
 })
 export class FavouritesPage {
-  apartments: Apartment[] = [];
+  apartments: Observable<Apartment[]> ;
   user: User;
   loading: boolean = true;
   loadingMore: boolean = false;
@@ -39,43 +42,60 @@ export class FavouritesPage {
   	public navCtrl: NavController, 
   	public navParams: NavParams,
   	private accom_svc: AccommodationsProvider,
-  	private storage: LocalDataProvider) {
-    this.accom_svc.loading.subscribe(data =>{
+  	private storage: LocalDataProvider,
+    private toast_svc: ToastSvcProvider) {
+    /*this.accom_svc.loading.subscribe(data =>{
       this.loadingMore = data;
     })
 
     this.accom_svc.done.subscribe(data =>{
       this.done = data;
       if(this.done == true) this.loadingMore = false;
-    })
+    })*/
+    this.loading = true;
   	this.storage.getUser().then(data =>{
       this.user = data;
-      this.accom_svc.initUserFavs(data.liked_apartments);
+      this.apartments = this.accom_svc.getUserFavourites(data.liked_apartments)
   		this.apartmentSub = this.accom_svc.getUserFavourites(data.liked_apartments)
+      .pipe(
+        take(1)
+       )
   		.subscribe(aparts =>{
-  			this.apartments = aparts;
-        this.loading = false;
+        if(aparts.length > 0){
+          aparts.forEach(apart =>{
+            this.imagesLoaded.push(false);
+          })
+          this.loading = false;
+        }else{
+          this.toast_svc.showToast('You have not liked any apartments yet...')
+          this.loading = false;
+        }
   		})
   	})
 
   }
 
   ionViewDidLoad() {
-    this.monitorEnd()
+    //this.monitorEnd()
   }
 
   ionViewDidLeave(){
+    //this.accom_svc.reset();
     if(this.apartmentSub) this.apartmentSub.unsubscribe();
   }
 
-  gotoApartment(apartment: Apartment){
-    this.storage.setApartment(apartment).then(data => this.navCtrl.push('ApartmentDetailsPage'))
+  gotoApartment(apartment: any){
+    //delete apartment.doc
+    this.storage.setApartment(apartment).then(data => {
+      //this.accom_svc.reset();
+      this.navCtrl.push('ApartmentDetailsPage')
+    })
     .catch(err => {
       console.log(err)
     });
   }
 
-  monitorEnd(){
+  /*monitorEnd(){
     //console.log('Content scrollHeight = ', this.content.scrollHeight)
     this.content.ionScrollEnd.subscribe(ev =>{
     let height = ev.scrollElement.scrollHeight;
@@ -85,6 +105,6 @@ export class FavouritesPage {
         this.accom_svc.moreUserProperties(this.user.uid)
       }
     })
-  }
+  }*/
 
 }

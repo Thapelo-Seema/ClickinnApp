@@ -12,6 +12,12 @@
 
 
 <ion-content padding>
+	<ion-fab bottom right>
+		<button ion-fab color="secondary" (click)="showInput(deposit)" >
+			<ion-icon name="ios-chatboxes-outline">
+			</ion-icon>
+		</button>
+	</ion-fab>
 	<div *ngIf="loading" class="centered_on_screen" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; 
     border-radius: 10px;padding: 20px; text-align: center; z-index: 1">
     <ion-spinner name="ios"></ion-spinner>
@@ -22,58 +28,111 @@
     <ion-spinner name="ios"></ion-spinner>
     <h3 text-center>Processing action...</h3>
   </div>
-	<ion-item no-lines style="background: #000050; color: white">
-		<ion-avatar item-left>
-			<img src="{{deposit?.by?.dp}}}" (load)="imageLoaded = true" [hidden]="!imageLoaded" />
-			<img src="assets/imgs/placeholder.png" [hidden]="imageLoaded" />
-		</ion-avatar>
-		<h1 text-center>	
-	  		{{deposit?.by?.firstname}} {{deposit?.by?.lastname}}
-	  	</h1>
-	</ion-item>
-	<div style="background: #000020">
-		<h4 text-center padding style="color: white">Apartment pictures</h4>
-		<ion-slides  loop="true" slidesPerView="2" class="image_container" [pager]="true">
-			<ion-slide *ngFor="let image of images; let idx = index">
-				<img src="{{image?.url}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" imageViewer class="thumb-img" />
-				<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[idx]" />
-			</ion-slide>
-		</ion-slides>
-	</div>
-	<ion-item>
-		<h1>Apartment type</h1>
-		<p>{{deposit?.apartment?.room_type}}</p>
-	</ion-item>
-	<ion-item padding-horizontal>
-        <h1>Monthly Rent (Rands)</h1>
-        <p>R{{deposit?.apartment?.price}}</p>
-    </ion-item>
-    <ion-item padding-horizontal>
-        <h1>Deposit/Securing fee (Rands)</h1>
-        <p>R{{deposit?.apartment?.deposit}}</p>
-    </ion-item>
-    <ion-item padding-horizontal>
-        <h1>Availability</h1>
-        <p>{{deposit?.apartment?.available ? 'Apartment available' : 'Apartment not available'}}</p>
-    </ion-item>
-    <ion-item padding-horizontal>
-        <h1>Description</h1>
-        <p>{{deposit?.apartment?.description}}</p>
-    </ion-item>
+  <ion-grid>
+	    <ion-row>
+	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+	        </ion-col>
+	        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				<ion-item no-lines text-wrap style="background: #000050; color: white">
+					<ion-avatar item-left>
+						<img src="{{deposit?.by?.dp}}}" (load)="imageLoaded = true" [hidden]="!imageLoaded" />
+						<img src="assets/imgs/placeholder.png" [hidden]="imageLoaded" />
+					</ion-avatar>
+					<p style="text-align: center">	
+				  		<strong>{{deposit?.by?.firstname}} {{deposit?.by?.lastname}}</strong>
+				  	</p>
+				</ion-item>
+				<div style="background: #000020">
+					<h3 text-center padding style="color: white">Apartment pictures</h3>
+					<ion-slides  loop="true" slidesPerView="2" class="image_container" [pager]="true">
+						<ion-slide *ngFor="let image of images; let idx = index">
+							<img src="{{image?.url}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" imageViewer class="thumb-img" />
+							<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[idx]" />
+						</ion-slide>
+					</ion-slides>
+				</div>
+				<ion-item text-wrap>
+					<strong>Apartment type</strong>
+					<p>{{deposit?.apartment?.room_type}}</p>
+				</ion-item>
+				<ion-item padding-horizontal text-wrap>
+			        <strong>Monthly Rent (Rands)</strong>
+			        <p>R{{deposit?.apartment?.price}}</p>
+			    </ion-item>
+			    <ion-item padding-horizontal text-wrap>
+			        <strong>Deposit/Securing fee (Rands)</strong>
+			        <p>R{{deposit?.apartment?.deposit}}</p>
+			    </ion-item>
+			    <ion-item padding-horizontal text-wrap>
+			        <strong>Availability</strong>
+			        <p>{{deposit?.apartment?.available ? 'Apartment available' : 'Apartment not available'}}</p>
+			    </ion-item>
+			    <ion-item padding-horizontal text-wrap>
+			        <strong>Description</strong>
+			        <p>{{deposit?.apartment?.description}}</p>
+			    </ion-item>
 
-    <h1 *ngIf="host" style="text-align: center;">Accept deposit ?</h1>
-	<p *ngIf="host" style="text-align: center;">Please do not accept if the apartment is not obviously available</p>
-	<h1 *ngIf="!host" style="text-align: center;">Confirm deposit</h1>
-	<p *ngIf="!host" style="text-align: center;">Please confirm whether you have deposited the amount required</p>
+			    <h1 *ngIf="host" style="text-align: center; color: #488aff">Accept Deposit ?</h1>
+				<p *ngIf="host" style="text-align: center;">Please accept this deposit only if you are sure that the apartment is available, otherwise send the seeker a chat by pressing on the bottom right chat icon. </p>
+				<h1 *ngIf="!host" style="text-align: center; color: #488aff">Deposit &amp; Confirm</h1>
+				<p *ngIf="!host" style="text-align: center;">Please go ahead with the deposit using the details below </p>
+				<p *ngIf="!host" style="text-align: center;">This transaction <strong style="color: red"> expires within the next 3 hours </strong> and the landlord reserves the right to give this apartment away on failure to confirm the deposit within the given time.<strong style="color: #32db64"> Communicate any delays with the landlord via the Clickinn Chat button at the bottom right.</strong></p>
+				<p *ngIf="!host">Press the confirm button once the deposit is done, to alert the landlord</p>
+				<div *ngIf="!host" style="background: lightblue; margin-top: 10px; margin-bottom: 15px; padding: 4px; border-radius: 4px" >
+					<ion-row>
+						<ion-col>
+							<strong>Bank</strong> 
+						</ion-col>
+						<ion-col>
+							FNB
+						</ion-col>
+					</ion-row>
+					<ion-row>
+						<ion-col>
+							<strong>Accountholder</strong> 
+						</ion-col>
+						<ion-col text-wrap>
+							Metalojiq Solutions (Pty)Ltd 
+						</ion-col>
+					</ion-row>
+					<ion-row>
+						<ion-col>
+							<strong>Account number</strong> 
+						</ion-col>
+						<ion-col text-wrap>
+							7097898876543 
+						</ion-col>
+					</ion-row>
+					<ion-row>
+						<ion-col>
+							<strong>Deposit Amount</strong> 
+						</ion-col>
+						<ion-col text-wrap>
+							R{{deposit?.apartment?.deposit}}
+						</ion-col>
+					</ion-row>
+					<ion-row>
+						<ion-col>
+							<strong>Deposit Refference</strong> 
+						</ion-col>
+						<ion-col text-wrap>
+							{{deposit?.ref ? deposit?.ref : 'None provided'}} 
+						</ion-col>
+					</ion-row>
+				</div>
 
-	<ion-buttons text-center *ngIf="host">
-		<button ion-button round (click)="acceptDeposit()" >Accept</button>
-		<button ion-button round (click)="rejectDeposit()" color="danger">Decline</button>
-	</ion-buttons>
+				<ion-buttons text-center *ngIf="host">
+					<button ion-button round (click)="acceptDeposit()" >Accept</button>
+					<button ion-button round (click)="rejectDeposit()" color="danger">Decline</button>
+				</ion-buttons>
 
-	<ion-buttons text-center *ngIf="!host">
-		<button ion-button round (click)="confirmDeposit()" >Confirm</button>
-		<button ion-button round (click)="cancelDeposit()" color="danger">Failed to deposit</button>
-	</ion-buttons>
-	
+				<ion-buttons text-center *ngIf="!host">
+					<button ion-button round (click)="confirmDeposit()" >Confirm</button>
+					<button ion-button round (click)="cancelDeposit()" color="danger">Failed to deposit</button>
+				</ion-buttons>
+			</ion-col>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+	        </ion-col>
+	    </ion-row>
+	</ion-grid>
 </ion-content>

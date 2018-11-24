@@ -6,7 +6,7 @@
 </ion-header>
 
 <ion-content style="background: #f4f4f4;">
-	<ion-grid>
+	<ion-grid no-padding>
 		<ion-row>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
@@ -18,7 +18,7 @@
 				      <img src="{{srch?.searcher_dp}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" />
 				      <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[idx]" />
 				    </ion-avatar>
-				    <h2> {{srch?.searcher_name != 'undefined undefined' ? srch?.searcher_name : 'Anonymous'}} </h2>
+				    <h2> <strong>{{srch?.searcher_name != 'undefined undefined' ? srch?.searcher_name : 'Anonymous'}} </strong></h2>
 				  </ion-item>
 				  <ion-card-content>
 				    <p text-center>

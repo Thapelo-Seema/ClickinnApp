@@ -10,42 +10,35 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
+<ion-content>
 	<ion-grid>
 		<ion-row>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-				<ion-item no-lines text-center text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white">
-					<p text-center style="color: white">
-						Edit information about your properties or upload new apartments
-					</p>
-					<ion-buttons end>
-						<button ion-button small clear>
-							<div style="color: #32db64">
-								<!-- personnel ~ {{channel?.creator?.firstname}} {{channel?.creator?.lastname}} -->
-							</div>
+				<ion-item no-lines text-center text-wrap style="border-radius: 7px; background: #f4f4f4; letter-spacing: 2px">
+					<strong>
+						Edit information about your properties and apartments or upload new apartments
+					</strong>
+				</ion-item>
+				
+					<ion-buttons margin text-center>
+						<button ion-button margin color="clickinn" outline round padding="20"  (click)="gotoBuildings()" >
+							<ion-icon name="home" style="font-size: 30px"></ion-icon> &nbsp;&nbsp;&nbsp;&nbsp;
+							<strong>List of Properties</strong>
+						</button>
+					
+						<button ion-button margin color="clickinn" outline round padding="20" (click)="uploadAndEarn()" >
+							<ion-icon name="ios-cloud-upload" style="font-size: 30px"></ion-icon> &nbsp;&nbsp;&nbsp;&nbsp;
+							<strong>Upload apartment</strong>
+						</button>
+					
+						<button ion-button margin padding="20" text-center round outline color="clickinn" (click)="gotoAparts()" >
+							<ion-icon name="clipboard" style="font-size: 30px"></ion-icon> &nbsp;&nbsp;&nbsp;&nbsp;
+							<strong>Saved Apartments</strong>
 						</button>
 					</ion-buttons>
-				</ion-item>
-				<ion-grid>
-				<ion-row>
-					<ion-col col-12 col-sm-12 col-md-6 text-center>
-						<button ion-item full text-wrap padding text-center style="border-radius: 5px; color: silver;
-						border: 1px solid silver" (click)="gotoBuildings()" >
-							<ion-icon name="home" style="font-size: 40px"></ion-icon>
-							<h1 text-center>property list</h1>
-						</button>
-					</ion-col>
-					<ion-col col-12 col-sm-12 col-md-6 text-center color="secondary">
-						<button ion-item full text-wrap padding text-center style="border-radius: 5px; color: silver;
-						border: 1px solid silver" (click)="uploadAndEarn()" >
-							<ion-icon name="ios-cloud-upload" style="font-size: 40px"></ion-icon>
-							<h1 text-center>Upload apartment</h1>
-						</button>
-					</ion-col>
-				</ion-row>
-			</ion-grid>
+				
 			</ion-col>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>

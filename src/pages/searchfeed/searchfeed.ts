@@ -9,6 +9,7 @@ import { User } from '../../models/users/user.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { take } from 'rxjs-compat/operators/take';
 import { PaginationProvider } from '../../providers/pagination/pagination';
+import { Subscription } from 'rxjs-compat/Subscription';
 
 @IonicPage()
 @Component({
@@ -21,6 +22,9 @@ export class SearchfeedPage {
   search: Search;
   inputVisible: boolean = false;
   user: User;
+  loadingSubs: Subscription;
+  doneSubs: Subscription;
+  dataSubs: Subscription;
   loading: boolean = true;
   loadingMore: boolean = false;
   done: boolean = false;
@@ -48,16 +52,16 @@ export class SearchfeedPage {
       if(user) this.user = user;
     })
   	this.search = this.object_init.initializeSearch();
-    this.searchfeed_svc.loading.subscribe(dat =>{
+    this.loadingSubs = this.searchfeed_svc.loading.subscribe(dat =>{
       this.loadingMore = dat
       console.log('loading... ', this.loadingMore)
     })
-    this.searchfeed_svc.done.subscribe(dat =>{
+    this.doneSubs = this.searchfeed_svc.done.subscribe(dat =>{
       this.done = dat
       if(dat == true) this.loadingMore = false;
       console.log('done... ', this.done)
     })
-    this.searchfeed_svc.data
+    this.dataSubs = this.searchfeed_svc.data
     .subscribe(searches =>{
       if(searches){
         console.log(searches.length)
@@ -99,6 +103,13 @@ export class SearchfeedPage {
 
   ionViewDidLoad(){
     this.monitorEnd();
+  }
+
+  ionViewWillLeave(){
+    console.log('Searchfeed unsubscribing...')
+    this.dataSubs.unsubscribe();
+    this.doneSubs.unsubscribe();
+    this.loadingSubs.unsubscribe();
   }
 
   monitorEnd(){

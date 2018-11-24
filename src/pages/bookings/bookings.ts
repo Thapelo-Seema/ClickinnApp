@@ -28,6 +28,8 @@ export class BookingsPage {
   done: boolean = false;
   role: string = '';
   bookingsSub: Subscription = null;
+  loadingSub: Subscription;
+  doneSub: Subscription;
   @ViewChild(Content) content: Content;
   imagesLoaded: boolean[] = 
       [false, false, false, false, false, false, false, false, false, false,
@@ -53,10 +55,10 @@ export class BookingsPage {
     ){
 
     this.loading = true;
-    this.appt_svc.loading.subscribe(data =>{
+    this.loadingSub = this.appt_svc.loading.subscribe(data =>{
       this.loadingMore = data;
     })
-    this.appt_svc.done.subscribe(data =>{
+    this.doneSub = this.appt_svc.done.subscribe(data =>{
       this.done = data;
       if(data == true) this.loadingMore = false;
     })
@@ -83,6 +85,10 @@ export class BookingsPage {
             this.toast_svc.showToast('You are offline OR There are no appointments to show for your property/s');
             this.loading = false;
           } 
+        },
+        err =>{
+          this.toast_svc.showToast(err.message);
+          this.loading = false;
         })
       }else if(this.navParams.get('selectedTab')){
         console.log(navParams)
@@ -101,6 +107,10 @@ export class BookingsPage {
             this.toast_svc.showToast('You are offline OR There are no appointments to show for your property/s');
             this.loading = false;
           } 
+        },
+        err =>{
+          this.toast_svc.showToast(err.message);
+          this.loading = false;
         })
       }
       else{
@@ -118,12 +128,18 @@ export class BookingsPage {
             this.toast_svc.showToast('You are offline OR There are no appointments to show for your profile');
             this.loading = false;
           }
+        },
+        err =>{
+          this.toast_svc.showToast(err.message);
+          this.loading = false;
         })
       }
   	})
   }
 
-  ionViewDidLeave(){
+  ionViewWillLeave(){
+    this.doneSub.unsubscribe();
+    this.loadingSub.unsubscribe();
     this.bookingsSub.unsubscribe();
     this.appt_svc.reset();
   }

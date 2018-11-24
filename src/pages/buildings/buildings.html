@@ -11,7 +11,7 @@
 </ion-header>
 
 
-<ion-content padding>
+<ion-content>
 	
 	<ion-grid>
 	  <ion-row>
@@ -30,7 +30,7 @@
 					</button>
 				</ion-buttons>
 			</ion-item>
-	    <button ion-item text-wrap *ngFor="let building of accom_svc?.data | async; let i = index" (click)="gotoProperty(building)" >
+	    <button ion-item margin-vertical text-wrap *ngFor="let building of buildings | async; let i = index" (click)="gotoProperty(building)" >
 	      <ion-avatar item-start>
 	        <img src="{{building?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
 	        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
