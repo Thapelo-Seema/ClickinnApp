@@ -20,5 +20,7 @@ export interface Apartment{
 	complete?: boolean;
 	timeStampModified?: number;
 	user_id?: string;
+	quantity_available?: number;
+	by?: string;
 
 }

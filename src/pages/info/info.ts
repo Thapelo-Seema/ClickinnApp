@@ -67,7 +67,7 @@ export class InfoPage {
       this.loading = false;
     })
   	this.storage.getApartment().then(data => {
-      this.apartment = data;
+      this.apartment = this.object_init.initializeApartment2(data);
       this.accom_svc.getPropertyById(data.prop_id)
       .pipe(
         take(1)
@@ -157,8 +157,8 @@ export class InfoPage {
   showAlert() {
     let showPaymentSaftey: boolean = false;
     let alertC = this.alertCtrl.create({
-      title: 'Alert !',
-      message: `Please note that if you want to secure an apartment immediately, we highly recommend that you use the Clickinn payment system ( it is a much safer option than paying money directly to the advertiser )`,
+      title: 'ALERT !',
+      message: `Please note that if you want to secure an apartment immediately, we highly recommend that you use the Clickinn payment system by pressing MAKE DEPOSIT NOW below ( it is a much safer option than paying money directly to the advertiser )`,
       buttons: [
         {
           role: 'cancel',
@@ -178,7 +178,7 @@ export class InfoPage {
     alertC.present();
     alertC.onDidDismiss(data =>{
       if(showPaymentSaftey){
-        alert('We shall explain on our own time lol !')
+        this.navCtrl.push('PaymentDetailsPage');
       }
     })
   }

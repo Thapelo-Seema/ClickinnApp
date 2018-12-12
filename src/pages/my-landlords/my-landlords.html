@@ -1,0 +1,45 @@
+<!--
+  Generated template for the MyLandlordsPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-navbar color="clickinn" >
+    <ion-title>My landlords</ion-title>
+  </ion-navbar>
+</ion-header>
+
+
+<ion-content>
+	<ion-grid>
+		<ion-row>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				<ion-item  *ngFor="let landlord of landlords | async ; let i = index">
+					<ion-avatar item-start>
+		        		<img src="{{landlord?.landlord_dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
+			        	<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
+		        	</ion-avatar>
+		        	<strong> {{landlord?.landlord_firstname}} {{landlord?.landlord_lastname}}</strong>
+		        	<p margin-top > {{landlord?.landlord_phoneNumber}} </p>
+		        	<ion-row>
+		        		<ion-col>
+		        			<button color="secondary" ion-button clear (click)="showInput(landlord)" >
+		        				<ion-icon name="chatboxes"></ion-icon>
+		        			</button>
+		        		</ion-col>
+		        		<ion-col>
+		        			<button color="danger" ion-button clear (click)="cancelDeal(landlord)" >
+		        				<ion-icon name="close"></ion-icon>
+		        			</button>
+		        		</ion-col>
+		        	</ion-row>
+				</ion-item>
+			</ion-col>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+		</ion-row>
+	</ion-grid>
+</ion-content>

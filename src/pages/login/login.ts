@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController } from 'ionic-angular';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
@@ -8,6 +8,7 @@ import { ErrorHandlerProvider } from '../../providers/error-handler/error-handle
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { FcmProvider } from '../../providers/fcm/fcm';
 import { Push, PushOptions, PushObject } from '@ionic-native/push';
+import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 //import { Thread } from '../../models/thread.interface';
 
 
@@ -20,6 +21,7 @@ export class LoginPage {
   seeker: User;
   password: string = '';
   loading: boolean = false;
+  reseting: boolean = false;
   constructor(
     public navCtrl: NavController, 
     private afAuth: AngularFireAuth,
@@ -28,8 +30,9 @@ export class LoginPage {
     private errHandler: ErrorHandlerProvider, 
     private object_init: ObjectInitProvider,
     private fcm: FcmProvider,
-    //private platform: Platform,
-    private push: Push) {
+    private alertCtrl: AlertController,
+    private push: Push,
+    private toast_svc: ToastSvcProvider) {
   	this.seeker = this.object_init.initializeUser();
   }
 
@@ -85,6 +88,41 @@ export class LoginPage {
       this.errHandler.handleError(err);
       this.loading = false;
     })
+  }
+
+  resetPassword(){
+    let alert = this.alertCtrl.create({
+      title: 'Reset password',
+      message: 'Forgot your password ? do not worry, please enter your email below and we will send a reset link to your email',
+      inputs: [{
+        name: 'email',
+        placeholder: 'Email adress',
+        type: 'text'
+      }],
+      buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel'
+      },
+      {
+        text: 'Reset',
+        handler: data =>{
+          this.reseting = true;
+          this.afAuth.auth.sendPasswordResetEmail(data.email)
+          .then(() =>{
+            this.reseting = false;
+            this.toast_svc.showToast('Your password reset link has been sent to your email.')
+          })
+          .catch(err =>{
+            this.reseting = false;
+            this.errHandler.handleError(err);
+          })
+        }
+      }
+      ]
+    })
+
+    alert.present();
   }
 
 }

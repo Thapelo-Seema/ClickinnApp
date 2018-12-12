@@ -3,9 +3,9 @@ import { Apartment } from './properties/apartment.interface';
 
 export interface ATMDeposit{
 	time_initiated: Date;
-	time_tenant_confirmed: Date;
-	time_clickinn_confirm: Date;
-	time_agent_confirm: Date;
+	time_tenant_confirmed: number;
+	time_clickinn_confirm: number;
+	time_agent_confirm: number;
 	currency: string;
 	to: {firstname: string, lastname: string, dp: string, uid: string};
 	by: {firstname: string, lastname: string, dp: string, uid: string}
@@ -18,8 +18,14 @@ export interface ATMDeposit{
 	tenant_refund_request: boolean;
 	transaction_closed: boolean;
 	landlord_credit: number;
+	agent_commision?: number;
 	id: string;
 	ref: string;
 	timeStampModified?: number;
+	bank?: string;
+	account_holder?: string;
+	account_number?: string;
+	branch_code?: string;
+	tenantMovedIn?: boolean;
 
 }

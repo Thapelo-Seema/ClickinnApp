@@ -2,7 +2,8 @@
 <div *ngIf="loading" class="centered_on_screen">
 	<ion-spinner name="ios"></ion-spinner>
 </div>
-<ion-menu [content]="content">
+
+<ion-menu [content]="content" swipeEnabled="false">
 	<ion-content>
 		<ion-item text-wrap no-lines style="background: #000030; color: white">
 		    <ion-avatar item-left>
@@ -34,23 +35,27 @@
 		      </button>
 		      <button ion-item  no-lines menuClose (click)="gotoDeposits()" >
 		        <ion-icon name="ios-cash-outline" item-end></ion-icon>
-		        Apartment Deposits
+		        Transactions
 		      </button>
 		      <button ion-item no-lines menuClose color="secondary" (click)="gotoLandlordDash()" >
-		        <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon>
-		        Landlord/Caretaker 
+		        <!-- <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon> -->
+		        Agents Dashboard
 		      </button>
-		      <!-- <button ion-item menuClose  (click)="gotoCaretakerDash()" >
-		        <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon>
-		        Caretaker/Manager
-		      </button> -->
-		     <!--  <button ion-item menuClose  (click)="gotoAgentDash()" >
-		        <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon>
-		        Agent 
-		      </button> -->
+		      <button ion-item no-lines menuClose color="primary" (click)="gotoOwners()" >
+		        <!-- <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon> -->
+		        Landlord Dashboard 
+		      </button>
+		      <button *ngIf="user?.user_type == 'admin' " ion-item menuClose  (click)="gotoSupportAdmin()" >
+		        <!-- <ion-icon name="help" item-end></ion-icon> -->
+		        Support 
+		      </button>
 		      <button ion-item menuClose  (click)="gotoBursaryDash()" >
-		        <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon>
+		        <!-- <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon> -->
 		        Bursary placements
+		      </button>
+		      <button ion-item menuClose  (click)="gotoSupport()" >
+		        <ion-icon name="help" item-end></ion-icon>
+		        Help
 		      </button>
 		      <button ion-item menuClose (click)="logout()">
 		        Logout

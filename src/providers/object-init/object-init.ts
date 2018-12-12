@@ -17,6 +17,7 @@ import { MarkerOptions } from '../../models/markeroptions.interface';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { ChatMessage } from '../../models/chatmessage.interface';
 import { ATMDeposit } from '../../models/atmdeposit.interface';
+import { SupportMessage } from '../../models/support_message.interface';
 
 @Injectable()
 export class ObjectInitProvider {
@@ -33,9 +34,9 @@ export class ObjectInitProvider {
     let deposit: ATMDeposit = {
       agent_goAhead: false,
       time_initiated: null,
-      time_agent_confirm: null,
-      time_clickinn_confirm: null,
-      time_tenant_confirmed: null,
+      time_agent_confirm: 0,
+      time_clickinn_confirm: 0,
+      time_tenant_confirmed: 0,
       tenant_confirmed: false,
       agent_confirmed: false,
       clickinn_confirmed: false,
@@ -48,7 +49,43 @@ export class ObjectInitProvider {
       transaction_closed: false,
       tenant_refund_request: false,
       landlord_credit: 0,
-      ref : ''
+      ref : '',
+      bank: '',
+      account_holder: '',
+      account_number: '',
+      branch_code: '',
+      tenantMovedIn: false,
+      timeStampModified: 0
+    }
+    return deposit;
+  }
+
+  initializeDeposit2(dep: ATMDeposit){
+    let deposit: ATMDeposit = {
+      agent_goAhead: dep.agent_goAhead,
+      time_initiated: dep.time_initiated ? dep.time_initiated : null,
+      time_agent_confirm: dep.time_agent_confirm ? dep.time_agent_confirm : 0,
+      time_clickinn_confirm: dep.time_clickinn_confirm ? dep.time_clickinn_confirm : 0,
+      time_tenant_confirmed: dep.time_tenant_confirmed ? dep.time_tenant_confirmed : 0,
+      tenant_confirmed: dep.tenant_confirmed,
+      agent_confirmed: dep.agent_confirmed,
+      clickinn_confirmed: dep.clickinn_confirmed,
+      clickinn_cancel: dep.clickinn_cancel,
+      to: dep.to,
+      by: dep.by,
+      apartment: dep.apartment,
+      id: dep.id ? dep.id : '',
+      currency: dep.currency ? dep.currency : 'ZAR',
+      transaction_closed: dep.transaction_closed,
+      tenant_refund_request: dep.tenant_refund_request,
+      landlord_credit: dep.landlord_credit ? dep.landlord_credit : 0,
+      ref : dep.ref ? dep.ref : '',
+      bank: dep.bank ? dep.bank : '',
+      account_holder: dep.account_holder ? dep.account_holder : '',
+      account_number: dep.account_number ? dep.account_number : '',
+      branch_code: dep.branch_code ? dep.branch_code : '',
+      tenantMovedIn: dep.tenantMovedIn ? dep.tenantMovedIn : false,
+      timeStampModified: dep.timeStampModified ? dep.timeStampModified : 0
     }
     return deposit;
   }
@@ -63,6 +100,20 @@ export class ObjectInitProvider {
       recieved: false,
       text: '',
       topic: ''
+    }
+    return message;
+  }
+
+  initializeSupportMessage(){
+    let message: SupportMessage ={
+      user: {displayName: '', dp: '', uid: ''},
+      assigned_to: {displayName: '', dp: '', uid: ''},
+      timeStamp: 0,
+      sent: false,
+      solved: false,
+      recieved: false,
+      text: '',
+      issue_type: ''
     }
     return message;
   }
@@ -167,7 +218,9 @@ export class ObjectInitProvider {
   		timeStamp: 0,
       user_id: '',
       complete: false,
-      timeStampModified: 0
+      timeStampModified: 0,
+      quantity_available: 1,
+      by: ''
   	}
   	return apartment;
   }
@@ -190,7 +243,9 @@ export class ObjectInitProvider {
       timeStamp: apart.timeStamp ? apart.timeStamp : 0,
       user_id: apart.user_id ? apart.user_id: '',
       complete: apart.complete ? apart.complete : false,
-      timeStampModified: apart.timeStampModified ? apart.timeStampModified : 0
+      timeStampModified: apart.timeStampModified ? apart.timeStampModified : 0,
+      quantity_available: apart.quantity_available ? apart.quantity_available : 1,
+      by: apart.by ? apart.by : ''
     }
     return apartment;
   }
@@ -249,10 +304,13 @@ export class ObjectInitProvider {
 
   initializeUser(): User{
   	let user: User = {
+      agents: [],
+      landlords: [],
   		displayName: '',
   		firstname: '',
   		lastname: '',
       liked_apartments: [],
+      locations: [],
   		user_type: '',
   		email: '',
   		fcm_token: '',
@@ -268,13 +326,20 @@ export class ObjectInitProvider {
   		dob: new Date(),
   		id_no: '',
   		gender: '',
-      balance: 0
+      balance: 0,
+      bank: '',
+      account_number: '',
+      bank_code: '',
+      account_holder: '',
+      agreed_to_terms: false
   	}
   	return user;
   }
 
   initializeUser2(userIn: User): User{
     let user: User = {
+      agents: userIn.agents ? userIn.agents : [],
+      landlords: userIn.landlords ? userIn.landlords : [],
       displayName: userIn.displayName ? userIn.displayName: '',
       firstname: userIn.firstname ? userIn.firstname: '',
       lastname: userIn.lastname ? userIn.lastname : '',
@@ -294,7 +359,13 @@ export class ObjectInitProvider {
       dob: userIn.dob ? userIn.dob : new Date(),
       id_no: userIn.id_no ? userIn.id_no : '',
       gender: userIn.gender ? userIn.gender : '',
-      balance: userIn.balance
+      balance: userIn.balance ? userIn.balance : 0,
+      bank: userIn.bank ? userIn.bank : '',
+      account_number: userIn.account_number ? userIn.account_number : '',
+      bank_code: userIn.bank_code ? userIn.bank_code : '',
+      account_holder: userIn.account_holder ? userIn.account_holder : '',
+      agreed_to_terms: userIn.agreed_to_terms ? userIn.agreed_to_terms : false,
+      locations: userIn.locations ? userIn.locations : []
     }
     return user;
   }
@@ -337,7 +408,8 @@ export class ObjectInitProvider {
  		seeker_cancels: false,
  		timeStamp: 0,
  		address: '',
- 		room_type: ''
+ 		room_type: '',
+    timeStampModified: 0
  	}
  	return appointment;
  }
@@ -357,7 +429,8 @@ export class ObjectInitProvider {
      timeStamp: ap.timeStamp ? ap.timeStamp : 0,
      address: ap.address ? ap.address : '',
      room_type: ap.room_type ? ap.room_type : '',
-     apart_dp: ap.apart_dp ? ap.apart_dp : ''
+     apart_dp: ap.apart_dp ? ap.apart_dp : '',
+     timeStampModified: ap.timeStampModified ? ap.timeStampModified : 0
    }
    return appointment;
  }

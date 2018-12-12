@@ -47,10 +47,45 @@
 						<ion-label stacked>Email</ion-label>
 						<ion-input type="email" [(ngModel)]="user.email" name="email" autocomplete="email" autocorrect="off"></ion-input>
 					</ion-item>
-					<ion-item >
+					<ion-item>
 						<ion-label stacked>Phone number</ion-label>
 			  			<ion-input type="number" [(ngModel)]="user.phoneNumber"></ion-input>
 					</ion-item>
+					<ion-item margin-bottom>
+						<ion-label stacked>Occupation</ion-label>
+			  			<ion-input type="text" [(ngModel)]="user.occupation"></ion-input>
+					</ion-item>
+					<!-- <ion-item >
+						<input type="file" accept="application/pdf" #proof hidden="hidden" (change)="updateproof($event)">
+						<span></span>
+						<span><button ion-button>ID copy</button></span>
+					</ion-item> -->
+					<fieldset>
+    					<legend>Banking details (For agents commision payout)</legend>
+    					<ion-item text-wrap>
+					        <ion-label>Bank</ion-label>
+					        <ion-select [(ngModel)]="user.bank" required>
+					          <ion-option value="ABSA">ABSA</ion-option>
+					          <ion-option value="African Bank">African Bank</ion-option>
+					          <ion-option value="Capitec">Capitec</ion-option>
+					          <ion-option value="FNB">FNB</ion-option>
+					          <ion-option value="Nedbank">Nedbank</ion-option>
+					          <ion-option value="Standard bank">Standard bank</ion-option>
+					        </ion-select>
+					    </ion-item>
+					    <ion-item >
+							<ion-label stacked>Account holder</ion-label>
+							<ion-input type="text" [(ngModel)]="user.account_holder" name="acc_holder" autocorrect="off"></ion-input>
+						</ion-item>
+	    				<ion-item >
+							<ion-label stacked>Account number</ion-label>
+							<ion-input type="text" [(ngModel)]="user.account_number" name="acc_number" autocorrect="off"></ion-input>
+						</ion-item>
+						<ion-item >
+							<ion-label stacked>Branch code</ion-label>
+							<ion-input type="text" [(ngModel)]="user.bank_code" name="b_code" autocorrect="off"></ion-input>
+						</ion-item>
+    				</fieldset>
 				</div>
 				<progress-bar *ngIf="uploading" [progress]="progress" [color]="'#488aff'">
 				</progress-bar> 

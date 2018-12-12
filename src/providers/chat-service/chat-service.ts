@@ -8,6 +8,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
+import { SupportMessage } from '../../models/support_message.interface';
 
 @Injectable()
 export class ChatServiceProvider {
@@ -89,6 +90,31 @@ export class ChatServiceProvider {
   		this.createNewThread(msg);
   	}
   }
+
+  sendSupportMessage(msg: SupportMessage){
+    
+    this.afs.collection('Support').doc(msg.user.uid).set({user: msg.user, text: msg.text, timeStamp: msg.timeStamp, assigned: msg.assigned_to})
+    this.afs.collection(`Support`).doc(msg.user.uid).collection('chats').add(msg);
+  }
+
+  replySupport(msg: SupportMessage){
+    this.afs.collection('Support').doc(msg.user.uid).set({user: msg.user, text: msg.text, timeStamp: msg.timeStamp, assigned: msg.assigned_to})
+    this.afs.collection(`Support`).doc(msg.user.uid).collection('chats').add(msg);
+  }
+
+  getUserSupportMessages(uid: string){
+    return this.afs.collection(`Support`).doc(uid).collection<SupportMessage>('chats', ref => ref.orderBy('timeStamp', 'asc'))
+    .valueChanges();
+  }
+
+  getAllSupport(){
+    return this.afs.collection('Support').valueChanges()
+  }
+
+  /*getAdminSupportMessages(uid: string){
+    return this.afs.collection(`Support`).doc(uid).collection<SupportMessage>('chats', ref => ref.orderBy('timeStamp', 'asc'))
+    .valueChanges();
+  }*/
 
   getThreadChats(thread_id):Observable<ChatMessage[]>{
     return this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref => ref.orderBy('timeStamp', 'asc'))

@@ -6,68 +6,35 @@
 -->
 <ion-header>
   <ion-navbar color="clickinn">
-    <ion-title style="font-family: 'Ubuntu', sans-serif;">Payment - {{payment_method ? payment_method : 'loading...'}}</ion-title>
+    <ion-title style="font-family: 'Ubuntu', sans-serif;">Payment security</ion-title>
   </ion-navbar>
 </ion-header>
-<ion-content *ngIf="payment_method !== 'deposit'" padding>
+<ion-content padding>
 	<ion-grid>
     <ion-row>
-      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
-      </ion-col>
-      <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-      	<ion-item padding>
-	  <ion-label>Bank</ion-label>
-	  <ion-select [(ngModel)]="bank" required>
-	    <ion-option value="2 Bedroom flat">ABSA</ion-option>
-	    <ion-option value="Single Room">Capitec</ion-option>
-	    <ion-option value="Bachelor flat">FNB</ion-option>
-	    <ion-option value="Cottage">Nedbank</ion-option>
-	    <ion-option value="1 Bedroom flat">Standard Bank</ion-option>
-	  </ion-select>
-	</ion-item>
-	<ion-item>
-		<ion-label color="primary" stacked>Card Number</ion-label>
-	    <ion-input type="text"></ion-input>
-	</ion-item>
-	<ion-item margin-bottom text-wrap (click)="showDatePicker()">
-		<h2>Expiry Date</h2>
-		<p style="color: #488aff">
-		    {{myDate ? myDate : 'Select expiry date'}}
-		</p>
-	</ion-item>
-	<button ion-button block (click)="pay()">Pay</button>
-	</ion-col>
-      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
-      </ion-col>
+      	<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+     	 </ion-col>
+      	<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+      		<h1 text-center>How secure payments work</h1>
+	 		<p text-center>
+	 			When you are satisfied and ready to secure a room / apartment which you found on Clickinn, the best way to pay for it is by pressing on the 'make deposit now' button or by going to the 'deposit' tab and pressing on the atm-deposit button and you will be guided through. 
+	 		</p>
+	 		<p text-center>
+	 		The app will direct you to deposit or transfer the funds into Clickinn's bank account, the accountholder of this account is Metalojiq Solutions Pty Ltd
+	 		</p>
+	 		<p text-center>
+	 		Once the tenant has confirmed that they have successfully moved into the apartment and sends through the banking details of the landlord (as per on the contract which the tenant signs), the app will direct the funds appropriately to the landlord and the agent if any agent was involved.
+	 		</p>
+	 		<p text-center>
+	 			If any dispute arises before the tenant confirms that they have moved in, they can request a refund and Clickinn will make a refund with a penalty of 5% of the monies refunded 
+	 		</p>
+	 		<p text-center>
+	 			This system protects the accommodation seeker from sending money into scammers accounts and it also creates an opportunity for anyone to make money as an accommodation agent through Clickinn.
+	 		</p>
+		</ion-col>
+     	<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      	</ion-col>
     </ion-row>
   </ion-grid>
 </ion-content>
-<ion-content *ngIf="payment_method === 'deposit'" padding>
-	<ion-grid>
-    <ion-row>
-      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
-      </ion-col>
-      <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-	<h1 text-center>Deposit within 3 hours !</h1>
-	<p>Use the refference number provided below when you deposit and confirm your deposit on the app once done.</p>
-	
-	<ion-item>
-		<h1 text-center>Banking details</h1>
-		<h3>Bank</h3>
-		<p>Standard Bank</p>
-		<h3>Account holder</h3>
-		<p>Metalojiq Solutions Pty(Ltd)</p>
-		<h3>Account Number</h3>
-		<p>100007645</p>
-	</ion-item>
-	<ion-item padding>
-		<h2>Refference</h2>
-		<p>{{refference ? refference: 'No refference'}}</p>
-	</ion-item>
-	<button ion-button block >Generate refference</button>
-      </ion-col>
-      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-</ion-content>
+

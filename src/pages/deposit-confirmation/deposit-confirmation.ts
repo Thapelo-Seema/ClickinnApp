@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, AlertController } from 'ionic-angular';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { DepositProvider } from '../../providers/deposit/deposit';
 import { ATMDeposit } from '../../models/atmdeposit.interface';
@@ -33,6 +33,8 @@ export class DepositConfirmationPage {
   processing: boolean = false;
   apartImgCount: number;
   imageLoaded: boolean = false;
+  movedIn: boolean = false;
+  
   imagesLoaded: boolean[] = 
       [false, false, false, false, false, false, false, false, false, false,
        false, false, false, false, false, false, false, false, false, false, 
@@ -49,7 +51,8 @@ export class DepositConfirmationPage {
     private toast_svc: ToastSvcProvider,
     private chat_svc: ChatServiceProvider,
     private user_svc: UserSvcProvider,
-    private modal: ModalController) {
+    private modal: ModalController,
+    private alertCtrl: AlertController) {
     this.loading = true;
   	this.deposit = this.object_init.initializeDeposit();
     this.message = this.object_init.initializeChatMessage();
@@ -62,8 +65,9 @@ export class DepositConfirmationPage {
       if(state.type == 'host_accept_deposit') this.host = true;
       this.depositSubs = this.deposit_svc.getDepositById(state.id)
       .subscribe(deposit =>{
-        this.deposit = deposit;
+        this.deposit = this.object_init.initializeDeposit2(deposit);
         this.loading = false;
+        if(deposit.tenant_confirmed && ! this.host) this.movedIn = true;
         if(!(deposit.apartment.images.length > 0)){
           this.images = Object.keys(deposit.apartment.images).map(imageId =>{
               this.imagesLoaded.push(false);
@@ -118,92 +122,253 @@ export class DepositConfirmationPage {
   }
 
   acceptDeposit(){
-    this.processing = true;
-    this.generateRef();
-  	this.deposit.agent_goAhead = true;
-  	this.deposit_svc.updateDeposit(this.deposit)
-  	.then(() =>{
-      this.processing = false;
-  		this.toast_svc.showToast('You have accepted this deposit payment')
-  	})
-    .catch( err => {
-      this.processing = false;
-      console.log(err)
+    let confirm: boolean = false;
+    let alert = this.alertCtrl.create({
+      title: "ACCEPT DEPOSIT",
+      message: "Are you sure you want to accept this deposit ?",
+      buttons: [
+        {
+          text: 'Accept',
+          handler: data =>{
+            confirm = true;
+          }
+        },
+        {
+          role: 'cancel',
+          text: 'Cancel',
+          handler: data =>{
+            confirm = false;
+          }
+        }
+      ]
     })
+    alert.present();
+    alert.onDidDismiss(data =>{
+      if(confirm){
+        this.processing = true;
+        this.generateRef();
+        this.deposit.agent_goAhead = true;
+        this.deposit.time_agent_confirm = Date.now();
+        this.deposit.timeStampModified = Date.now();
+        this.deposit_svc.updateDeposit(this.deposit)
+        .then(() =>{
+          this.processing = false;
+          this.toast_svc.showToast('You have accepted this deposit payment')
+        })
+        .catch( err => {
+          this.processing = false;
+          console.log(err)
+        })
+      }else{
+        this.toast_svc.showToast('Deposit NOT accepted.')
+      }
+      })
   }
 
   rejectDeposit(){
-    this.processing = true;
-    this.message.topic = `Regarding your deposit of R${this.deposit.apartment.price} for the ${this.deposit.apartment.room_type}`
-    this.message.text = `Hi ${this.deposit.by.firstname}, I can not accept your deposit request, text me back if you want reasons`
-    this.message.to.uid = this.deposit.by.uid;
-    this.message.to.dp = this.deposit.by.dp;
-    this.message.to.displayName = this.deposit.by.firstname;
-    this.message.by.uid = this.deposit.to.uid;
-    this.message.by.dp = this.deposit.to.dp;
-    this.message.by.displayName = this.deposit.to.firstname;
-    this.user_svc.getUser(this.deposit.to.uid)
-    .pipe(
-      take(1)
-    )
-    .subscribe(user =>{
-      this.message.timeStamp = Date.now();
-      this.chat_svc.sendMessage(this.message, user.threads)
+    let confirm: boolean = false;
+    let alert = this.alertCtrl.create({
+      title: "DECLINE DEPOSIT",
+      message: "Are you sure you want to decline this deposit ?",
+      buttons: [
+        {
+          text: 'Decline',
+          handler: data =>{
+            confirm = true;
+          }
+        },
+        {
+          role: 'cancel',
+          text: 'Cancel',
+          handler: data =>{
+            confirm = false;
+          }
+        }
+      ]
     })
-    this.deposit.agent_goAhead = false;
-    this.deposit_svc.updateDeposit(this.deposit)
-    .then(() =>{
-      this.processing = false
-      this.toast_svc.showToast('You have rejected this deposit payment')
-    })
-    .catch( err => {
-      this.processing = false;
-      console.log(err)
+    alert.present();
+    alert.onDidDismiss(data =>{
+      if(confirm == true){
+        this.processing = true;
+        this.message.topic = `Regarding your deposit of R${this.deposit.apartment.price} for the ${this.deposit.apartment.room_type}`
+        this.message.text = `Hi ${this.deposit.by.firstname}, I can not accept your deposit request, text me back if you want reasons`
+        this.message.to.uid = this.deposit.by.uid;
+        this.message.to.dp = this.deposit.by.dp;
+        this.message.to.displayName = this.deposit.by.firstname;
+        this.message.by.uid = this.deposit.to.uid;
+        this.message.by.dp = this.deposit.to.dp;
+        this.message.by.displayName = this.deposit.to.firstname;
+        this.user_svc.getUser(this.deposit.to.uid)
+        .pipe(
+          take(1)
+        )
+        .subscribe(user =>{
+          this.message.timeStamp = Date.now();
+          this.chat_svc.sendMessage(this.message, user.threads)
+        })
+        this.deposit.agent_goAhead = false;
+        this.deposit.timeStampModified = Date.now();
+        this.deposit.time_agent_confirm = Date.now();
+        this.deposit_svc.updateDeposit(this.deposit)
+        .then(() =>{
+          this.processing = false
+          this.toast_svc.showToast('You have rejected this deposit payment')
+        })
+        .catch( err => {
+          this.processing = false;
+          console.log(err)
+        })
+
+      }else{
+        this.toast_svc.showToast('You have NOT rejected this deposit payment')
+      }
     })
   }
 
   cancelDeposit(){
-    this.processing = true;
-    this.message.topic = `Regarding the deposit of R${this.deposit.apartment.price} for the ${this.deposit.apartment.room_type}`
-    this.message.text = `Hi ${this.deposit.to.firstname}, I couldn't complete the deposit, text me back if you want reasons`
-    this.message.to.uid = this.deposit.to.uid;
-    this.message.to.dp = this.deposit.to.dp;
-    this.message.to.displayName = this.deposit.to.firstname;
-    this.message.by.uid = this.deposit.by.uid;
-    this.message.by.dp = this.deposit.by.dp;
-    this.message.by.displayName = this.deposit.by.firstname;
-    this.user_svc.getUser(this.deposit.by.uid)
-    .pipe(
-      take(1)
-    )
-    .subscribe(user =>{
-      this.message.timeStamp = Date.now();
-      this.chat_svc.sendMessage(this.message, user.threads)
+    let confirm: boolean = false;
+    let alert = this.alertCtrl.create({
+      title: "CANCEL DEPOSIT",
+      message: "Are you sure you want to cancel this deposit payment ?",
+      buttons: [
+        {
+          text: 'Yes cancel',
+          handler: data =>{
+            confirm = true;
+          }
+        },
+        {
+          role: 'cancel',
+          text: 'No do not cancel',
+          handler: data =>{
+            confirm = false;
+          }
+        }
+      ]
     })
-    this.deposit.tenant_confirmed = false;
-    this.deposit_svc.updateDeposit(this.deposit)
-    .then(() =>{
-      this.processing = false;
-      this.toast_svc.showToast('You have cancelled this deposit payment')
+    alert.present();
+    alert.onDidDismiss(data =>{
+      if(confirm == true){
+        this.processing = true;
+        this.message.topic = `Regarding the deposit of R${this.deposit.apartment.price} for the ${this.deposit.apartment.room_type}`
+        this.message.text = `Hi ${this.deposit.to.firstname}, I couldn't complete the deposit, text me back if you want reasons`
+        this.message.to.uid = this.deposit.to.uid;
+        this.message.to.dp = this.deposit.to.dp;
+        this.message.to.displayName = this.deposit.to.firstname;
+        this.message.by.uid = this.deposit.by.uid;
+        this.message.by.dp = this.deposit.by.dp;
+        this.message.by.displayName = this.deposit.by.firstname;
+        this.user_svc.getUser(this.deposit.by.uid)
+        .pipe(
+          take(1)
+        )
+        .subscribe(user =>{
+          this.message.timeStamp = Date.now();
+          this.chat_svc.sendMessage(this.message, user.threads)
+        })
+        this.deposit.time_tenant_confirmed = Date.now();
+        this.deposit.timeStampModified = Date.now();
+        this.deposit.tenant_confirmed = false;
+        this.deposit_svc.updateDeposit(this.deposit)
+        .then(() =>{
+          this.processing = false;
+          this.toast_svc.showToast('You have cancelled this deposit payment')
+        })
+        .catch( err => {
+          this.processing = false;
+          console.log(err)
+        })
+      }else{
+        this.toast_svc.showToast('You have NOT cancelled this deposit payment')
+      }
     })
-    .catch( err => {
-      this.processing = false;
-      console.log(err)
-    })
+    
   }
 
   confirmDeposit(){
-    this.processing = true;
-  	this.deposit.tenant_confirmed = true;
-    this.deposit_svc.updateDeposit(this.deposit)
-    .then(() =>{
-      this.processing =  false;
-      this.toast_svc.showToast('You have confirmed this deposit payment')
+    let confirm: boolean = false;
+    let alert = this.alertCtrl.create({
+      title: "CONFIRM DEPOSIT",
+      message: "Are you sure you want to confirm this deposit ?",
+      buttons: [
+        {
+          text: 'Confirm',
+          handler: data =>{
+            confirm = true;
+          }
+        },
+        {
+          role: 'cancel',
+          text: 'Cancel',
+          handler: data =>{
+            confirm = false;
+          }
+        }
+      ]
     })
-    .catch( err => {
-      this.processing = false;
-      console.log(err)
+    alert.present();
+    alert.onDidDismiss(data =>{
+      if(confirm){
+        this.processing = true;
+        this.deposit.tenant_confirmed = true;
+        this.deposit.time_tenant_confirmed = Date.now();
+        this.deposit.timeStampModified = Date.now();
+        this.deposit_svc.updateDeposit(this.deposit)
+        .then(() =>{
+          this.processing =  false;
+          this.toast_svc.showToast('You have confirmed this deposit payment')
+        })
+        .catch( err => {
+          this.processing = false;
+          console.log(err)
+        })
+      }else{
+        this.toast_svc.showToast('You have NOT confirmed this deposit payment')
+      }
     })
+  }
+
+  confirmMoveIn(){
+    let confirm: boolean = false;
+    let alert = this.alertCtrl.create({
+      title: "CONFIRM MOVE IN",
+      message: "Are you sure you want to confirm this move in ?",
+      buttons: [
+        {
+          text: 'Confirm',
+          handler: data =>{
+            confirm = true;
+          }
+        },
+        {
+          role: 'cancel',
+          text: 'Cancel',
+          handler: data =>{
+            confirm = false;
+          }
+        }
+      ]
+    })
+    alert.present();
+    alert.onDidDismiss(data =>{
+      if(confirm){
+        this.processing = true;
+        this.deposit.tenantMovedIn = true;
+        this.deposit.timeStampModified = Date.now();
+        this.deposit_svc.updateDeposit(this.deposit)
+        .then(() =>{
+          this.processing =  false;
+          this.toast_svc.showToast('You have confirmed your move in successfully, enjoy your stay !')
+        })
+        .catch( err => {
+          this.processing = false;
+          console.log(err)
+        })
+      }else{
+        this.toast_svc.showToast('You have NOT confirmed your move in ')
+      }
+    })
+    
   }
 
 }

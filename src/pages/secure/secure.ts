@@ -84,6 +84,7 @@ export class SecurePage {
     )
     .subscribe(data =>{
       this.deposit.landlord_credit = this.apartment.deposit - (this.apartment.deposit * data.deposit_commision);
+      this.deposit.agent_commision = this.apartment.deposit*data.deposit_commision*(1 - 0.4)
     })
   }
 
@@ -155,7 +156,16 @@ export class SecurePage {
   comingSoon(){
     let alert = this.alertCtrl.create({
       title: 'Coming Soon!',
-      subTitle: 'This feature is still under construction, please communicate with the advertiser about payments',
+      subTitle: 'This feature is still under construction, please use the Deposit/EFT feature for payments',
+      buttons: ['OK']
+    });
+    alert.present();
+  }
+
+  comingSooner(){
+    let alert = this.alertCtrl.create({
+      title: 'Coming Soon!',
+      subTitle: 'This feature is still under construction, please communicate with the landlord or agent about the lease',
       buttons: ['OK']
     });
     alert.present();

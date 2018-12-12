@@ -1,15 +1,17 @@
 import { Component, ViewChild } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, ToastController, Content } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, ToastController, Content, AlertController } from 'ionic-angular';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { SearchfeedProvider } from '../../providers/searchfeed/searchfeed';
 import { Observable } from 'rxjs-compat';
 import { Search } from '../../models/search.interface';
-//import { MessageInputPopupPage } from '../message-input-popup/message-input-popup';
+import { MapsProvider } from '../../providers/maps/maps';
 import { User } from '../../models/users/user.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { take } from 'rxjs-compat/operators/take';
 import { PaginationProvider } from '../../providers/pagination/pagination';
 import { Subscription } from 'rxjs-compat/Subscription';
+import { Address } from '../../models/location/address.interface';
+import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 
 @IonicPage()
 @Component({
@@ -28,6 +30,12 @@ export class SearchfeedPage {
   loading: boolean = true;
   loadingMore: boolean = false;
   done: boolean = false;
+  predictions: any[] = [];
+  pointOfInterest: Address;
+  userSubs: Subscription;
+  predictionLoading: boolean = false;
+  connectionError: boolean = false;
+  online: boolean = false;
   imagesLoaded: boolean[] = 
       [false, false, false, false, false, false, false, false, false, false,
        false, false, false, false, false, false, false, false, false, false, 
@@ -42,11 +50,15 @@ export class SearchfeedPage {
   	private searchfeed_svc: SearchfeedProvider, 
     private modal: ModalController, 
     private local_db: LocalDataProvider,
+    private map_svc: MapsProvider,
+    private errHandler: ErrorHandlerProvider,
     private toastCtrl: ToastController,
+    private alertCtrl: AlertController,
     private page: PaginationProvider){
   	
     this.searchfeed_svc.getAllSearches();
-    
+    this.pointOfInterest = this.object_init.initializeAddress(); //Initialize the point of interest with default values
+    this.pointOfInterest.description = '';
     this.user = this.object_init.initializeUser();
     this.local_db.getUser().then(user =>{
       if(user) this.user = user;
@@ -99,7 +111,17 @@ export class SearchfeedPage {
     toast.present()
   }
 
-  
+  gotoLandlordSearch(){
+    this.navCtrl.push('LandlordSearchPage')
+  }
+
+  gotoMyLandlords(){
+    this.navCtrl.push('MyLandlordsPage')
+  }
+
+  gotoMyAgents(){
+    this.navCtrl.push('MyAgentsPage')
+  }
 
   ionViewDidLoad(){
     this.monitorEnd();
@@ -124,5 +146,90 @@ export class SearchfeedPage {
       }
     })
   }
+
+  /*Getting autocomplete predictions from the google maps place predictions service*/
+  getPredictions(event){
+    this.predictionLoading = true;
+    //If there is an internet connection try to make requests
+    if(window.navigator.onLine){
+      this.online = true;
+      if(event.key === "Backspace" || event.code === "Backspace"){
+        setTimeout(()=>{//Set timeout to limit the number of requests made during a deletion
+          this.map_svc.getPlacePredictionsSA(event.target.value).then(data =>{
+            this.handleSuccess(data);
+          })
+          .catch(err =>{
+            console.log('Error 1')
+            this.handleNetworkError();
+          })
+        }, 3000)
+      }else{// When location is being typed
+        this.map_svc.getPlacePredictionsSA(event.target.value).then(data =>{
+          if(data == null || data == undefined ){
+            console.log('Error 2')
+            this.handleNetworkError();
+          }else{
+            this.handleSuccess(data);
+          }
+        })
+        .catch(err => {
+          console.log('Error 3')
+          this.handleNetworkError();
+        })
+      }
+    }else{ //If there's no connection set online status to false, show message and stop spinner
+      this.online = false;
+      this.predictionLoading = false;
+      this.showToast('You are not connected to the internet...')
+    }
+  }
+
+
+  cancelSearch(){
+    this.predictions = [];
+    this.predictionLoading = false;
+  }
+
+  selectPlace(place){
+    this.predictionLoading = true;
+    this.map_svc.getSelectedPlace(place).then(data => {
+      this.pointOfInterest = data;
+      this.predictions = [];
+      this.predictionLoading = false;
+    })
+    .catch(err => {
+      this.errHandler.handleError(err);
+      this.predictionLoading = false;
+    })
+  }
+
+  handleSuccess(data: any[]){
+    this.connectionError = false;
+    this.predictions = [];
+    this.predictions = data;
+    this.predictionLoading = false;
+  }
+
+  handleNetworkError(){
+    if(this.connectionError == false)
+      this.errHandler.handleError({message: 'You are offline...check your internet connection'});
+      this.predictionLoading = false;
+      this.connectionError = true;
+  }
+
+  showWarnig(title: string, message: string){
+    let alert = this.alertCtrl.create({
+      title: title,
+      message: message,
+      buttons: ['OK']
+    })
+    alert.present();
+  }
+
+  returnFirst(input: string): string{
+    if(input == undefined) return '';
+    return input.split(" ")[0];
+  }
+
   
 }

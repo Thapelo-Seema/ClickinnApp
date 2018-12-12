@@ -6,8 +6,6 @@ import { AngularFirestore } from 'angularfire2/firestore';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-//import { PrefferencesPage } from '../prefferences/prefferences';
-//import { AlertPage } from '../alert/alert';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { Subscription } from 'rxjs-compat/Subscription';
 
@@ -23,10 +21,12 @@ export class WelcomePage {
   predictions: any[] = [];
   pointOfInterest: Address;
   user: User;
+  search: boolean = false;
   userSubs: Subscription;
   loading: boolean = false;
   predictionLoading: boolean = false;
   connectionError: boolean = false;
+  online: boolean = false;
   constructor(
     public navCtrl: NavController, 
     private storage: LocalDataProvider,
@@ -39,34 +39,37 @@ export class WelcomePage {
     private platform: Platform,
     private alertCtrl: AlertController){
     this.platform.ready().then(value =>{
-      
-      this.loading = true;
-      this.user = this.object_init.initializeUser();
-      this.pointOfInterest = this.object_init.initializeAddress();
-      this.pointOfInterest.description = '';
-      this.storage.getUser().then(data =>{
+      this.loading = true; //indicate that data is being loaded from the database
+      this.user = this.object_init.initializeUser(); //Initialize user object with default values
+      this.pointOfInterest = this.object_init.initializeAddress(); //Initialize the point of interest with default values
+      this.pointOfInterest.description = ''; //Initialize the description of the the POI with an empty string (for some strange reason)
+      this.storage.getUser().then(data =>{ //Get a cached copy of user
+          //Subscribing to the most recent user object in the database
           this.userSubs = this.afs.collection('Users').doc<User>(data.uid).valueChanges().subscribe(user =>{
             this.user = user;
             this.loading = false;
           }, 
           err =>{
+            //If theres an error getting the user info from the firestore database display the error message from firestore and stop the spinner
             this.errHandler.handleError(err);
             this.loading = false;
           })
         })
         .catch(() => {
-          this.errHandler.handleError({message: "Could not find user"});
+          //If there's an error getting the user from the local storage display the message below and stop the spinner
+          this.errHandler.handleError({message: "Could not find local user", code: 101});
           this.loading = false;
         })
     })
   }
 
-  ionViewWillLeave(){
+  //Unsubscribe from all subscriptions before leaving the page
+  ionViewDidLeave(){
     console.log('Welcome page unsubscrinbing...')
     this.userSubs.unsubscribe();
   }
 
-
+  //Navigating to the chats page
   gotoChats(){
     this.loading = true;
     this.navCtrl.push('ChatsPage');
@@ -75,6 +78,7 @@ export class WelcomePage {
   
 /*Navigating to the next page, which is the PrefferencesPage and passing the pointOfInterest object along*/
   nextPage(){
+    //If the POI is not set by a google maps response throw an error otherwise cache the POI and navigate to the next page
     if(this.pointOfInterest.lat == 0 && this.pointOfInterest.lng == 0){
       this.showWarnig(
         'Enter area or institution!',
@@ -86,55 +90,44 @@ export class WelcomePage {
       this.navCtrl.push('PrefferencesPage');
     })
     .catch(err => {
-      this.errHandler.handleError(err);
+      this.errHandler.handleError({message: 'Could not set POI', code: 102});
       this.loading = false;
     })
   }
 
-  /*Getting autocomplete predictions from the google maps place predictions service*/
+/*Getting autocomplete predictions from the google maps place predictions service*/
   getPredictions(event){
     this.predictionLoading = true;
+    //If there is an internet connection try to make requests
     if(window.navigator.onLine){
+      this.online = true;
       if(event.key === "Backspace" || event.code === "Backspace"){
-        setTimeout(()=>{
-          this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
-            this.connectionError = false;
-            this.predictions = [];
-            this.predictions = data;
-            this.predictionLoading = false;
+        setTimeout(()=>{//Set timeout to limit the number of requests made during a deletion
+          this.map_svc.getPlacePredictionsSA(event.target.value).then(data =>{
+            this.handleSuccess(data);
           })
-          .catch(err => {
+          .catch(err =>{
             console.log('Error 1')
-           if(this.connectionError == false)
-            this.errHandler.handleError({message: 'Your internet connection is faulty please try again once a proper connection is established'});
-            this.predictionLoading = false;
-            this.connectionError = true;
+            this.handleNetworkError();
           })
         }, 3000)
-      }else{
-        this.map_svc.getPlacePredictionsSA(event.target.value).then(data => {
+      }else{// When location is being typed
+        this.map_svc.getPlacePredictionsSA(event.target.value).then(data =>{
           if(data == null || data == undefined ){
             console.log('Error 2')
-            if(this.connectionError == false)
-          this.errHandler.handleError({message: 'Your internet connection is faulty please try again once a proper connection is established'});
-          this.predictionLoading = false;
-          this.connectionError = true;
+            this.handleNetworkError();
           }else{
-            this.connectionError = false;
-            this.predictions = [];
-            this.predictions = data;
-            this.predictionLoading = false;
+            this.handleSuccess(data);
           }
         })
         .catch(err => {
           console.log('Error 3')
-          if(this.connectionError == false)
-          this.errHandler.handleError({message: 'Your internet connection is faulty please try again once a proper connection is established'});
-          this.predictionLoading = false;
-          this.connectionError = true;
+          this.handleNetworkError();
         })
       }
-    }else{
+    }else{ //If there's no connection set online status to false, show message and stop spinner
+      this.online = false;
+      this.predictionLoading = false;
       this.showToast('You are not connected to the internet...')
     }
   }
@@ -142,30 +135,65 @@ export class WelcomePage {
   showToast(message){
     let toast = this.toastCtrl.create({
       message: message,
-      duration: 3000
+      duration: 9000
     })
     toast.present();
   }
 
   cancelSearch(){
     this.predictions = [];
-    this.loading = false;
+    this.predictionLoading = false;
   }
 
   selectPlace(place){
-    this.loading = true;
+    this.predictionLoading = true;
     this.map_svc.getSelectedPlace(place).then(data => {
       this.pointOfInterest = data;
       this.predictions = [];
-      this.loading = false;
+      this.predictionLoading = false;
     })
     .catch(err => {
       this.errHandler.handleError(err);
+      this.predictionLoading = false;
+    })
+  }
+
+  gotoOwners(){
+    this.loading = true;
+    this.navCtrl.push('OwnersDashboardPage')
+    this.loading = false;
+  }
+
+  gotoLandlordDash(){
+    this.loading = true;
+    this.storage.setUserType('Landlord')
+    .then(val =>{
+      this.navCtrl.push('LandlordDashboardPage');
       this.loading = false;
     })
   }
 
-  
+  showSearch(){
+    this.search = true;
+  }
+
+  showOptions(){
+    this.search = false;
+  }
+
+  handleSuccess(data: any[]){
+    this.connectionError = false;
+    this.predictions = [];
+    this.predictions = data;
+    this.predictionLoading = false;
+  }
+
+  handleNetworkError(){
+    if(this.connectionError == false)
+      this.errHandler.handleError({message: 'You are offline...check your internet connection'});
+      this.predictionLoading = false;
+      this.connectionError = true;
+  }
 
   showWarnig(title: string, message: string){
     let alert = this.alertCtrl.create({
@@ -180,5 +208,7 @@ export class WelcomePage {
     if(input == undefined) return '';
     return input.split(" ")[0];
   }
+
+ 
 
 }

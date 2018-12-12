@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, AlertController, Platform, ToastController } from 'ionic-angular';
+import { Component, ViewChild } from '@angular/core';
+import { IonicPage, NavController, NavParams, AlertController, Platform, ToastController, Content } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { Property } from '../../models/properties/property.interface';
 import { Camera, CameraOptions } from '@ionic-native/camera';
@@ -24,7 +24,7 @@ import { Subscription } from 'rxjs-compat/Subscription';
   templateUrl: 'upload-and-earn.html',
 })
 export class UploadAndEarnPage{
-  
+  @ViewChild(Content) content: Content;
   apartment: Apartment  = {
     available: true,
     dP: {name: 'placeholder', path: 'path', progress: 0,url: "assets/imgs/placeholder.jpg"},
@@ -40,7 +40,9 @@ export class UploadAndEarnPage{
     occupiedBy: this.object_init.initializeTenant(),
     user_id: '',
     complete: false,
-    timeStampModified: 0
+    timeStampModified: 0,
+    quantity_available: 1,
+    by: ''
   }
   building: Property ={
   	address: null,
@@ -81,8 +83,6 @@ export class UploadAndEarnPage{
   uploading: boolean = false;
   existing: boolean = false;
   progss: number = 0;
-  apartments: Apartment[] = [];
-  apartmentsSub: Subscription;
   propertySubs: Subscription;
   imagesLoaded: boolean[] = 
       [false, false, false, false, false, false, false, false, false, false,
@@ -109,17 +109,15 @@ export class UploadAndEarnPage{
       if(platform.is('cordova')) this.onMobile = true;
       this.storage.getUser().then(user =>{ //getting user from local storage
         this.user = user;
-        this.building.user_id = user.uid;
-        this.apartmentsSub = this.accom_svc.getUserApartments(user.uid)
-        .subscribe(aparts =>{
-          this.apartments = aparts;
-        })
+        this.building.user_id = user.uid; //Setting the user id of the building
         this.propertySubs = this.accom_svc.getUsersProperties(user.uid).subscribe(buildings =>{
+          //Subscribing to the users properties and declaring a loaded - boolean for each buildings dp
           this.buildings = buildings;
           buildings.forEach(bld =>{
             this.imagesLoaded.push(false);
           })
         })
+        //If a navigation parameter containing prop_id is passed, we are just editting an existing apartment
         if(this.navParams.data.prop_id != undefined){
           console.log(this.navParams.data)
           this.initializeExisting(this.navParams.data)
@@ -132,6 +130,10 @@ export class UploadAndEarnPage{
     //this.showAlert();
   }
 
+  scrollToTop(){
+    this.content.scrollToTop();
+  }
+
   initializeExisting(apartment: Apartment){
     this.existing = true;
     this.storage.setApartment(apartment)
@@ -142,7 +144,6 @@ export class UploadAndEarnPage{
   ionViewWillLeave(){
     console.log('uplaod page unsubscrinbing...')
     this.propertySubs.unsubscribe();
-    this.apartmentsSub.unsubscribe();
   }
 
   selectChange(e) {
@@ -158,7 +159,7 @@ export class UploadAndEarnPage{
   }
 
   selectEBuilding(building: Property){
-    this.building = building;
+    this.building = this.object_init.initializeProperty2(building);
     this.apartment.property = building;
     this.apartment.prop_id = building.prop_id;
     this.buildings = [];
@@ -426,7 +427,7 @@ export class UploadAndEarnPage{
   uploadApartPics(): Promise<void>{
     if(this.apartmentImages.length <= 0){
       console.log('No apartment images... ', this.apartmentImages);
-      return;
+      return new Promise<void>((resolve, reject) =>resolve())
     } 
     return this.uploadPics(this.apartmentImages).then(images =>{
       this.apartment.images = images;
@@ -469,7 +470,7 @@ export class UploadAndEarnPage{
   }
 
   uploadBuildingPics(): Promise<void>{
-    if(!(this.propertyImages.length > 0)) return
+    if(!(this.propertyImages.length > 0)) return new Promise<void>((resolve, reject) =>resolve())
     return new Promise<void>((resolve, reject) =>{
       this.uploadPics(this.propertyImages).then(images =>{
       this.building.images = images;

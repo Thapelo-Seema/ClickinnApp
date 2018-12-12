@@ -31,29 +31,64 @@
   
     <div>
       <ion-item>
-        <h1>Display Name</h1>
+        <strong>Display Name</strong>
         <p>{{user?.displayName ? user?.displayName: 'none provided'}}</p>
       </ion-item>
       <ion-item>
-        <h1>Firstname</h1>
+        <strong>Firstname</strong>
         <p>{{user?.firstname ? user?.firstname: 'none provided'}}</p>
       </ion-item>
       <ion-item>
-        <h1>Lastname</h1>
+        <strong>Lastname</strong>
         <p>{{user?.lastname ? user?.lastname: 'none provided'}}</p>
       </ion-item>
       <ion-item>
-        <h1>Email</h1>
+        <strong>Email</strong>
         <p>{{user?.email ? user?.email: 'none provided'}}</p>
       </ion-item>
       <ion-item>
-        <h1>Phone</h1>
+        <strong>Phone</strong>
         <p>{{user?.phoneNumber ? user?.phoneNumber: 'none provided'}}</p>
       </ion-item>
       <ion-item>
-        <h1>User role</h1>
-        <p>{{user?.user_type ? user?.user_type: 'none provided'}}</p>
+        <strong>Occupation</strong>
+        <p>{{user?.occupation ? user?.occupation: 'none provided'}}</p>
       </ion-item>
+      <div style="background: lightblue; margin-top: 15px; margin-bottom: 15px; padding: 4px; border-radius: 4px" >
+        <h1 text-center> Banking details </h1>
+          <ion-row>
+            <ion-col>
+              <strong>Bank</strong> 
+            </ion-col>
+            <ion-col>
+              {{user?.bank}}
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <strong>Accountholder</strong> 
+            </ion-col>
+            <ion-col text-wrap>
+             {{ user?.account_holder}}
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <strong>Account number</strong> 
+            </ion-col>
+            <ion-col text-wrap>
+              {{user?.account_number}} 
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <strong>Branch code</strong> 
+            </ion-col>
+            <ion-col text-wrap>
+              {{user?.bank_code}} 
+            </ion-col>
+          </ion-row>
+        </div>
     </div>
       </ion-col>
       <ion-col col-0 col-sm-0 col-md-0 col-lg-3>

@@ -13,7 +13,6 @@ import { take } from 'rxjs-compat/operators/take';
 import { Push, PushOptions, PushObject } from '@ionic-native/push';
 import { Thread } from '../models/thread.interface';
 import { DepositProvider } from '../providers/deposit/deposit';
-import { Network } from '@ionic-native/network';
 import { Subscription } from 'rxjs-compat/Subscription'
 
 @Component({
@@ -56,7 +55,7 @@ export class MyApp {
     private push: Push,
     private alertCtrl: AlertController,
     private deposit_svc: DepositProvider,
-    private network: Network,
+    
     //private events: Events
     ){
     this.loading = true;
@@ -129,6 +128,16 @@ export class MyApp {
     this.loading = true;
     this.navCtrl.push('ChatsPage');
     this.loading = false;
+  }
+
+  gotoSupport(){
+    this.loading = true;
+    this.navCtrl.push('SupportPage');
+    this.loading = false;
+  }
+
+  gotoSupportAdmin(){
+    this.navCtrl.push('SupportAdminPage')
   }
 
   gotoBookings(){
@@ -350,6 +359,12 @@ export class MyApp {
     this.loading = false;
   }
 
+  gotoOwners(){
+    this.loading = true;
+    this.navCtrl.push('OwnersDashboardPage')
+    this.loading = false;
+  }
+
   //Navigates the user their appropriate homepage at startup
   navigateUser(user: User){
     if(user.user_type){ //check i user_type property exists in user
@@ -375,6 +390,16 @@ export class MyApp {
           break;
         }
         case 'Thapelo':{
+          //Navigate to master
+          this.rootPage = 'WelcomePage';
+          break;
+        }
+        case 'admin':{
+          //Navigate to master
+          this.rootPage = 'WelcomePage';
+          break;
+        }
+        case 'landlord':{
           //Navigate to master
           this.rootPage = 'WelcomePage';
           break;
@@ -522,10 +547,9 @@ export class MyApp {
           this.online = true;
           this.showToast('You are back online!')
         }
-        this.afs.firestore.enableNetwork().then(() =>{
-          this.syncAuthenticatedUser();
-        })
-        .catch(err => console.log(err))
+        
+        this.syncAuthenticatedUser();
+        
       })
   }
 
@@ -534,8 +558,6 @@ export class MyApp {
       window.addEventListener('offline', () =>{
         this.online = false;
         this.showToast('You are offline...')
-        this.afs.firestore.disableNetwork()
-        .catch(err => console.log(err))
       })
   }
 

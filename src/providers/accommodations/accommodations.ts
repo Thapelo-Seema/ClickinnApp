@@ -15,6 +15,7 @@ import { map } from 'rxjs-compat/operators/map';
 /*import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/filter';*/
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { take } from 'rxjs-compat/operators/take';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
@@ -306,6 +307,12 @@ export class AccommodationsProvider {
 
   search(search_obj: Search):Observable<Apartment[]>{
     console.log('search_obj: ', search_obj);
+    this.afs.collection('Apartments')
+    .valueChanges()
+    .pipe(take(1))
+    .subscribe(data =>{
+      console.log('All aarts: ',data)
+    })
    if(search_obj.apartment_type !== 'Any' && search_obj.parking && search_obj.wifi && search_obj.nsfas && search_obj.laundry){
      console.log('case 1');
      return this.afs.collection<Apartment>('/Apartments', ref => 

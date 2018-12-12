@@ -7,6 +7,9 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
+import { User } from '../../models/users/user.interface';
+import { ServiceDeal } from '../../models/service_deal.interface';
+import { take } from 'rxjs-compat/operators/take'
 
 interface QueryConfig {
   path: string, //  path to collection
@@ -160,16 +163,96 @@ export class SearchfeedProvider {
     const cursor = this.getCursor()
     const more = this.afs.collection('Searches2', ref => {
       return ref
-              .where('Address.locality_lng', '==', area)
-              .orderBy('timeStamp', 'desc' )
-              .limit(10)
-              .startAfter(cursor)
+      .where('Address.locality_lng', '==', area)
+      .orderBy('timeStamp', 'desc' )
+      .limit(10)
+      .startAfter(cursor)
     })
     this.mapAndUpdate(more)
   }
 
   getSearchesSince(){
   	
+  }
+
+  getAllLandLords(){
+    return this.afs.collection<User>(`Users`, ref =>{
+      return ref.where('user_type', '==', 'landlord')
+    })
+    .valueChanges()
+  }
+
+  getLandLordsByLocation(location: any){
+    let match: boolean = false;
+    return this.afs.collection<User>('Users', ref =>{
+      return ref.where('user_type', '==', 'landlord')
+    })
+    .valueChanges()
+    .map(users =>{
+      return users.filter(user => {
+        user.locations.forEach(loc =>{
+            if(this.returnFirst(loc.description) == this.returnFirst(location.description)) match = true;
+        })
+        return match;
+      })
+    })
+  }
+
+  returnFirst(input: string): string{
+    if(input == undefined) return '';
+    return input.split(',')[0] + ', ' + input.split(',')[1];
+  }
+
+  proposeAgentService(deal: ServiceDeal): Promise<void>{
+    let dl = deal;
+     return new Promise<void>((resolve, reject) =>{
+        this.afs.collection('AgentProposals', ref =>{
+          return ref.where('landlord_uid', '==', deal.landlord_uid)
+                    .where('agent_uid', '==', deal.agent_uid)
+        })
+        .valueChanges()
+        .pipe(take(1))
+        .subscribe(data =>{
+          if(data.length > 0){
+            resolve();
+         }else{
+        this.afs.collection<ServiceDeal>('AgentProposals').add(deal)
+        .then(dat =>{
+          let docRef = dat;
+          let doc_id = docRef.id;
+          dl.id = doc_id;
+          this.afs.collection<ServiceDeal>('AgentProposals').doc(doc_id).set(dl)
+          .then(() => resolve())
+        })
+      }
+    })
+   })
+    
+  }
+
+  updateProposal(deal: ServiceDeal){
+    return this.afs.collection<ServiceDeal>('AgentProposals').doc(deal.id).set(deal)
+  }
+
+  getLandlordAgents(uid: string){
+    return this.afs.collection<ServiceDeal>('AgentProposals', ref =>{
+      return ref.where('landlord_uid', '==', uid)
+                .where('landlord_agreed', '==', true)
+    }).valueChanges()
+  }
+
+  getAgentsLandlords(uid: string){
+    return this.afs.collection<ServiceDeal>('AgentProposals', ref =>{
+      return ref.where('agent_uid', '==', uid)
+                .where('landlord_agreed', '==', true)
+    }).valueChanges()
+  }
+
+  getLandlordAgentProposals(uid: string){
+    return this.afs.collection<ServiceDeal>('AgentProposals', ref =>{
+      return ref.where('landlord_uid', '==', uid)
+                .where('landlord_agreed', '==', false)
+    }).valueChanges()
   }
 
 }

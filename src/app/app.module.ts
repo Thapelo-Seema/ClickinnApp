@@ -24,7 +24,7 @@ import { File } from '@ionic-native/file';
 import { FileTransfer } from '@ionic-native/file-transfer';
 import { Push } from '@ionic-native/push';
 import { ProgressBarModule } from "angular-progress-bar";
-import { Network } from '@ionic-native/network';
+
 
 
 //import custom pages
@@ -40,7 +40,6 @@ import { UserSvcProvider } from '../providers/user-svc/user-svc';
 import { ToastSvcProvider } from '../providers/toast-svc/toast-svc';
 import { FileUploadSvcProvider } from '../providers/file-upload-svc/file-upload-svc';
 import { DepositProvider } from '../providers/deposit/deposit';
-import { ConnectionProvider } from '../providers/connection/connection';
 import { PaginationProvider } from '../providers/pagination/pagination';
 
 
@@ -94,8 +93,6 @@ export const firebaseConfig = {
     FileUploadSvcProvider,
     Push,
     DepositProvider,
-    ConnectionProvider,
-    Network,
     PaginationProvider 
   ]
 })

@@ -61,6 +61,10 @@ export class SignupPage {
     this.navCtrl.setRoot('LoginPage');
   }
 
+  gotoTerms(){
+    this.navCtrl.push('TermsPage');
+  }
+
   resetPassword(email: string){
     this.afAuth.auth.sendPasswordResetEmail(email)
     .then(() => {

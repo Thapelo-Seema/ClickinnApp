@@ -57,6 +57,11 @@
 			</ion-list>
 		</ion-item>
 		<ion-item text-wrap>
+			<ion-icon name='home' color="light-gray" item-start></ion-icon>
+			Apartments left 
+			<ion-note color="danger" item-end>{{apartment?.quantity_available ? apartment?.quantity_available : 1 }}</ion-note>
+		</ion-item>
+		<ion-item text-wrap>
 			<ion-icon name='cash' color="light-gray" item-start></ion-icon>
 			Deposit ( 1st month rent incl. ) <ion-note item-end>R{{apartment?.deposit}}</ion-note>
 		</ion-item>

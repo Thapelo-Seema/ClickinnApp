@@ -26,7 +26,7 @@
 	  		<button ion-button clear (click)="signup()">Create An Account</button>
 	  	</ion-buttons>
 	  	<ion-buttons start>
-	  		<button ion-button small clear margin-vertical color="silver">Forgot password ?</button>
+	  		<button ion-button small clear margin-vertical color="silver" (click)="resetPassword()" >Forgot password ?</button>
 	  	</ion-buttons>
 	</div>
 	<div *ngIf="loading" class="centered_on_screen" 

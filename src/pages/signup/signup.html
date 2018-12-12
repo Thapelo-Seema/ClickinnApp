@@ -52,6 +52,10 @@
       </ion-item>
     </form>
     <ion-buttons>
+      <ion-item text-wrap no-lines style="background: transparent; color: white">
+         <ion-label>I agree to the <button ion-button clear small (click)="gotoTerms()" >terms of service</button> for using the Clickinn platform</ion-label>
+         <ion-checkbox [(ngModel)]="seeker.agreed_to_terms"></ion-checkbox>
+      </ion-item>
       <button ion-button color="secondary" (click)="signup()">Sign Up</button>
       <button ion-button clear (click)="signin()">Have an account ?</button>
     </ion-buttons>

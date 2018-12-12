@@ -16,4 +16,5 @@ export interface Appointment{
     address?: string;
     bookerDp?: string;
     appointment_id?: string;
+    timeStampModified?: number;
 }

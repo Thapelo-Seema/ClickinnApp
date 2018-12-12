@@ -25,24 +25,38 @@
         <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
         </ion-col>
         <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-          <h1  style="color: white">Moving closer to school or work {{user ? returnFirst(user?.displayName): ''}}?</h1>
-          <p style="color: white">Enter the name of the school, company or the area below and press next.</p>
-          <ion-searchbar type="search" [(ngModel)]="pointOfInterest.description" 
-            placeholder="e.g. Wits or liberty life  or  Braamfontein" (ionInput)="getPredictions($event)" mode="ios">
-          </ion-searchbar>
-          <div *ngIf="predictionLoading" style="background: rgba(0, 0, 0, 0.8); color: white; padding-top: 5px; padding-bottom: 5px;  text-align: center; z-index: 1">
-            <ion-spinner name="ios"></ion-spinner> &nbsp;&nbsp;
-            Loading predictions...
+          <div *ngIf="!search">
+            <h1  style="color: white">Choose your option {{user ? returnFirst(user?.displayName): ''}}</h1>
+            <ion-buttons>
+              <button ion-button round outline (click)="showSearch()">Search for Accommodation</button>
+              <button ion-button round outline margin-vertical (click)="gotoLandlordDash()">I am an agent</button>
+              <button ion-button round outline (click)="gotoOwners()" >I am a landlord</button>
+            </ion-buttons>
           </div>
-          <ion-list *ngIf="predictions">
-            <button ion-item *ngFor="let pred of predictions" (click)="selectPlace(pred)">{{pred?.description}}</button>
-          </ion-list>
-          <ion-buttons text-center>
-            <button ion-button margin-vertical padding-horizontal round outline (click)="nextPage()">
-              Next &nbsp;&nbsp;&nbsp;&nbsp;
-                <ion-icon name="arrow-round-forward"></ion-icon>
-            </button>
-          </ion-buttons>
+          <div *ngIf="search" >
+            <h1  style="color: white">Moving closer to school or work {{user ? returnFirst(user?.displayName): ''}}?</h1>
+            <p style="color: white">Enter the name of the school, company or the area below and press next.</p>
+            <ion-searchbar type="search" [(ngModel)]="pointOfInterest.description" 
+              placeholder="e.g. Wits or liberty life  or  Braamfontein" (ionInput)="getPredictions($event)" mode="ios">
+            </ion-searchbar>
+            <div *ngIf="predictionLoading" style="background: rgba(0, 0, 0, 0.8); color: white; padding-top: 5px; padding-bottom: 5px;  text-align: center; z-index: 1">
+              <ion-spinner name="ios"></ion-spinner> &nbsp;&nbsp;
+              Loading predictions...
+            </div>
+            <ion-list *ngIf="predictions">
+              <button ion-item *ngFor="let pred of predictions" (click)="selectPlace(pred)">{{pred?.description}}</button>
+            </ion-list>
+            <ion-buttons text-center>
+              <button ion-button margin-vertical padding-horizontal round outline (click)="showOptions()">
+                <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;&nbsp;&nbsp;
+                   Options 
+              </button>
+              <button ion-button margin-vertical padding-horizontal round outline (click)="nextPage()">
+                Next &nbsp;&nbsp;&nbsp;&nbsp;
+                  <ion-icon name="arrow-round-forward"></ion-icon>
+              </button>
+            </ion-buttons>
+          </div>
         </ion-col>
         <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
         </ion-col>

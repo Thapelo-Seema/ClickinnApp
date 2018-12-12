@@ -16,6 +16,14 @@ export class LocalDataProvider {
    
   }
 
+  setChannelID(channel_id: string){
+    return this.storage.set('channel_id', channel_id)
+  }
+
+  getChannelID(){
+    return this.storage.get('channel_id')
+  }
+
   setTransactionState(state: any){
     return this.storage.set('transaction_state', state)
   }

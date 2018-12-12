@@ -41,9 +41,17 @@ export class DepositsPage {
         if(deps.length > 0 ){
           this.loading = false;
           deps.forEach(dep =>{
-            if(dep.to.uid == user.uid && !dep.transaction_closed) this.balance += dep.landlord_credit
+            if(dep.to.uid == user.uid && !dep.transaction_closed){
+              if(dep.apartment.by && dep.apartment.by == 'Agent'){
+                this.balance += dep.agent_commision
+              }else {
+                this.balance += dep.landlord_credit
+              }
+            } 
               console.log(this.balance)
           })
+          this.user.balance = this.balance;
+          this.dep_svc.updateUserBalance(user.uid, this.balance)
         }else{
           this.loading = false;
           this.toast_svc.showToast('You have no deposit transactions on this profile...')

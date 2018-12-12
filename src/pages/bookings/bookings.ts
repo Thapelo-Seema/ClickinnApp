@@ -12,7 +12,7 @@ import { AccommodationsProvider } from '../../providers/accommodations/accommoda
 import { Subscription } from 'rxjs-compat/Subscription';
 import { Calendar } from '@ionic-native/calendar';
 import * as firebase from 'firebase';
-import { PaginationProvider } from '../../providers/pagination/pagination';
+//import { PaginationProvider } from '../../providers/pagination/pagination';
 
  
 @IonicPage()
@@ -51,7 +51,7 @@ export class BookingsPage {
     private errHandler: ErrorHandlerProvider,
     private platform: Platform,
     private alertCtrl: AlertController,
-    private page: PaginationProvider
+    //private page: PaginationProvider
     ){
 
     this.loading = true;
@@ -67,6 +67,7 @@ export class BookingsPage {
       console.log('cached user: ', user)
   		this.user = user; 
       if(this.navCtrl.parent != null){//This means you're in the Landlords/agents appointments interface
+        console.log('Host')
         this.appointments = null;
         this.appointments = this.appt_svc.getHostBookings(user.uid);
         //if(this.appt_svc.data)this.appt_svc.reset();
@@ -115,7 +116,7 @@ export class BookingsPage {
       }
       else{
         this.appointments = null;
-        //if(this.appt_svc.data)this.appt_svc.reset();
+        console.log('else paet')
         this.appt_svc.initUserBookings(user.uid)
         this.appointments = this.appt_svc.getUserBookings(user.uid);
         this.role = 'user';
@@ -175,6 +176,7 @@ export class BookingsPage {
 
   declineBooking(appointment: Appointment){
     let app = appointment;
+    app.timeStampModified = Date.now();
     app.host_declines = true;
     app.host_confirms = false;
     app.seeker_cancels = false;
@@ -215,6 +217,7 @@ export class BookingsPage {
 
   confirmBooking(appointment: Appointment){
     let app = appointment;
+    app.timeStampModified = Date.now();
     app.host_confirms = true;
     app.host_declines = false;
     app.seeker_cancels = false;
@@ -259,6 +262,7 @@ export class BookingsPage {
 
   seekerCancel(appointment: Appointment){
     let app = appointment;
+    app.timeStampModified = Date.now();
     app.seeker_cancels = true;
     app.host_confirms = false;
     app.host_declines = false;
@@ -294,7 +298,6 @@ export class BookingsPage {
       this.toast_svc.showToast('Viewing appointment NOT cancelled.')
     }
     })
-    
   }
 
   showInput(appointment: Appointment){
