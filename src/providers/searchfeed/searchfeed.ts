@@ -9,7 +9,8 @@ import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
 import { User } from '../../models/users/user.interface';
 import { ServiceDeal } from '../../models/service_deal.interface';
-import { take } from 'rxjs-compat/operators/take'
+import { take } from 'rxjs-compat/operators/take';
+import { Subscription } from 'rxjs-compat/Subscription';
 
 interface QueryConfig {
   path: string, //  path to collection
@@ -30,14 +31,32 @@ export class SearchfeedProvider {
   private query: QueryConfig;
 
   // Observable data
-  data: Observable<any>;
+  data: Observable<any> = this._data.asObservable();
   done: Observable<boolean> = this._done.asObservable();
   loading: Observable<boolean> = this._loading.asObservable();
-
+  data1Subs: Subscription;
+  data2Subs: Subscription;
   constructor(private afs: AngularFirestore) {
   }
 
+reset(){
+  console.log('reseting...')
+  this.data = this._data.asObservable()
+  this._data.next([])
+  this._done.next(false);
+}
 
+unsubscribe(){
+  console.log('searchfeed unsubscribing...')
+  this.reset()
+  if(this.data1Subs) this.data1Subs.unsubscribe();
+  if(this.data2Subs) this.data2Subs.unsubscribe();
+}
+
+refresh(){
+  this.reset()
+  this.getAllSearches();
+}
 
   // Determines the doc snapshot to paginate query 
   private getCursor() {
@@ -51,14 +70,11 @@ export class SearchfeedProvider {
 
   // Maps the snapshot to usable format the updates source
   private mapAndUpdate(col: AngularFirestoreCollection<any>) {
-
     if (this._done.value || this._loading.value) { return };
-
     // loading
     this._loading.next(true)
-
     // Map snapshot with doc ref (needed for cursor)
-    return col.snapshotChanges()
+    this.data1Subs = col.snapshotChanges()
       .do(arr => {
         let values = arr.map(snap => {
           const data = snap.payload.doc.data()
@@ -76,21 +92,50 @@ export class SearchfeedProvider {
           this._done.next(true)
         }
     })
-    .take(1)
-    .subscribe()
+    .subscribe(arr =>{
+      this.data = this._data.asObservable()
+      .scan((acc, val) =>{
+        return acc.concat(val);
+      })
+    })
+    return this.data1Subs;
+  }
 
+  private mapAndUpdateMore(col: AngularFirestoreCollection<any>) {
+    if (this._done.value || this._loading.value) { return };
+    // loading
+    this._loading.next(true)
+    // Map snapshot with doc ref (needed for cursor)
+    this.data2Subs = col.snapshotChanges()
+      .do(arr => {
+        let values = arr.map(snap => {
+          const data = snap.payload.doc.data()
+          const doc = snap.payload.doc
+          return { ...data, doc }
+        })
+  
+        // update source with new values, done loading
+        this._data.next(values)
+        this._loading.next(false)
+
+        // no more values, mark done
+        if (!values.length) {
+          console.log('done!')
+          this._done.next(true)
+        }
+    })
+    .subscribe()
+    return this.data2Subs;
   }
 
   getAllSearches(){
-    
+    console.log('Getting all seraches : ')
     const first = this.afs.collection<Search>('Searches2', ref => {
       return ref.orderBy('timeStamp', 'desc')
-      .limit(10)
+      .limit(15)
       }
      )
-
     this.mapAndUpdate(first)
-
     this.data = this._data.asObservable()
     .scan((acc, val) =>{
       return acc.concat(val);
@@ -99,15 +144,15 @@ export class SearchfeedProvider {
 
    // Retrieves additional data from firestore
   moreAllSearches() {
+    console.log('Getting more all searches : ')
     const cursor = this.getCursor()
-
     const more = this.afs.collection('Searches2', ref => {
       return ref
-              .orderBy('timeStamp', 'desc' )
-              .limit(10)
-              .startAfter(cursor)
+      .orderBy('timeStamp', 'desc' )
+      .limit(15)
+      .startAfter(cursor)
     })
-    this.mapAndUpdate(more)
+    this.mapAndUpdateMore(more)
   }
 
   getSeekerSearches(uid: string){
@@ -145,14 +190,13 @@ export class SearchfeedProvider {
   }
 
   getSearchesOfArea(area: string){
+    console.log('Getting seraches of area: ', area)
     let first = this.afs.collection<Search>('Searches2', ref => ref
       .where('Address.locality_lng', '==', area)
       .orderBy('timeStamp', 'desc')
-      .limit(10)
-      )
-
+      .limit(15)
+    )
     this.mapAndUpdate(first);
-
     this.data = this._data.asObservable()
     .scan( (acc, val) =>{
       return acc.concat(val)
@@ -160,6 +204,7 @@ export class SearchfeedProvider {
   }
 
   moreAreaSearches(area: string) {
+    console.log('Getting more searches of area: ', area)
     const cursor = this.getCursor()
     const more = this.afs.collection('Searches2', ref => {
       return ref
@@ -203,35 +248,16 @@ export class SearchfeedProvider {
     return input.split(',')[0] + ', ' + input.split(',')[1];
   }
 
-  proposeAgentService(deal: ServiceDeal): Promise<void>{
-    let dl = deal;
-     return new Promise<void>((resolve, reject) =>{
-        this.afs.collection('AgentProposals', ref =>{
-          return ref.where('landlord_uid', '==', deal.landlord_uid)
-                    .where('agent_uid', '==', deal.agent_uid)
-        })
-        .valueChanges()
-        .pipe(take(1))
-        .subscribe(data =>{
-          if(data.length > 0){
-            resolve();
-         }else{
-        this.afs.collection<ServiceDeal>('AgentProposals').add(deal)
-        .then(dat =>{
-          let docRef = dat;
-          let doc_id = docRef.id;
-          dl.id = doc_id;
-          this.afs.collection<ServiceDeal>('AgentProposals').doc(doc_id).set(dl)
-          .then(() => resolve())
-        })
-      }
-    })
-   })
-    
+  proposeAgentService(deal: ServiceDeal){
+    let deall = deal;
+    deall.id = deal.agent_uid + deal.landlord_uid;
+    return this.afs.collection<ServiceDeal>('AgentProposals').doc(deall.id).set(deall)
   }
 
   updateProposal(deal: ServiceDeal){
-    return this.afs.collection<ServiceDeal>('AgentProposals').doc(deal.id).set(deal)
+    let deall = deal;
+    deall.id = deal.agent_uid + deal.landlord_uid;
+    return this.afs.collection<ServiceDeal>('AgentProposals').doc(deall.id).set(deall)
   }
 
   getLandlordAgents(uid: string){
@@ -251,7 +277,6 @@ export class SearchfeedProvider {
   getLandlordAgentProposals(uid: string){
     return this.afs.collection<ServiceDeal>('AgentProposals', ref =>{
       return ref.where('landlord_uid', '==', uid)
-                .where('landlord_agreed', '==', false)
     }).valueChanges()
   }
 

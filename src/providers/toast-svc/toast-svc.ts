@@ -17,7 +17,8 @@ export class ToastSvcProvider {
   showToast(message: string){
     let toast = this.toastCtrl.create({
       message: message,
-      duration: 4000
+      duration: 3000,
+      dismissOnPageChange: true
     })
     toast.present();
   }

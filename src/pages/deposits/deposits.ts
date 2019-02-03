@@ -4,7 +4,7 @@ import { DepositProvider } from '../../providers/deposit/deposit'
 import { ATMDeposit } from '../../models/ATMdeposit.interface';
 import { Observable } from 'rxjs';
 import { User } from '../../models/users/user.interface';
-import { take } from 'rxjs-compat/operators/take';
+//import { take } from 'rxjs-compat/operators/take';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 import { Subscription } from 'rxjs-compat/Subscription';
@@ -26,6 +26,8 @@ export class DepositsPage {
   user: User;
   loading: boolean = true;
   balance: number = 0;
+  depIds: string[] = [];
+  noPayments: boolean = false;
   constructor(
   	public navCtrl: NavController, 
   	public navParams: NavParams,
@@ -34,18 +36,20 @@ export class DepositsPage {
     private toast_svc: ToastSvcProvider) {
   	this.storage.getUser().then(user =>{
   		this.user = user;
-  		this.deposits = this.dep_svc.getUserDeposits(user.uid)
+  		this.deposits = this.dep_svc.getUserDeposits(user.uid);
       this.depositsSubs = this.dep_svc.getUserDeposits(user.uid)
       .subscribe(deps =>{
         console.log('subscribing to deposits...')
         if(deps.length > 0 ){
           this.loading = false;
           deps.forEach(dep =>{
-            if(dep.to.uid == user.uid && !dep.transaction_closed){
+            if(dep.to.uid == user.uid && !dep.transaction_closed && (this.depIds.indexOf(dep.id) == -1)){
               if(dep.apartment.by && dep.apartment.by == 'Agent'){
-                this.balance += dep.agent_commision
+                this.depIds.push(dep.id)
+                this.balance += dep.agent_commision;
               }else {
-                this.balance += dep.landlord_credit
+                this.depIds.push(dep.id)
+                this.balance += dep.landlord_credit;
               }
             } 
               console.log(this.balance)
@@ -54,7 +58,8 @@ export class DepositsPage {
           this.dep_svc.updateUserBalance(user.uid, this.balance)
         }else{
           this.loading = false;
-          this.toast_svc.showToast('You have no deposit transactions on this profile...')
+          this.noPayments = true;
+          //this.toast_svc.showToast('You have no deposit transactions on this profile...')
         } 
       }, 
       err =>{

@@ -26,12 +26,15 @@ import { map } from 'rxjs-compat/operators/map';
 /*import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/filter';*/
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { take } from 'rxjs-compat/operators/take';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
+import { ObjectInitProvider } from '../object-init/object-init';
 var AccommodationsProvider = /** @class */ (function () {
-    function AccommodationsProvider(afs) {
+    function AccommodationsProvider(afs, object_init) {
         this.afs = afs;
+        this.object_init = object_init;
         // Source data
         this._done = new BehaviorSubject(false);
         this._loading = new BehaviorSubject(false);
@@ -46,6 +49,11 @@ var AccommodationsProvider = /** @class */ (function () {
             return current[current.length - 1].doc;
         }
         return null;
+    };
+    AccommodationsProvider.prototype.reset = function () {
+        console.log('reseting...');
+        this._data.next([]);
+        this._done.next(false);
     };
     // Maps the snapshot to usable format the updates source
     AccommodationsProvider.prototype.mapAndUpdate = function (col) {
@@ -110,18 +118,118 @@ var AccommodationsProvider = /** @class */ (function () {
             .valueChanges();
     };
     AccommodationsProvider.prototype.initUserProperties = function (uid) {
-        var first = ;
+        var first = this.afs.collection('Properties', function (ref) {
+            return ref.where('user_id', '==', uid)
+                .orderBy('timeStamp', 'desc')
+                .limit(10);
+        });
+        this.mapAndUpdate(first);
+        this.data = this._data.asObservable()
+            .scan(function (acc, val) {
+            return acc.concat(val);
+        });
+    };
+    AccommodationsProvider.prototype.moreUserProperties = function (uid) {
+        var cursor = this.getCursor();
+        var more = this.afs.collection('Properties', function (ref) {
+            return ref.where('user_id', '==', uid)
+                .orderBy('timeStamp', 'desc')
+                .limit(10)
+                .startAfter(cursor);
+        });
+        this.mapAndUpdate(more);
     };
     AccommodationsProvider.prototype.getUserApartments = function (uid) {
-        return this.afs.collection('Apartments', function (ref) { return ref.where('property.user_id', '==', uid); }).valueChanges();
+        return this.afs.collection('Apartments', function (ref) {
+            return ref.where('property.user_id', '==', uid)
+                .orderBy('timeStamp', 'desc');
+        }).valueChanges();
+    };
+    AccommodationsProvider.prototype.getUserUnfinishedApartments = function (uid) {
+        return this.afs.collection('Apartments', function (ref) {
+            return ref.where('property.user_id', '==', uid)
+                .where('complete', '==', false)
+                .orderBy('timeStampModified', 'desc');
+        })
+            .valueChanges();
+    };
+    AccommodationsProvider.prototype.moreUserApartments = function (uid) {
+        var cursor = this.getCursor();
+        var more = this.afs.collection('Apartments', function (ref) {
+            return ref.where('property.user_id', '==', uid)
+                .orderBy('timeStamp', 'desc')
+                .limit(10)
+                .startAfter(cursor);
+        });
+        this.mapAndUpdate(more);
     };
     AccommodationsProvider.prototype.getUserFavourites = function (favs) {
         return this.afs.collection('Apartments')
             .valueChanges()
             .pipe(map(function (obsAparts) { return obsAparts.filter(function (apart) { return favs.indexOf(apart.apart_id) != -1; }); }));
     };
+    AccommodationsProvider.prototype.mapAndUpdateFavs = function (col, favs) {
+        var _this = this;
+        if (this._done.value || this._loading.value) {
+            return;
+        }
+        ;
+        // loading
+        this._loading.next(true);
+        return col.snapshotChanges()
+            .do(function (arr) {
+            var filtered = arr.filter(function (snp) { return favs.indexOf(snp.payload.doc.data().apart_id) != -1; });
+            var values = filtered.map(function (snap) {
+                var data = snap.payload.doc.data();
+                var doc = snap.payload.doc;
+                return __assign({}, data, { doc: doc });
+            });
+            // update source with new values, done loading
+            _this._data.next(values);
+            _this._loading.next(false);
+            // no more values, mark done
+            if (!values.length) {
+                _this._done.next(true);
+            }
+        })
+            .take(1)
+            .subscribe();
+    };
+    AccommodationsProvider.prototype.initUserFavs = function (favs) {
+        var first = this.afs.collection('Apartments', function (ref) {
+            return ref.orderBy('timeStamp', 'desc')
+                .limit(10);
+        });
+        this.mapAndUpdateFavs(first, favs);
+        this.data = this._data.asObservable()
+            .scan(function (acc, val) {
+            return acc.concat(val);
+        });
+    };
+    AccommodationsProvider.prototype.moreUserFavs = function (favs) {
+        var cursor = this.getCursor();
+        var more = this.afs.collection('Apartments', function (ref) {
+            return ref.orderBy('timeStamp', 'desc')
+                .limit(10)
+                .startAfter(cursor);
+        });
+        this.mapAndUpdateFavs(more, favs);
+    };
     AccommodationsProvider.prototype.getPropertyApartments = function (prop_id) {
-        return this.afs.collection('Apartments', function (ref) { return ref.where('prop_id', '==', prop_id); }).valueChanges();
+        return this.afs.collection('Apartments', function (ref) {
+            return ref.where('prop_id', '==', prop_id)
+                .orderBy('timeStamp', 'desc');
+        }).valueChanges();
+    };
+    AccommodationsProvider.prototype.morePropertyApartments = function (prop_id) {
+        var cursor = this.getCursor();
+        var more = this.afs.collection('Apartments', function (ref) {
+            return ref.where('prop_id', '==', prop_id)
+                .orderBy('timeStamp', 'desc')
+                .limit(10)
+                .startAfter(cursor);
+        });
+        this.mapAndUpdate(more);
     };
     AccommodationsProvider.prototype.getPropertyImages = function (prop_id) {
         var col = this.afs.collection('Properties');
@@ -158,18 +266,26 @@ var AccommodationsProvider = /** @class */ (function () {
     };
     AccommodationsProvider.prototype.search = function (search_obj) {
         console.log('search_obj: ', search_obj);
+        this.afs.collection('Apartments')
+            .valueChanges()
+            .pipe(take(1))
+            .subscribe(function (data) {
+            console.log('All aarts: ', data);
+        });
         if (search_obj.apartment_type !== 'Any' && search_obj.parking && search_obj.wifi && search_obj.nsfas && search_obj.laundry) {
             console.log('case 1');
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking) {
@@ -177,12 +293,14 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && !search_obj.parking) {
@@ -190,11 +308,13 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking) {
@@ -202,10 +322,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.wifi', '==', search_obj.wifi)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking) {
@@ -213,9 +335,11 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking) {
@@ -223,8 +347,10 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && search_obj.nsfas && search_obj.parking) {
@@ -232,12 +358,14 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking) {
@@ -245,11 +373,13 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && !search_obj.parking) {
@@ -257,10 +387,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking) {
@@ -268,9 +400,11 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.wifi', '==', search_obj.wifi)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && search_obj.parking) {
@@ -278,12 +412,14 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking) {
@@ -291,11 +427,13 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && !search_obj.nsfas && !search_obj.parking) {
@@ -303,6 +441,7 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.laundry', '==', search_obj.laundry)
                     .orderBy('price', 'asc');
@@ -313,9 +452,11 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking) {
@@ -323,12 +464,14 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.nsfas', '==', search_obj.nsfas)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking) {
@@ -336,10 +479,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.nsfas', '==', search_obj.nsfas)
+                    .limit(15)
                     .orderBy('price', 'asc');
             }).valueChanges();
         }
@@ -348,10 +493,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.nsfas', '==', search_obj.nsfas)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking) {
@@ -359,9 +506,11 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.nsfas', '==', search_obj.nsfas)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking) {
@@ -369,12 +518,14 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking) {
@@ -382,11 +533,13 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.wifi', '==', search_obj.wifi)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking) {
@@ -394,10 +547,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.wifi', '==', search_obj.wifi)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking) {
@@ -405,9 +560,11 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.parking', '==', search_obj.parking)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking) {
@@ -415,10 +572,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.nsfas', '==', search_obj.nsfas)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking) {
@@ -426,10 +585,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.parking', '==', search_obj.parking)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking) {
@@ -437,11 +598,13 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking) {
@@ -449,11 +612,13 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.nsfas', '==', search_obj.nsfas)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && !search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking) {
@@ -461,10 +626,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking) {
@@ -472,10 +639,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.wifi', '==', search_obj.wifi)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && search_obj.parking) {
@@ -483,11 +652,13 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.laundry', '==', search_obj.laundry)
                     .where('property.parking', '==', search_obj.parking)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking) {
@@ -495,10 +666,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.parking', '==', search_obj.parking)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type === 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking) {
@@ -506,10 +679,12 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('property.nsfas', '==', search_obj.nsfas)
                     .where('property.laundry', '==', search_obj.laundry)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else if (search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking) {
@@ -517,11 +692,13 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
+                    .where('complete', '==', true)
                     .where('price', "<=", search_obj.maxPrice)
                     .where('room_type', '==', search_obj.apartment_type)
                     .where('property.parking', '==', search_obj.parking)
                     .where('property.wifi', '==', search_obj.wifi)
-                    .orderBy('price', 'asc');
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
         else {
@@ -529,7 +706,9 @@ var AccommodationsProvider = /** @class */ (function () {
             return this.afs.collection('/Apartments', function (ref) {
                 return ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
                     .where('available', '==', true)
-                    .orderBy('price', 'asc');
+                    .where('complete', '==', true)
+                    .orderBy('price', 'asc')
+                    .limit(15);
             }).valueChanges();
         }
     };
@@ -571,9 +750,95 @@ var AccommodationsProvider = /** @class */ (function () {
         rating += 40 * ((search.maxPrice - apartment.price) / search.maxPrice);
         return rating;
     };
+    /* migrateApartments(){
+       this.db.list('/Apartments').snapshotChanges().map(actions =>{
+         return actions.map(action =>{
+           const data = action.payload.val();
+           const id = action.key;
+           console.log(id);
+           return {'data': data, 'id': id}
+         })
+       }).subscribe(apartments =>{
+           var i = 0;
+           apartments.forEach(apartment =>{
+             console.log(++i ,') ', apartment);
+             this.afs.collection('Apartments').doc(apartment.id).set(apartment.data)
+           })
+           
+       })
+   
+       this.db.list('/Properties').snapshotChanges().map(actions =>{
+         return actions.map(action =>{
+           const data = action.payload.val();
+           const id = action.key;
+           console.log(id);
+           return {'data': data, 'id': id}
+         })
+       }).subscribe(apartments =>{
+           var i = 0;
+           apartments.forEach(apartment =>{
+             console.log(++i ,') ', apartment);
+             this.afs.collection('Properties').doc(apartment.id).set(apartment.data)
+           })
+           
+       })
+     }
+   
+     pingClickinnSearch(search: Search):Observable<Apartment[]>{
+       let headers = new HttpHeaders(
+         {
+           'Access-Control-Allow-Headers': ['Content-Type'],
+           'Access-Control-Allow-Methods': ['GET', 'POST', 'OPTIONS'],
+           'Access-Control-Allow-Origin': ['*']
+         }
+       )
+       return this.http.post<Apartment[]>('https://us-central1-clickinn-996f0.cloudfunctions.net/clickinnSearch', search, {
+           headers: headers
+         })
+     }
+   
+     changePropertyStructure(){
+       this.db.list<Apartment>('Apartments').valueChanges().take(1).subscribe(apartments =>{
+         apartments.forEach(apartment =>{
+           this.db.object(`Properties/${apartment.prop_id}`).valueChanges().take(1).subscribe(property =>{
+             this.db.object(`Apartments/${apartment.apart_id}/property`).set(property).then(() =>{
+               console.log('success')
+             });
+           })
+         })
+       })
+     }
+   
+     changeProperty(){
+       this.db.list<Apartment>('Apartments').valueChanges().take(1).subscribe(apartments =>{
+         apartments.forEach(apartment =>{
+             this.db.object(`Properties/${apartment.prop_id}`).set(apartment.property).then(success =>{
+               console.log('successful')
+             });
+         })
+       })
+     }*/
+    AccommodationsProvider.prototype.changeApartments = function () {
+        var _this = this;
+        this.afs.collection('Apartments')
+            .valueChanges()
+            .pipe(take(1))
+            .subscribe(function (aparts) {
+            aparts.forEach(function (apart) {
+                var newApt = _this.object_init.initializeApartment2(apart);
+                newApt.complete = true;
+                newApt.available = true;
+                console.log(newApt);
+                _this.updateApartment(newApt)
+                    .then(function () {
+                    console.log('updated...');
+                });
+            });
+        });
+    };
     AccommodationsProvider = __decorate([
         Injectable(),
-        __metadata("design:paramtypes", [AngularFirestore])
+        __metadata("design:paramtypes", [AngularFirestore, ObjectInitProvider])
     ], AccommodationsProvider);
     return AccommodationsProvider;
 }());

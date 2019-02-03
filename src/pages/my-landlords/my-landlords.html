@@ -17,6 +17,10 @@
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				<div *ngIf="noLandlords == true" style="color: lightgray; text-align: center;"> 
+					<h1>No Landlords</h1>
+					<p>You have no landlords who have accepted your services yet</p>
+				</div>
 				<ion-item  *ngFor="let landlord of landlords | async ; let i = index">
 					<ion-avatar item-start>
 		        		<img src="{{landlord?.landlord_dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
@@ -25,6 +29,11 @@
 		        	<strong> {{landlord?.landlord_firstname}} {{landlord?.landlord_lastname}}</strong>
 		        	<p margin-top > {{landlord?.landlord_phoneNumber}} </p>
 		        	<ion-row>
+		        		<ion-col>
+		        			<button ion-button clear (click)="callLandlord(landlord)" >
+		        				<ion-icon name="call"></ion-icon>
+		        			</button>
+		        		</ion-col>
 		        		<ion-col>
 		        			<button color="secondary" ion-button clear (click)="showInput(landlord)" >
 		        				<ion-icon name="chatboxes"></ion-icon>

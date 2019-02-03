@@ -7,6 +7,7 @@ import { User } from '../../models/users/user.interface';
 import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 import { Thread } from '../../models/thread.interface';
+import { take } from 'rxjs-compat/operators/take';
 /**
  * Generated class for the MessageInputPopupPage page.
  *
@@ -36,7 +37,7 @@ export class MessageInputPopupPage {
   	this.user = this.objectInit.initializeUser();
   	
   	this.storage.getUser().then(user =>{
-      this.chat_svc.getThreads(user).subscribe(threads =>{
+      this.chat_svc.getThreads(user).pipe(take(1)).subscribe(threads =>{
         this.threads = threads;
       })
   		console.log('curentUers : ', user);

@@ -27,5 +27,7 @@ export interface ATMDeposit{
 	account_number?: string;
 	branch_code?: string;
 	tenantMovedIn?: boolean;
+	seen ?: boolean;
+	uploader_commision?: number;
 
 }

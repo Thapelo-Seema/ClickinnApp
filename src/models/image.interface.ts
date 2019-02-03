@@ -3,4 +3,5 @@ export interface Image{
 	path: string;
 	progress: number;
 	url: string;
+	loaded?: boolean;
 }

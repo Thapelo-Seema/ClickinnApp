@@ -1,3 +1,14 @@
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -44,9 +55,20 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from 'angularfire2/firestore';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import 'rxjs/add/operator/do';
+import 'rxjs/add/operator/scan';
+import 'rxjs/add/operator/take';
+import { ObjectInitProvider } from '../object-init/object-init';
 var ChatServiceProvider = /** @class */ (function () {
-    function ChatServiceProvider(afs) {
+    function ChatServiceProvider(afs, object_init) {
         this.afs = afs;
+        this.object_init = object_init;
+        this._done = new BehaviorSubject(false);
+        this._loading = new BehaviorSubject(false);
+        this._data = new BehaviorSubject([]);
+        this.done = this._done.asObservable();
+        this.loading = this._loading.asObservable();
     }
     /**This function checks if the sender has the reciever already as part of their contact list and if so it will return
       an object that contains the thread_id on which the two users chat else the object returned will contain an empty string
@@ -83,7 +105,7 @@ var ChatServiceProvider = /** @class */ (function () {
     */
     ChatServiceProvider.prototype.createNewThread = function (msg) {
         return __awaiter(this, void 0, void 0, function () {
-            var docRef, thread_id;
+            var docRef, thread_id, msg2, chat;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -91,7 +113,12 @@ var ChatServiceProvider = /** @class */ (function () {
                     case 1:
                         docRef = _a.sent();
                         thread_id = docRef.id;
-                        this.afs.collection("Threads/" + thread_id + "/chats").add(msg);
+                        msg2 = this.object_init.initializeChatMessag2(msg);
+                        return [4 /*yield*/, this.afs.collection("Threads/" + thread_id + "/chats").add(msg)];
+                    case 2:
+                        chat = _a.sent();
+                        msg2.id = chat.id;
+                        this.afs.collection("Threads").doc(thread_id).collection('chats').doc(msg2.id).set(msg2);
                         /*console.log('Thread id', thread_id);
                         this.db.list(`Threads/${thread_id}`).push(msg);*/
                         this.afs.collection("Users")
@@ -119,25 +146,165 @@ var ChatServiceProvider = /** @class */ (function () {
         });
     };
     ChatServiceProvider.prototype.sendMessage = function (msg, threads) {
-        console.log('Message: ', msg);
-        var results = this.isContact(msg.to.uid, threads);
-        console.log('results: ', results);
-        if (results.match) {
-            this.afs.collection("Threads").doc(results.thread_id).collection('chats').add(msg);
-        }
-        else {
-            this.createNewThread(msg);
-        }
+        return __awaiter(this, void 0, void 0, function () {
+            var results, msg2, chat;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        console.log('Message: ', msg);
+                        results = this.isContact(msg.to.uid, threads);
+                        console.log('results: ', results);
+                        if (!results.match) return [3 /*break*/, 2];
+                        msg2 = this.object_init.initializeChatMessag2(msg);
+                        console.log('First message...', msg2);
+                        return [4 /*yield*/, this.afs.collection("Threads").doc(results.thread_id).collection('chats').add(msg)];
+                    case 1:
+                        chat = _a.sent();
+                        msg2.id = chat.id;
+                        console.log('Second message', msg2);
+                        return [2 /*return*/, this.afs.collection("Threads").doc(results.thread_id).collection('chats').doc(msg2.id).set(msg2)];
+                    case 2:
+                        this.createNewThread(msg);
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
     };
+    ChatServiceProvider.prototype.sendSupportMessage = function (msg) {
+        this.afs.collection('Support').doc(msg.user.uid).set({ user: msg.user, text: msg.text, timeStamp: msg.timeStamp, assigned: msg.assigned_to });
+        this.afs.collection("Support").doc(msg.user.uid).collection('chats').add(msg);
+    };
+    ChatServiceProvider.prototype.replySupport = function (msg) {
+        this.afs.collection('Support').doc(msg.user.uid).set({ user: msg.user, text: msg.text, timeStamp: msg.timeStamp, assigned: msg.assigned_to });
+        this.afs.collection("Support").doc(msg.user.uid).collection('chats').add(msg);
+    };
+    ChatServiceProvider.prototype.getUserSupportMessages = function (uid) {
+        return this.afs.collection("Support").doc(uid).collection('chats', function (ref) { return ref.orderBy('timeStamp', 'asc'); })
+            .valueChanges();
+    };
+    ChatServiceProvider.prototype.getAllSupport = function () {
+        return this.afs.collection('Support').valueChanges();
+    };
+    /*getAdminSupportMessages(uid: string){
+      return this.afs.collection(`Support`).doc(uid).collection<SupportMessage>('chats', ref => ref.orderBy('timeStamp', 'asc'))
+      .valueChanges();
+    }*/
     ChatServiceProvider.prototype.getThreadChats = function (thread_id) {
-        return this.afs.collection("Threads").doc(thread_id).collection('chats', function (ref) { return ref.orderBy('timeStamp', 'asc'); }).valueChanges();
+        return this.afs.collection("Threads").doc(thread_id).collection('chats', function (ref) { return ref.orderBy('timeStamp', 'asc'); })
+            .valueChanges();
     };
+    ChatServiceProvider.prototype.getUnseenThreadChats = function (thread_id) {
+        return this.afs.collection("Threads").doc(thread_id)
+            .collection('chats', function (ref) { return ref.where('seen', '==', false); })
+            .valueChanges();
+    };
+    /*initGetThreadChats(thread_id){
+      console.log('initGetThreadChats...')
+      const first = this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref =>
+        ref.orderBy('timeStamp', 'asc')
+        .limit(15)
+       )
+  
+      this.mapAndUpdate(first);
+  
+      this.data = this._data.asObservable()
+      .scan((acc, val) =>{
+        console.log('chats: ', acc)
+        return acc.concat(val)
+      })
+    }*/
+    /*moreThreadChats(thread_id){
+      const cursor = this.getCursor();
+  
+      const more = this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref =>
+        ref.orderBy('timeStamp', 'asc')
+        .limit(15)
+        .startAfter(cursor)
+       )
+  
+      this.mapAndUpdate(more);
+    }*/
     ChatServiceProvider.prototype.getThreads = function (user) {
         return this.afs.collection('Users').doc(user.uid).collection('threads').valueChanges();
     };
+    /*initGetThreads(user: User){
+      console.log('initGetThreads...')
+      const first = this.afs.collection('Users').doc(user.uid).collection<Thread>('threads', ref =>{
+        return ref.limit(15)
+      })
+  
+      this.mapAndUpdate(first)
+  
+      this.data = this._data.asObservable()
+      .scan((acc, val) =>{
+        return acc.concat(val)
+      })
+    }
+  
+    moreThreads(user: User){
+      const cursor = this.getCursor();
+      if(cursor == null) return;
+      const more = this.afs.collection('Users').doc(user.uid).collection<Thread>('threads', ref =>{
+        return ref.limit(15)
+                  .startAfter(cursor)
+      })
+  
+      this.mapAndUpdate(more);
+    }
+  
+     // Determines the doc snapshot to paginate query
+    private getCursor() {
+      const current = this._data.value
+      console.log('current: ', current)
+      if (current.length) {
+        console.log('cursor: ', current[current.length - 1].doc)
+        return current[current.length - 1].doc
+      }
+      return null
+    }
+  
+    reset(){
+      console.log('reseting...')
+      this._data.next([])
+      this._done.next(false);
+    }
+  */
+    // Maps the snapshot to usable format the updates source
+    ChatServiceProvider.prototype.mapAndUpdate = function (col) {
+        var _this = this;
+        if (this._done.value || this._loading.value) {
+            return;
+        }
+        ;
+        // loading
+        this._loading.next(true);
+        // Map snapshot with doc ref (needed for cursor)
+        return col.snapshotChanges()
+            .do(function (arr) {
+            var values = arr.map(function (snap) {
+                var data = snap.payload.doc.data();
+                var doc = snap.payload.doc;
+                return __assign({}, data, { doc: doc });
+            });
+            // update source with new values, done loading
+            _this._data.next(values);
+            _this._loading.next(false);
+            // no more values, mark done
+            if (!values.length) {
+                console.log('done!');
+                _this._done.next(true);
+            }
+        })
+            .take(1)
+            .subscribe();
+    };
+    ChatServiceProvider.prototype.updateMessage = function (thread_id, msg) {
+        return this.afs.collection("Threads").doc(thread_id).collection('chats').doc(msg.id).set(msg);
+    };
     ChatServiceProvider = __decorate([
         Injectable(),
-        __metadata("design:paramtypes", [AngularFirestore])
+        __metadata("design:paramtypes", [AngularFirestore, ObjectInitProvider])
     ], ChatServiceProvider);
     return ChatServiceProvider;
 }());

@@ -13,7 +13,7 @@
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
 				<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white">
 					<p text-center style="color: white">
-						Your old messages may be deleted from this conversation after a couple of weeks 
+						Text and attach apartments to clarify your messages 
 					</p>
 					<ion-buttons end>
 						<button ion-button small clear>
@@ -23,10 +23,22 @@
 						</button>
 					</ion-buttons>
 				</ion-item>
+				<div *ngIf="noMessages == true" style="color: lightgray; text-align: center;"> 
+					<h1>No Chats</h1>
+					<p>You have no chats yet</p>
+				</div>
 				<ion-list>
-					<ion-card *ngFor="let msg of thread | async" style="border-radius: 7px; ">
+					<ion-card *ngFor="let msg of thread | async; let i = index" style="border-radius: 7px; ">
 					  <ion-item text-wrap *ngIf="msg?.topic" style="color: white; background: #000190">
 					    {{msg?.topic}} 
+					  </ion-item>
+					  <ion-item text-wrap *ngIf="msg?.attachment" style="color: white; background: #000190" (click)="gotoApartment(msg?.attachment)" >
+					    <ion-avatar item-start>
+					        <img src="{{msg?.attachment?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
+					        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
+					    </ion-avatar>
+					    <p style="color: white;">{{msg?.attachment?.room_type}}, R{{msg?.attachment?.price}}</p>
+					    <p style="color: white;">{{returnFirst(msg?.attachment?.property?.description)}}</p> 
 					  </ion-item>
 					  <ion-card-content padding-top *ngIf="user?.uid != msg?.by?.uid" style="background: #FCF3CF">
 					    <p style="padding-top: 7px">{{msg?.text}}</p>
@@ -49,6 +61,7 @@
 					  	<ion-col>
 					  	</ion-col>
 					    <ion-col>
+					    	<button *ngIf="msg?.seen == true" ion-button clear><ion-icon name="done-all" ></ion-icon></button>
 					    </ion-col>
 					    <ion-col center text-center>
 					      <ion-note>
@@ -58,9 +71,6 @@
 					  </ion-row>
 					</ion-card>
 				</ion-list>
-				<div *ngIf="loadingMore" style="text-align: center">
-				    <ion-spinner></ion-spinner>
-				</div>
 			</ion-col>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
@@ -73,6 +83,9 @@
 			(keydown)="handleSubmit($event)"></ion-textarea>
 	    <button ion-button clear item-right (click)="send()">
 	      <ion-icon name="send" style="font-size: 30px"></ion-icon>
+	    </button>
+	    <button ion-button  clear item-right (click)="attachApartment()">
+	      <ion-icon name="attach" style="font-size: 30px"></ion-icon>
 	    </button>
 	</ion-item>
 </ion-footer>

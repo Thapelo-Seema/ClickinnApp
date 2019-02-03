@@ -9,7 +9,7 @@
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>
 	        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-				<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white">
+				<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white; letter-spacing: 2px">
 					<p text-center style="color: white">
 						Please use this chat platform responsibly and for accomodation purposes only
 					</p>
@@ -21,6 +21,20 @@
 						</button>
 					</ion-buttons>
 				</ion-item>
+				<ion-label text-center style=" margin-bottom: 2px; letter-spacing: 2px">Search users by email</ion-label>
+					<ion-searchbar type="search" [(ngModel)]="searchText" 
+		              placeholder="e.g. me@gmail.com" (ionInput)="userAutocomplete($event)" mode="ios">
+		            </ion-searchbar>
+		            <ion-list *ngIf="users">
+		              <button ion-item *ngFor="let us of users"  (click)="selectUser(us)">
+		              	<strong>{{us?.firstname}} {{us?.lastname}}</strong>
+		              	<p>{{us?.email}}</p>
+		              </button>
+		            </ion-list>
+				<div *ngIf="noChats == true" style="color: lightgray; text-align: center;"> 
+					<h1>No Chats</h1>
+					<p>You have no chats yet</p>
+				</div>
 				<ion-list>
 					<button ion-item *ngFor="let thread of threads | async; let i = index" (click)="gotoThread(thread)">
 					    <ion-avatar item-start>
@@ -30,9 +44,6 @@
 					    <p>{{thread?.displayName ? thread?.displayName : 'Anonymous'}}</p>
 					</button>
 				</ion-list>
-				<div *ngIf="loading" style="text-align: center">
-				    <ion-spinner></ion-spinner>
-				</div>
 			</ion-col>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>

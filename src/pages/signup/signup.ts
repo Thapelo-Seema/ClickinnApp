@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController} from 'ionic-angular';
+import { IonicPage, NavController, LoadingController} from 'ionic-angular';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface'
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
-import { FcmProvider } from '../../providers/fcm/fcm';
-import { Push, PushOptions, PushObject } from '@ionic-native/push';
+//import { FcmProvider } from '../../providers/fcm/fcm';
+//import { Push, PushOptions, PushObject } from '@ionic-native/push';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 //import { Thread } from '../../models/thread.interface';
 
@@ -20,7 +20,7 @@ export class SignupPage {
 
 	seeker: User;
 	password: string;
-  loading: boolean = false;
+  loader = this.loadingCtrl.create();
 
   constructor(
     public navCtrl: NavController,
@@ -29,22 +29,24 @@ export class SignupPage {
     private storage: LocalDataProvider,
      private errHandler: ErrorHandlerProvider, 
      private object_init: ObjectInitProvider,
-     private fcm: FcmProvider,
+     //private fcm: FcmProvider,
      private toast_svc: ToastSvcProvider,
-     private push: Push) {
+     //private push: Push,
+     private loadingCtrl: LoadingController) {
   	this.seeker = this.object_init.initializeUser();
   }
 
   signup(){
-    this.loading = true;
+    this.loader.present()
     this.afAuth.auth.createUserWithEmailAndPassword(this.seeker.email, this.password)
     .then(data =>{
       this.seeker.uid = data.user.uid;
+      this.seeker.agreed_to_terms = true;
       this.seeker.displayName = this.seeker.firstname + ' ' + this.seeker.lastname;
       if(this.seeker.uid !== ''){
         this.persistUser(data.user.uid);
       }else{
-        this.loading = false;
+        this.loader.dismiss()
         this.errHandler.handleError({
           code: 'no uid',
           message: 'Something went wrong, please try again'
@@ -52,8 +54,8 @@ export class SignupPage {
       }
     })
     .catch(err => {
+      this.loader.dismiss()
       this.errHandler.handleError(err);
-      this.loading = false;
     })
   }
 
@@ -65,14 +67,9 @@ export class SignupPage {
     this.navCtrl.push('TermsPage');
   }
 
-  resetPassword(email: string){
-    this.afAuth.auth.sendPasswordResetEmail(email)
-    .then(() => {
-      this.toast_svc.showToast('Reset instructions sent to your email')
-    })
-  }
+  
 
-  onNotifications(){
+  /*onNotifications(){
     const options: PushOptions = {
      android: {
        senderID: '882290923419'
@@ -92,7 +89,7 @@ export class SignupPage {
       this.fcm.saveTokenToFirestore(registration.registrationId)
     });
     pushObject.on('error').subscribe(error => alert(error));
-  }
+  }*/
 
   persistUser(uid: string){
     if(this.seeker.uid !== ''){
@@ -100,25 +97,26 @@ export class SignupPage {
       .then(() =>{
           //alert('stored in collection!');
           this.storage.setUser(this.seeker).then(val =>{
-           // alert('local storage!');
+            this.loader.dismiss();
             this.navCtrl.setRoot('WelcomePage').then(() =>{
-              this.loading = false;
-              this.onNotifications();
+              //this.onNotifications();
             })
             .catch(err => {
+              this.loader.dismiss()
               this.errHandler.handleError(err);
-              this.loading = false;
             })
           })
           .catch(err => {
+            this.loader.dismiss()
             this.errHandler.handleError(err);
-            this.loading = false;
           })
         })
         .catch(err => {
+          this.loader.dismiss()
           this.errHandler.handleError(err);
-          this.loading = false;
         })
+    }else{
+      this.loader.dismiss()
     }
   }
 

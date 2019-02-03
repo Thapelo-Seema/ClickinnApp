@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController, LoadingController } from 'ionic-angular';
 import { Address } from '../../models/location/address.interface';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
@@ -22,16 +22,29 @@ export class SeekingPage {
   pointOfInterest: Address;
   apartments: Apartment[] = [];
   numberOfApartments: number = 0;
+  bestMatchLoaded: boolean = false;
   search_object: Search;
-  dataLoaded: boolean = false;
+  loader = this.loadingCtrl.create();
   showList: boolean = false;
   more: boolean = false;
   bestMatch: Apartment ;
+  imagesLoaded: boolean[] = 
+    [false, false, false, false, false, false, false, false, false, false,
+       false, false, false, false, false, false, false, false, false, false, 
+       false,false, false, false, false, false, false, false, false, false,
+       false,false, false, false, false, false, false, false, false, false,
+       false,false, false, false, false, false, false, false, false, false
+    ];
 
-
-  constructor(public navCtrl: NavController,  private accom_svc: AccommodationsProvider,
-   private alertCtrl: AlertController, private storage: LocalDataProvider,
-   private errHandler: ErrorHandlerProvider, private object_init: ObjectInitProvider){ 
+  constructor(
+    public navCtrl: NavController,  
+    private accom_svc: AccommodationsProvider,
+    private alertCtrl: AlertController, 
+    private storage: LocalDataProvider,
+    private errHandler: ErrorHandlerProvider, 
+    private object_init: ObjectInitProvider, 
+    private loadingCtrl: LoadingController){
+    this.loader.present() 
     this.pointOfInterest = this.object_init.initializeAddress();
     this.bestMatch = this.object_init.initializeApartment();
     this.search_object = this.object_init.initializeSearch();
@@ -48,24 +61,23 @@ export class SeekingPage {
       })
       .catch(err => {
         this.errHandler.handleError(err);
-        this.dataLoaded = true;
+        this.loader.dismiss()
       })
     })
     .catch(err => {
       this.errHandler.handleError(err);
-      this.dataLoaded = true;
+      this.loader.dismiss()
     })	
   }
+
 
   getApartments(obj: Search){
     var ratedArray: Apartment[] = [];
     this.accom_svc.search(obj)
-    .pipe(
-      take(1)
-    )
+    .pipe(take(1))
     .subscribe(apartments =>{
+      console.log('apartments returned: ', apartments)
       if(apartments.length > 0){
-
       ratedArray = apartments;
       this.numberOfApartments = apartments.length;
       if(ratedArray.length > 0){
@@ -73,6 +85,7 @@ export class SeekingPage {
         ratedArray.forEach(apartment => {
           ratedArray[ind].search_rating = this.calcRating(apartment);
           ++ind;
+          this.imagesLoaded.push(false);
         });
         var tempRatedApart = ratedArray[0];
         for(var i = 1; i < ratedArray.length; ++i){
@@ -85,20 +98,20 @@ export class SeekingPage {
         this.bestMatch = ratedArray[0];
         ratedArray.splice(0, 1);
         this.apartments = ratedArray;
-        this.showAlert();
+        this.loader.dismiss();
+        //this.showAlert();
         console.log(ratedArray)
-        this.dataLoaded = true;
       }
 
       }else{
-        this.dataLoaded = true;
+        this.loader.dismiss();
         this.showNull();
       }
       
     },
     err =>{
+      this.loader.dismiss();
       this.errHandler.handleError(err);
-      this.dataLoaded = true;
     })
 	}
 
@@ -106,7 +119,6 @@ export class SeekingPage {
     this.storage.setApartment(apartment).then(data => this.navCtrl.push('ApartmentDetailsPage'))
     .catch(err => {
       this.errHandler.handleError(err);
-      this.dataLoaded = true;
     });
   }
 
@@ -114,7 +126,7 @@ export class SeekingPage {
     this.showList = !this.showList;
   }
 
-  showAlert() {
+ /* showAlert() {
     let alert = this.alertCtrl.create({
       title:    'Best Matched Apartment!',
       subTitle: ` ${this.bestMatch.room_type} in ${this.bestMatch.property.address.sublocality_lng}, \n 
@@ -125,7 +137,7 @@ export class SeekingPage {
       buttons: ['OK']
     });
     alert.present();
-  }
+  }*/
 
   showNull() {
     let alert = this.alertCtrl.create({

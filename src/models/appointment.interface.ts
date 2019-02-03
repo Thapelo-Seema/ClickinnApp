@@ -17,4 +17,5 @@ export interface Appointment{
     bookerDp?: string;
     appointment_id?: string;
     timeStampModified?: number;
+    seen ?: boolean;
 }

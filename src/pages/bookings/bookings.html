@@ -15,9 +15,9 @@
 	    <ion-row>
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>
-		    <ion-col col-12 col-sm-12 col-md-12 col-lg-6 >
-		        
-		        	<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white">
+		    <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+		        	<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.5); 
+		        	color: white; letter-spacing: 2px">
 						<p text-center style="color: white">
 							Below is a list of your viewing appointments, please make an effort to honour them or communicate any changes with the relevant parties.  
 						</p>
@@ -29,14 +29,19 @@
 							</button>
 						</ion-buttons>
 					</ion-item>
+					<div *ngIf="noBookings == true" style="color: lightgray; text-align: center; padding: 10px"> 
+						<h1>No Appointments</h1>
+						<p>You have no appointments yet</p>
+					</div>
 					<ion-list>
 					  <ion-item-sliding #slidingItem *ngFor="let app of appt_svc?.data | async; let i = index">
-					    <ion-item #item text-wrap *ngIf="user.uid != app.booker_id" tooltip="Slide left for actions" positionH="right" event="click" arrow>
+					    <ion-item #item text-wrap *ngIf="user.uid != app.booker_id" tooltip="Slide left for actions" 
+					    positionH="right" event="click" arrow>
 					      <ion-avatar item-left>
 					        <img src="{{app?.bookerDp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]"  imageViewer />
 							<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 					      </ion-avatar>
-					      <p style="text-align: center">
+					      <p style="margin-bottom: 5px">
 					      	<strong style="overflow-wrap: normal">For {{app?.date?.toDate() | date : "medium" }}</strong>
 					      </p>
 					      <p *ngIf="app?.host_declines && !app?.seeker_cancels && !app?.host_confirms" style="background: rgba(180,0,0,0.3); padding: 15px"> 
@@ -52,12 +57,13 @@
 					      	{{app?.booker_name ? app?.booker_name : 'Anonymous'}} wants to view the {{app?.apart_type ? app?.apart_type : 'room'}} at {{app?.address}}
 					      </p>
 					    </ion-item>
-					    <ion-item #item text-wrap *ngIf="user.uid == app.booker_id" tooltip="Slide left for actions" positionH="right" event="click" arrow>
+					    <ion-item #item text-wrap *ngIf="user.uid == app.booker_id" tooltip="Slide left for actions" 
+					    positionH="right" event="click" arrow>
 					      <ion-avatar item-start>
 					        <img src="{{app?.apart_dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer />
 					        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 					      </ion-avatar>
-					      <p style="text-align: center">
+					      <p style="margin-bottom: 5px">
 					      	<strong style="overflow-wrap: normal;">For {{app?.date?.toDate() | date : "medium" }}</strong>
 					      </p>
 					      <p *ngIf="app?.host_declines && !app?.seeker_cancels && !app?.host_confirms" style="background: rgba(180,0,0,0.3); padding: 15px"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
@@ -74,6 +80,14 @@
 					      </p>
 					    </ion-item>
 					    <ion-item-options #item side="right">
+					      <button ion-button color="secondary" (click)="callTenant(app?.booker_id)" *ngIf="user.uid != app.booker_id">
+					        <ion-icon name="call"></ion-icon>
+					        Call
+					      </button>
+					      <button ion-button color="secondary" (click)="callLandlord(app?.host_id)" *ngIf="user.uid == app.booker_id">
+					        <ion-icon name="call"></ion-icon>
+					        Call
+					      </button>
 					      <button ion-button color="primary" (click)="showInput(app)">
 					        <ion-icon name="text"></ion-icon>
 					        Text
@@ -82,6 +96,7 @@
 					        <ion-icon name="close"></ion-icon>
 					        decline
 					      </button>
+
 					      <button ion-button color="secondary" (click)="confirmBooking(app)" *ngIf="user.uid != app.booker_id">
 					        <ion-icon name="thumbs-up"></ion-icon>
 					        Accept

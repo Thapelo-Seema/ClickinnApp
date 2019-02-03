@@ -1,0 +1,64 @@
+<!--
+  Generated template for the AttachmentPopupPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-navbar color="clickinn" >
+    <ion-title>Attachment</ion-title>
+  </ion-navbar>
+</ion-header>
+
+
+<ion-content>
+	<ion-grid>
+		<ion-row>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				<ion-textarea rows="3" [(ngModel)]="message.text" placeholder="Type message here..." style=" border: 1px solid lightgray; border-radius: 4px">
+				</ion-textarea>
+				<button *ngIf="message?.attachment" ion-item (click)="gotoEditApartment(apartment)">
+			      <ion-avatar item-start>
+			        <img src="{{message?.attachment?.dP?.url}}" (load)="imagesLoaded[0] = true" [hidden]="!imagesLoaded[0]" imageViewer/>
+			        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[0]" />
+			      </ion-avatar>
+			      <button ion-button clear item-right (click)="cancelSelect(selectedIndex)" >
+			      	<ion-icon name="close"></ion-icon>
+			      </button>
+			      <p>{{message?.attachment?.room_type}}, R{{message?.attachment?.price}}</p>
+			      <p>{{message?.attachment?.property?.vicinity}}</p>
+			    </button>
+				<ion-buttons end margin-vertical>
+					<button color="danger" ion-button (click)="close()">
+				      cancel
+				    </button>
+				    <button ion-button (click)="send()">
+				      send
+				    </button>
+			    </ion-buttons>
+				<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white" margin-vertical>
+					<p text-center style="color: white">
+						Attach ONE apartment at a time, from your uploaded apartments
+					</p>
+				</ion-item>
+				<ion-item margin-vertical text-wrap *ngFor="let apartment of apartments | async; let i = index" (click)="addApartment(apartment, i)" >
+			      <ion-avatar item-start>
+			        <img src="{{apartment?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
+			        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
+			      </ion-avatar>
+			      <span *ngIf="attached" item-right>
+			      	<button *ngIf="attached[i] == true" ion-button small clear color="secondary" (click)="cancelSelect(i)" >
+			      		<ion-icon name="checkmark"></ion-icon>
+			      	</button>
+			      </span>
+			      <p>{{apartment?.room_type}}, R{{apartment?.price}}</p>
+			      <p>{{returnFirst(apartment?.property?.description)}}</p>
+			    </ion-item>
+			</ion-col>
+			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+			</ion-col>
+		</ion-row>
+	</ion-grid>
+</ion-content>

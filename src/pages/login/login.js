@@ -8,7 +8,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { IonicPage, NavController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController, LoadingController } from 'ionic-angular';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
@@ -16,11 +16,10 @@ import { ErrorHandlerProvider } from '../../providers/error-handler/error-handle
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { FcmProvider } from '../../providers/fcm/fcm';
 import { Push } from '@ionic-native/push';
+import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 //import { Thread } from '../../models/thread.interface';
 var LoginPage = /** @class */ (function () {
-    function LoginPage(navCtrl, afAuth, afs, storage, errHandler, object_init, fcm, 
-    //private platform: Platform,
-    push) {
+    function LoginPage(navCtrl, afAuth, afs, storage, errHandler, object_init, fcm, alertCtrl, push, toast_svc, loadingCtrl) {
         this.navCtrl = navCtrl;
         this.afAuth = afAuth;
         this.afs = afs;
@@ -28,9 +27,13 @@ var LoginPage = /** @class */ (function () {
         this.errHandler = errHandler;
         this.object_init = object_init;
         this.fcm = fcm;
+        this.alertCtrl = alertCtrl;
         this.push = push;
+        this.toast_svc = toast_svc;
+        this.loadingCtrl = loadingCtrl;
         this.password = '';
-        this.loading = false;
+        this.loader = this.loadingCtrl.create();
+        this.reseting = false;
         this.seeker = this.object_init.initializeUser();
     }
     LoginPage.prototype.signup = function () {
@@ -60,7 +63,7 @@ var LoginPage = /** @class */ (function () {
     };
     LoginPage.prototype.signin = function () {
         var _this = this;
-        this.loading = true;
+        this.loader.present();
         this.afAuth.auth.signInWithEmailAndPassword(this.seeker.email, this.password).then(function (firebaseUser) {
             //console.log('firebaseUser: ', firebaseUser);
             _this.afs.collection('Users').doc("" + firebaseUser.user.uid).valueChanges().subscribe(function (data) {
@@ -68,22 +71,56 @@ var LoginPage = /** @class */ (function () {
                 _this.seeker = data;
                 _this.storage.setUser(data).then(function () {
                     //console.log('CurrentUser: ', this.seeker)
-                    _this.navCtrl.setRoot('WelcomePage').then(function () { return _this.loading = false; });
+                    _this.navCtrl.setRoot('WelcomePage').then(function () { return _this.loader.dismiss(); });
                     _this.onNotifications();
                 })
                     .catch(function (err) {
                     _this.errHandler.handleError(err);
-                    _this.loading = false;
+                    _this.loader.dismiss();
                 });
             }, function (err) {
                 _this.errHandler.handleError(err);
-                _this.loading = false;
+                _this.loader.dismiss();
             });
         })
             .catch(function (err) {
             _this.errHandler.handleError(err);
-            _this.loading = false;
+            _this.loader.dismiss();
         });
+    };
+    LoginPage.prototype.resetPassword = function () {
+        var _this = this;
+        var alert = this.alertCtrl.create({
+            title: 'Reset password',
+            message: 'Forgot your password ? do not worry, please enter your email below and we will send a reset link to your email',
+            inputs: [{
+                    name: 'email',
+                    placeholder: 'Email adress',
+                    type: 'text'
+                }],
+            buttons: [
+                {
+                    text: 'Cancel',
+                    role: 'cancel'
+                },
+                {
+                    text: 'Reset',
+                    handler: function (data) {
+                        _this.reseting = true;
+                        _this.afAuth.auth.sendPasswordResetEmail(data.email)
+                            .then(function () {
+                            _this.reseting = false;
+                            _this.toast_svc.showToast('Your password reset link has been sent to your email.');
+                        })
+                            .catch(function (err) {
+                            _this.reseting = false;
+                            _this.errHandler.handleError(err);
+                        });
+                    }
+                }
+            ]
+        });
+        alert.present();
     };
     LoginPage = __decorate([
         IonicPage(),
@@ -98,7 +135,10 @@ var LoginPage = /** @class */ (function () {
             ErrorHandlerProvider,
             ObjectInitProvider,
             FcmProvider,
-            Push])
+            AlertController,
+            Push,
+            ToastSvcProvider,
+            LoadingController])
     ], LoginPage);
     return LoginPage;
 }());

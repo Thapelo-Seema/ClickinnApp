@@ -1,16 +1,16 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController, LoadingController } from 'ionic-angular';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
-import { FcmProvider } from '../../providers/fcm/fcm';
-import { Push, PushOptions, PushObject } from '@ionic-native/push';
+//import { FcmProvider } from '../../providers/fcm/fcm';
+//import { Push, PushOptions, PushObject } from '@ionic-native/push';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 //import { Thread } from '../../models/thread.interface';
-
+import { take } from 'rxjs-compat/operators/take';
 
 @IonicPage()
 @Component({
@@ -20,7 +20,7 @@ import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 export class LoginPage {
   seeker: User;
   password: string = '';
-  loading: boolean = false;
+  loader = this.loadingCtrl.create();
   reseting: boolean = false;
   constructor(
     public navCtrl: NavController, 
@@ -29,10 +29,11 @@ export class LoginPage {
     private storage: LocalDataProvider,
     private errHandler: ErrorHandlerProvider, 
     private object_init: ObjectInitProvider,
-    private fcm: FcmProvider,
+   /// private fcm: FcmProvider,
     private alertCtrl: AlertController,
-    private push: Push,
-    private toast_svc: ToastSvcProvider) {
+   // private push: Push,
+    private toast_svc: ToastSvcProvider,
+    private loadingCtrl: LoadingController) {
   	this.seeker = this.object_init.initializeUser();
   }
 
@@ -40,7 +41,7 @@ export class LoginPage {
   	this.navCtrl.push('SignupPage');
   }
 
-   onNotifications(){
+   /*onNotifications(){
     const options: PushOptions = {
      android: {
        senderID: '882290923419'
@@ -61,32 +62,34 @@ export class LoginPage {
     });
 
     pushObject.on('error').subscribe(error => alert(error));
-  }
+  }*/
 
   signin(){
-  	this.loading = true;
+  	this.loader.present()
   	this.afAuth.auth.signInWithEmailAndPassword(this.seeker.email, this.password).then(firebaseUser =>{
       //console.log('firebaseUser: ', firebaseUser);
-  		this.afs.collection('Users').doc<User>(`${firebaseUser.user.uid}`).valueChanges().subscribe(data =>{
+  		this.afs.collection('Users').doc<User>(`${firebaseUser.user.uid}`).valueChanges()
+      .pipe(take(1))
+      .subscribe(data =>{
         //console.log('ClickinnUser: ', data);
   			this.seeker = data;
   			this.storage.setUser(data).then(() =>{
-          //console.log('CurrentUser: ', this.seeker)
-  				this.navCtrl.setRoot('WelcomePage').then(() => this.loading = false);
-          this.onNotifications();
+          this.loader.dismiss()
+  				this.navCtrl.setRoot('WelcomePage')
+          //this.onNotifications();
   			})
         .catch(err => {
+          this.loader.dismiss()
           this.errHandler.handleError(err);
-          this.loading = false;
         })
   		}, err =>{
+        this.loader.dismiss()
         this.errHandler.handleError(err);
-        this.loading = false;
       })
   	})
     .catch(err => {
+      this.loader.dismiss()
       this.errHandler.handleError(err);
-      this.loading = false;
     })
   }
 

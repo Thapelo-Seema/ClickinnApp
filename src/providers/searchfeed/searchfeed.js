@@ -32,9 +32,21 @@ var SearchfeedProvider = /** @class */ (function () {
         this._done = new BehaviorSubject(false);
         this._loading = new BehaviorSubject(false);
         this._data = new BehaviorSubject([]);
+        // Observable data
+        this.data = this._data.asObservable();
         this.done = this._done.asObservable();
         this.loading = this._loading.asObservable();
     }
+    SearchfeedProvider.prototype.reset = function () {
+        console.log('reseting...');
+        this.data = this._data.asObservable();
+        this._data.next([]);
+        this._done.next(false);
+    };
+    SearchfeedProvider.prototype.refresh = function () {
+        this.reset();
+        this.getAllSearches();
+    };
     // Determines the doc snapshot to paginate query 
     SearchfeedProvider.prototype.getCursor = function () {
         var current = this._data.value;
@@ -69,13 +81,45 @@ var SearchfeedProvider = /** @class */ (function () {
                 _this._done.next(true);
             }
         })
-            .take(1)
+            .subscribe(function (arr) {
+            _this.data = _this._data.asObservable()
+                .scan(function (acc, val) {
+                return acc.concat(val);
+            });
+        });
+    };
+    SearchfeedProvider.prototype.mapAndUpdateMore = function (col) {
+        var _this = this;
+        if (this._done.value || this._loading.value) {
+            return;
+        }
+        ;
+        // loading
+        this._loading.next(true);
+        // Map snapshot with doc ref (needed for cursor)
+        return col.snapshotChanges()
+            .do(function (arr) {
+            var values = arr.map(function (snap) {
+                var data = snap.payload.doc.data();
+                var doc = snap.payload.doc;
+                return __assign({}, data, { doc: doc });
+            });
+            // update source with new values, done loading
+            _this._data.next(values);
+            _this._loading.next(false);
+            // no more values, mark done
+            if (!values.length) {
+                console.log('done!');
+                _this._done.next(true);
+            }
+        })
             .subscribe();
     };
     SearchfeedProvider.prototype.getAllSearches = function () {
+        console.log('Getting all seraches : ');
         var first = this.afs.collection('Searches2', function (ref) {
             return ref.orderBy('timeStamp', 'desc')
-                .limit(10);
+                .limit(15);
         });
         this.mapAndUpdate(first);
         this.data = this._data.asObservable()
@@ -85,14 +129,15 @@ var SearchfeedProvider = /** @class */ (function () {
     };
     // Retrieves additional data from firestore
     SearchfeedProvider.prototype.moreAllSearches = function () {
+        console.log('Getting more all searches : ');
         var cursor = this.getCursor();
         var more = this.afs.collection('Searches2', function (ref) {
             return ref
                 .orderBy('timeStamp', 'desc')
-                .limit(10)
+                .limit(15)
                 .startAfter(cursor);
         });
-        this.mapAndUpdate(more);
+        this.mapAndUpdateMore(more);
     };
     SearchfeedProvider.prototype.getSeekerSearches = function (uid) {
         var first = this.afs.collection('Searches2', function (ref) {
@@ -123,10 +168,11 @@ var SearchfeedProvider = /** @class */ (function () {
             .pipe(map(function (searches) { return searches.filter(function (search) { return locations.indexOf(search.Address.locality_lng) != -1; }); }));
     };
     SearchfeedProvider.prototype.getSearchesOfArea = function (area) {
+        console.log('Getting seraches of area: ', area);
         var first = this.afs.collection('Searches2', function (ref) { return ref
             .where('Address.locality_lng', '==', area)
             .orderBy('timeStamp', 'desc')
-            .limit(10); });
+            .limit(15); });
         this.mapAndUpdate(first);
         this.data = this._data.asObservable()
             .scan(function (acc, val) {
@@ -134,6 +180,7 @@ var SearchfeedProvider = /** @class */ (function () {
         });
     };
     SearchfeedProvider.prototype.moreAreaSearches = function (area) {
+        console.log('Getting more searches of area: ', area);
         var cursor = this.getCursor();
         var more = this.afs.collection('Searches2', function (ref) {
             return ref
@@ -145,6 +192,61 @@ var SearchfeedProvider = /** @class */ (function () {
         this.mapAndUpdate(more);
     };
     SearchfeedProvider.prototype.getSearchesSince = function () {
+    };
+    SearchfeedProvider.prototype.getAllLandLords = function () {
+        return this.afs.collection("Users", function (ref) {
+            return ref.where('user_type', '==', 'landlord');
+        })
+            .valueChanges();
+    };
+    SearchfeedProvider.prototype.getLandLordsByLocation = function (location) {
+        var _this = this;
+        var match = false;
+        return this.afs.collection('Users', function (ref) {
+            return ref.where('user_type', '==', 'landlord');
+        })
+            .valueChanges()
+            .map(function (users) {
+            return users.filter(function (user) {
+                user.locations.forEach(function (loc) {
+                    if (_this.returnFirst(loc.description) == _this.returnFirst(location.description))
+                        match = true;
+                });
+                return match;
+            });
+        });
+    };
+    SearchfeedProvider.prototype.returnFirst = function (input) {
+        if (input == undefined)
+            return '';
+        return input.split(',')[0] + ', ' + input.split(',')[1];
+    };
+    SearchfeedProvider.prototype.proposeAgentService = function (deal) {
+        var deall = deal;
+        deall.id = deal.agent_uid + deal.landlord_uid;
+        return this.afs.collection('AgentProposals').doc(deall.id).set(deall);
+    };
+    SearchfeedProvider.prototype.updateProposal = function (deal) {
+        var deall = deal;
+        deall.id = deal.agent_uid + deal.landlord_uid;
+        return this.afs.collection('AgentProposals').doc(deall.id).set(deall);
+    };
+    SearchfeedProvider.prototype.getLandlordAgents = function (uid) {
+        return this.afs.collection('AgentProposals', function (ref) {
+            return ref.where('landlord_uid', '==', uid)
+                .where('landlord_agreed', '==', true);
+        }).valueChanges();
+    };
+    SearchfeedProvider.prototype.getAgentsLandlords = function (uid) {
+        return this.afs.collection('AgentProposals', function (ref) {
+            return ref.where('agent_uid', '==', uid)
+                .where('landlord_agreed', '==', true);
+        }).valueChanges();
+    };
+    SearchfeedProvider.prototype.getLandlordAgentProposals = function (uid) {
+        return this.afs.collection('AgentProposals', function (ref) {
+            return ref.where('landlord_uid', '==', uid);
+        }).valueChanges();
     };
     SearchfeedProvider = __decorate([
         Injectable(),

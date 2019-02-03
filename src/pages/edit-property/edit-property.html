@@ -62,7 +62,7 @@
 					</ion-item>
 					<div style="background: #000020; border-radius: 10px">
 						<h4 text-center padding style="color: white">Property common area images</h4>
-						<ion-slides  loop="true" slidesPerView="2" class="image_container" [pager]="true">
+						<ion-slides *ngIf="images && images.length" loop="true" slidesPerView="2" class="image_container" [pager]="true">
 							<ion-slide *ngFor="let image of images; let idx = index">
 								<div style="position: relative; top:0; left: 0; width:100%; height: 100%; ">	
 									<img src="{{image?.url}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" imageViewer class="thumb-img" />

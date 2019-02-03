@@ -8,7 +8,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component, ViewChild } from '@angular/core';
-import { Platform, ToastController, AlertController } from 'ionic-angular';
+import { Platform, ToastController, AlertController, LoadingController } from 'ionic-angular';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { StatusBar } from '@ionic-native/status-bar';
 import { LocalDataProvider } from '../providers/local-data/local-data';
@@ -20,7 +20,8 @@ import { ObjectInitProvider } from '../providers/object-init/object-init';
 import { take } from 'rxjs-compat/operators/take';
 import { Push } from '@ionic-native/push';
 import { DepositProvider } from '../providers/deposit/deposit';
-import { Network } from '@ionic-native/network';
+//import { Subscription } from 'rxjs-compat/Subscription';
+//import { AccommodationsProvider } from '../providers/accommodations/accommodations';
 var MyApp = /** @class */ (function () {
     //Check network status
     //if connected check authState
@@ -33,7 +34,7 @@ var MyApp = /** @class */ (function () {
     //if tenant -->home
     //else if seeker -->welcome
     //else --> login
-    function MyApp(storage, afs, afAuth, platform, errHandler, fcm, toastCtrl, object_init, statusBar, splashScreen, push, alertCtrl, deposit_svc, network) {
+    function MyApp(storage, afs, afAuth, platform, errHandler, fcm, toastCtrl, object_init, statusBar, splashScreen, push, alertCtrl, deposit_svc, loadingCtrl) {
         var _this = this;
         this.storage = storage;
         this.afs = afs;
@@ -48,12 +49,14 @@ var MyApp = /** @class */ (function () {
         this.push = push;
         this.alertCtrl = alertCtrl;
         this.deposit_svc = deposit_svc;
-        this.network = network;
-        this.loading = true;
+        this.loadingCtrl = loadingCtrl;
         this.online = false;
         this.dpLoaded = false;
+        this.loader = this.loadingCtrl.create({
+            dismissOnPageChange: true
+        });
         this.notificationObject = null;
-        this.loading = true;
+        this.loader.present();
         //Check for platform readiness before doing anything
         this.platform.ready()
             .then(function () {
@@ -69,57 +72,53 @@ var MyApp = /** @class */ (function () {
             _this.monitorOfflineState();
         })
             .catch(function (err) {
+            console.log('theres an error...');
+            _this.loader.dismiss();
             _this.errHandler.handleError(err);
-            _this.loading = false;
         });
     }
+    MyApp.prototype.ngOnDestroy = function () {
+    };
     //Navigate to the users profile
     MyApp.prototype.gotoProfile = function () {
-        var _this = this;
-        this.loading = true;
-        this.navCtrl.push('ProfilePage').then(function () {
-            _this.loading = false;
-        });
+        this.navCtrl.push('ProfilePage');
     };
     MyApp.prototype.gotoAgentDash = function () {
-        this.loading = true;
         this.navCtrl.push('AgentDashboardPage');
-        this.loading = false;
     };
     MyApp.prototype.gotoBursaryDash = function () {
-        this.loading = true;
         this.navCtrl.push('BursaryPlacementsPage');
-        this.loading = false;
     };
     MyApp.prototype.gotoCaretakerDash = function () {
-        this.loading = true;
         this.navCtrl.push('CaretakerManagerDashboardPage');
-        this.loading = false;
     };
     MyApp.prototype.gotoLandlordDash = function () {
-        var _this = this;
-        this.loading = true;
-        this.storage.setUserType('Landlord')
-            .then(function (val) {
-            _this.navCtrl.push('LandlordDashboardPage');
-            _this.loading = false;
-        });
+        this.navCtrl.push('LandlordDashboardPage');
+    };
+    MyApp.prototype.gotoDeposits = function () {
+        this.navCtrl.push('DepositsPage');
     };
     MyApp.prototype.gotoChats = function () {
-        this.loading = true;
         this.navCtrl.push('ChatsPage');
-        this.loading = false;
+    };
+    MyApp.prototype.gotoSupport = function () {
+        this.navCtrl.push('SupportPage');
+    };
+    MyApp.prototype.gotoSupportAdmin = function () {
+        this.navCtrl.push('SupportAdminPage');
     };
     MyApp.prototype.gotoBookings = function () {
-        this.loading = true;
         this.navCtrl.push('BookingsPage');
-        this.loading = false;
     };
     //Change the users authState, remove the users local copy
     MyApp.prototype.logout = function () {
         var _this = this;
-        this.afAuth.auth.signOut().then(function () {
-            _this.navCtrl.setRoot('LoginPage');
+        var ldr = this.loadingCtrl.create();
+        ldr.present();
+        this.navCtrl.setRoot('LoginPage')
+            .then(function () {
+            ldr.dismiss();
+            _this.afAuth.auth.signOut();
         });
     };
     //Navigate to the upload and earn page
@@ -136,7 +135,7 @@ var MyApp = /** @class */ (function () {
             ios: {
                 alert: 'true',
                 badge: true,
-                sound: 'false'
+                sound: 'true'
             },
             windows: {},
             browser: {
@@ -146,49 +145,61 @@ var MyApp = /** @class */ (function () {
         var pushObject = this.push.init(options);
         pushObject.on('notification').subscribe(function (notification) {
             // alert(notification.additionalData.deposit_id) 
-            if (_this.notificationObject !== null) {
-                if (!_this.compareNotification(notification, _this.notificationObject)) {
+            if (_this.notificationObject != null) {
+                if (_this.compareNotification(notification, _this.notificationObject) == false) {
                     _this.notificationObject = notification;
                     if (notification.additionalData.foreground) {
+                        /*let notifyToast = this.toastCtrl.create({
+                          position: 'bottom',
+                          duration: 2500,
+                          message: `${notification.message}`,
+                          cssClass: 'notiToast'
+                        })
+                        notifyToast.present()*/
                         // if application open, show popup
-                        var notifAlert_1 = _this.alertCtrl.create({
+                        var notifAlert = _this.alertCtrl.create({
                             title: notification.title,
-                            message: notification.message,
+                            subTitle: notification.message,
                             cssClass: "notification",
                             buttons: [{
                                     text: 'View',
                                     role: 'cancel',
                                     handler: function () {
                                         //TODO: Your logic here
-                                        _this.routeToNotificationSource(notification.additionalData.key_code, notification.additionalData.thread_id, notification.additionalData.deposit_id);
+                                        _this.routeToNotificationSource(notification.additionalData.key_code, notification.additionalData.thread_id, notification.additionalData.deposit_id, notification.message);
                                     }
                                 }]
                         });
-                        notifAlert_1.present();
-                        setTimeout(function () {
-                            notifAlert_1.dismiss();
-                        }, 5000);
+                        notifAlert.present();
                     }
                     else {
                         //if user NOT using app and push notification comes - NOT working, redirect to default rootPage
-                        _this.routeToNotificationSource(notification.additionalData.key_code, notification.additionalData.thread_id, notification.additionalData.deposit_id);
+                        _this.routeToNotificationSource(notification.additionalData.key_code, notification.additionalData.thread_id, notification.additionalData.deposit_id, notification.message);
                     }
                 }
             }
             else {
                 _this.notificationObject = notification;
                 if (notification.additionalData.foreground) {
+                    /*let notifyToast = this.toastCtrl.create({
+                        position: 'bottom',
+                        duration: 2500,
+                        message: `${notification.message}`,
+                        cssClass: 'notiToast'
+                      })
+        
+                      notifyToast.present()*/
                     // if application open, show popup
                     var notifAlert = _this.alertCtrl.create({
                         title: notification.title,
-                        message: notification.message,
+                        subTitle: notification.message,
                         cssClass: "notification",
                         buttons: [{
                                 text: 'View',
                                 role: 'cancel',
                                 handler: function () {
                                     //TODO: Your logic here
-                                    _this.routeToNotificationSource(notification.additionalData.key_code, notification.additionalData.thread_id, notification.additionalData.deposit_id);
+                                    _this.routeToNotificationSource(notification.additionalData.key_code, notification.additionalData.thread_id, notification.additionalData.deposit_id, notification.message);
                                 }
                             }]
                     });
@@ -196,7 +207,7 @@ var MyApp = /** @class */ (function () {
                 }
                 else {
                     //if user NOT using app and push notification comes - NOT working, redirect to default rootPage
-                    _this.routeToNotificationSource(notification.additionalData.key_code, notification.additionalData.thread_id, notification.additionalData.deposit_id);
+                    _this.routeToNotificationSource(notification.additionalData.key_code, notification.additionalData.thread_id, notification.additionalData.deposit_id, notification.message);
                 }
             }
         });
@@ -205,7 +216,7 @@ var MyApp = /** @class */ (function () {
         });
         pushObject.on('error').subscribe(function (error) { return console.log(error); });
     };
-    MyApp.prototype.routeToNotificationSource = function (key_code, thread_id, deposit_id) {
+    MyApp.prototype.routeToNotificationSource = function (key_code, thread_id, deposit_id, message) {
         switch (key_code) {
             case "new_message":
                 this.gotoThread(thread_id);
@@ -240,7 +251,22 @@ var MyApp = /** @class */ (function () {
             case "agent_confirmed_deposit":
                 this.gotoDepositInfo(deposit_id, key_code);
                 break;
+            case "landlord_proposal_agreed":
+                this.gotoMyLandlords(message);
+                break;
+            case "landlord_proposal_declined":
+                this.gotoMyLandlords(message);
+                break;
+            case "agent_proposal_cancelled":
+                this.gotoMyAgents(message);
+                break;
         }
+    };
+    MyApp.prototype.gotoMyAgents = function (message) {
+        this.navCtrl.push('MyAgentsPage', { msg: message });
+    };
+    MyApp.prototype.gotoMyLandlords = function (message) {
+        this.navCtrl.push('MyLandlordsPage', { msg: message });
     };
     MyApp.prototype.compareNotification = function (noti1, noti2) {
         if ((noti1.title == noti2.title) &&
@@ -274,19 +300,19 @@ var MyApp = /** @class */ (function () {
             switch (code) {
                 case "clickinn_confirmed_deposit":
                     message = "Clickinn has confirmed payment of " + dep.apartment.deposit + " for the " + dep.apartment.room_type + " by " + dep.by.firstname + ".";
-                    title = 'Deposit payment confirmation';
+                    title = 'DEPOSIT PAYMENT CONFIRMATION';
                     break;
                 case "tenant_confirmed_deposit":
                     message = dep.by.firstname + " confirmed a deposit payment of " + dep.apartment.deposit + " for the " + dep.apartment.room_type + ", please await confirmation of reciept from Clickinn and ALLOW the tenant to move in once you've recieved confirmation.";
-                    title = 'Deposit payment claim';
+                    title = 'DEPOSIT PAYMENT CLAIM';
                     break;
                 case "tenant_cancelled_deposit":
                     message = dep.by.firstname + " cancelled the deposit payment of " + dep.apartment.deposit + " for the " + dep.apartment.room_type + ".";
-                    title = 'Deposit payment cancellation';
+                    title = 'DEPOSIT PAYMENT CANCELLATION';
                     break;
                 case "agent_confirmed_deposit":
                     message = "Your deposit for the " + dep.apartment.room_type + " at " + dep.apartment.property.address.description + " has been confirmed. You can chat with the landlord for further move-in arrangements.";
-                    title = 'Deposit payment recieved';
+                    title = 'DEPOSIT PAYMENT RECIEVED';
                     break;
             }
             var notifAlert = _this.alertCtrl.create({
@@ -315,73 +341,112 @@ var MyApp = /** @class */ (function () {
             .catch(function (err) { return console.log(err); });
     };
     MyApp.prototype.gotoHostBookings = function () {
-        this.loading = true;
         this.navCtrl.push('BookingsPage', { selectedTab: 2 });
-        this.loading = false;
+    };
+    MyApp.prototype.gotoOwners = function () {
+        this.navCtrl.push('OwnersDashboardPage');
     };
     //Navigates the user their appropriate homepage at startup
+    /*
+      Check if this is first time user by checking for the first time token,
+      if there's no token route to the user guide page else route to the page suitable for the user role
+    */
     MyApp.prototype.navigateUser = function (user) {
-        if (user.user_type) { //check i user_type property exists in user
-            switch (user.user_type) {
-                case 'seeker': {
-                    //Navigate to welcome page
-                    this.rootPage = 'WelcomePage';
-                    break;
-                }
-                case 'host': {
-                    //Navigate to host dashboard
-                    this.rootPage = 'WelcomePage';
-                    break;
-                }
-                case 'support': {
-                    //Navigate to support interface
-                    this.rootPage = 'WelcomePage';
-                    break;
-                }
-                case 'tenant': {
-                    //Navigate to home
-                    this.rootPage = 'WelcomePage';
-                    break;
-                }
-                case 'Thapelo': {
-                    //Navigate to master
-                    this.rootPage = 'WelcomePage';
-                    break;
-                }
-            }
+        var _this = this;
+        console.log('getting first time...', user);
+        if (user.firstime == true) {
+            console.log('Users first time');
+            this.user.firstime = false;
+            console.log('New users', this.user);
+            this.storage.setUser(this.user)
+                .then(function (uza) {
+                console.log('Updating user...', uza);
+                _this.afs.collection('Users').doc(user.uid).set(_this.user)
+                    .then(function () {
+                    console.log('User updated');
+                    _this.rootPage = 'WelcomePage';
+                });
+            });
         }
         else {
-            //Navigate to welcome page
-            this.rootPage = 'WelcomePage';
+            this.storage.setUser(user)
+                .then(function (cached) {
+                if (user.user_type) { //check i user_type property exists in user
+                    switch (user.user_type) {
+                        case 'seeker': {
+                            //Navigate to welcome page
+                            _this.rootPage = 'WelcomePage';
+                            break;
+                        }
+                        case 'host': {
+                            //Navigate to host dashboard
+                            _this.rootPage = 'WelcomePage';
+                            break;
+                        }
+                        case 'support': {
+                            //Navigate to support interface
+                            _this.rootPage = 'WelcomePage';
+                            break;
+                        }
+                        case 'tenant': {
+                            //Navigate to home
+                            _this.rootPage = 'WelcomePage';
+                            break;
+                        }
+                        case 'Thapelo': {
+                            //Navigate to master
+                            _this.rootPage = 'WelcomePage';
+                            break;
+                        }
+                        case 'admin': {
+                            //Navigate to master
+                            _this.rootPage = 'WelcomePage';
+                            break;
+                        }
+                        case 'landlord': {
+                            //Navigate to master
+                            _this.rootPage = 'WelcomePage';
+                            break;
+                        }
+                    }
+                }
+                else {
+                    //Navigate to welcome page
+                    console.log('No user match...');
+                    _this.rootPage = 'WelcomePage';
+                }
+                _this.appViewReady();
+            });
         }
-        this.appViewReady();
     };
     //Check for authState and sync user data if possible
     MyApp.prototype.initializeAuthenticatedUser = function () {
         var _this = this;
         if (this.afAuth.auth.currentUser) {
             this.afs.collection('Users').doc(this.afAuth.auth.currentUser.uid).valueChanges()
+                .pipe(take(1))
                 .subscribe(function (user) {
                 if (user) {
-                    _this.user = user;
-                    _this.storage.setUser(user)
+                    _this.user = _this.object_init.initializeUser2(user);
+                    _this.storage.setUser(_this.user)
                         .then(function () {
+                        _this.loader.dismiss();
                         _this.navigateUser(user);
                         _this.initNotifications();
-                        _this.loading = false;
                         return;
                     })
                         .catch(function (err) {
+                        _this.loader.dismiss();
                         _this.errHandler.handleError({ errCode: 'SET_OFFLINE_USER', message: "Error caching user" });
-                        _this.loading = false;
+                        _this.rootPage = 'LoginPage';
                         return;
                     });
                 }
             });
         }
         else {
+            this.loader.dismiss();
             this.rootPage = 'LoginPage';
-            this.loading = false;
             this.appViewReady();
             return;
         }
@@ -391,20 +456,22 @@ var MyApp = /** @class */ (function () {
         var _this = this;
         this.storage.getUser().then(function (user) {
             if (user) {
-                _this.user = user;
+                _this.user = _this.object_init.initializeUser2(user);
+                _this.loader.dismiss();
                 _this.navigateUser(user);
                 _this.initNotifications();
-                _this.loading = false;
             }
             else {
+                _this.loader.dismiss();
+                console.log('No user cached');
                 _this.rootPage = 'LoginPage';
                 _this.appViewReady();
-                _this.loading = false;
                 return;
             }
         }).catch(function (err) {
+            _this.loader.dismiss();
             _this.errHandler.handleError({ errCode: 'GET_OFFLINE_USER', message: 'Error initializing offline user' });
-            _this.loading = false;
+            _this.rootPage = 'LoginPage';
             return;
         });
     };
@@ -414,66 +481,52 @@ var MyApp = /** @class */ (function () {
             this.afs.collection('Users').doc(this.afAuth.auth.currentUser.uid).valueChanges()
                 .subscribe(function (user) {
                 if (user) {
-                    _this.user = user;
-                    _this.storage.setUser(user)
+                    _this.user = _this.object_init.initializeUser2(user);
+                    _this.storage.setUser(_this.user)
                         .then(function () {
-                        _this.loading = false;
                         return;
                     })
                         .catch(function (err) {
                         _this.errHandler.handleError({ errCode: 'SET_OFFLINE_USER', message: "Error persisting offline user" });
-                        _this.loading = false;
                         return;
                     });
                 }
             });
         }
     };
+    /*
+    This method monitors the authState and  initializes a user if auth is positive or navigates to the signup page if no
+    authenticated user is found
+    */
     MyApp.prototype.monitorAuthState = function () {
         var _this = this;
-        this.authState = this.afAuth.authState
+        this.afAuth.authState
+            .pipe(take(1))
             .subscribe(function (user) {
             console.log('MonitorAuthState running....');
             if (user || _this.afAuth.auth.currentUser) {
                 console.log('Firebase user found...');
-                if (_this.platform.is('cordova')) {
-                    console.log('on mobile device...');
-                    if (window.navigator.onLine) { //If there is a network connection
-                        console.log('Connected!');
-                        _this.online = true;
-                        _this.initializeAuthenticatedUser();
-                    }
-                    else {
-                        console.log('offline');
-                        _this.online = false;
-                        //Atleast check if there's a cached user otherwise only show login page
-                        _this.InitializeOfflineUser();
-                    }
+                if (window.navigator.onLine) { //If there is a network connection
+                    console.log('Connected!');
+                    _this.online = true;
+                    _this.initializeAuthenticatedUser();
                 }
                 else {
-                    console.log('On browser');
-                    if (window.navigator.onLine) {
-                        console.log('connected');
-                        _this.online = true;
-                        _this.initializeAuthenticatedUser();
-                    }
-                    else {
-                        //check for cached otherwise take to login page
-                        console.log('offline');
-                        _this.online = false;
-                        _this.InitializeOfflineUser();
-                    }
+                    console.log('offline');
+                    _this.online = false;
+                    //Atleast check if there's a cached user otherwise only show login page
+                    _this.InitializeOfflineUser();
                 }
             }
             else if (user == null) {
-                _this.navCtrl.setRoot('LoginPage');
+                _this.loader.dismiss();
+                _this.navCtrl.setRoot('SignupPage');
                 _this.appViewReady();
-                _this.loading = false;
             }
             else {
-                _this.navCtrl.setRoot('LoginPage');
+                _this.loader.dismiss();
+                _this.navCtrl.setRoot('SignupPage');
                 _this.appViewReady();
-                _this.loading = false;
                 console.log('I dunno');
             }
         });
@@ -481,6 +534,7 @@ var MyApp = /** @class */ (function () {
     MyApp.prototype.gotoLiked = function () {
         this.navCtrl.push('FavouritesPage');
     };
+    //This method manages the hiding of the splashscreen and loader once the app is ready
     MyApp.prototype.appViewReady = function () {
         if (this.platform.is('cordova')) {
             this.statusBar.styleDefault();
@@ -496,10 +550,7 @@ var MyApp = /** @class */ (function () {
                 _this.online = true;
                 _this.showToast('You are back online!');
             }
-            _this.afs.firestore.enableNetwork().then(function () {
-                _this.syncAuthenticatedUser();
-            })
-                .catch(function (err) { return console.log(err); });
+            _this.syncAuthenticatedUser();
         });
     };
     MyApp.prototype.monitorOfflineState = function () {
@@ -508,8 +559,6 @@ var MyApp = /** @class */ (function () {
         window.addEventListener('offline', function () {
             _this.online = false;
             _this.showToast('You are offline...');
-            _this.afs.firestore.disableNetwork()
-                .catch(function (err) { return console.log(err); });
         });
     };
     MyApp.prototype.initializeUser = function () {
@@ -543,7 +592,7 @@ var MyApp = /** @class */ (function () {
             Push,
             AlertController,
             DepositProvider,
-            Network])
+            LoadingController])
     ], MyApp);
     return MyApp;
 }());

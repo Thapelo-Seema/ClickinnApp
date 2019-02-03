@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, AlertController, LoadingController } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { Image } from '../../models/image.interface';
@@ -13,6 +13,7 @@ import { take } from 'rxjs-compat/operators/take';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 //import { ChatMessage } from '../../models/chatmessage.interface';
+import { CallNumber } from '@ionic-native/call-number';
 
 @IonicPage()
 @Component({
@@ -22,10 +23,10 @@ import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 export class InfoPage {
 
   apartment: Apartment;
-  adjustedDuration: number = 0;
+  //adjustedDuration: number = 0;
   pointOfInterest: Address ;
   images: Image[] = [];
-  loading: boolean = false;
+  loader = this.loadingCtrl.create();
   canEdit: boolean = false;
   user: User;
   to: any;
@@ -33,12 +34,12 @@ export class InfoPage {
   heart: string = "ios-heart-outline";
   //chatMessage: ChatMessage;
   imagesLoaded: boolean[] = 
-      [false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false, 
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false
-       ];
+  [ false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, 
+    false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false
+  ];
   constructor(
     public navCtrl: NavController, 
     public navParams: NavParams, 
@@ -48,50 +49,86 @@ export class InfoPage {
     private accom_svc: AccommodationsProvider,
     private user_svc: UserSvcProvider,
     private toast_svc: ToastSvcProvider,
-    private alertCtrl: AlertController) {
+    private alertCtrl: AlertController, 
+    private loadingCtrl: LoadingController,
+    private callNumber: CallNumber){
       //this.chatMessage = this.object_init.initializeChatMessage();
+      //his.loader.present();
       this.apartment = this.object_init.initializeApartment();
-      this.property = this.object_init.initializeProperty()
+      this.property = this.object_init.initializeProperty();
       this.pointOfInterest = this.object_init.initializeAddress();
-  }
-
-  ionViewWillLoad(){
-    this.showAlert();
-    this.user = this.object_init.initializeUser();
-    this.storage.getPOI().then(data => {
-      this.pointOfInterest = data;
-      //console.log('Description: ' + this.pointOfInterest.description + '\n' + 'Name: ' + this.pointOfInterest.name)
-    })
-    .catch(err => {
-      this.errHandler.handleError(err);
-      this.loading = false;
-    })
-  	this.storage.getApartment().then(data => {
-      this.apartment = this.object_init.initializeApartment2(data);
-      this.accom_svc.getPropertyById(data.prop_id)
-      .pipe(
-        take(1)
-      )
-      .subscribe(ppty =>{
-        this.property = this.object_init.initializeProperty2(ppty);
-        console.log('nearbys ', this.property.nearbys)
+      this.user = this.object_init.initializeUser();
+      this.storage.getPOI().then(data1 => {
+      this.pointOfInterest = data1;
+        //console.log('Description: ' + this.pointOfInterest.description + '\n' + 'Name: ' + this.pointOfInterest.name)
       })
-      this.storage.getUser().then(user => {
-        this.user = user;
-        this.user_svc.getUser(data.property.user_id)
-        .pipe(
-          take(1)
-        )
-        .subscribe(host =>{
-          //this.chatMessage = this.object_init.initializeChatMessageInComp(user, host);
-          this.to = {
-            displayName: host.firstname,
-            dp: host.photoURL,
-            uid: host.uid,
-            topic: `Interest in your ${this.apartment.room_type} at ${this.apartment.property.address.description}`
-          }
-          this.storage.setMessageDetails(this.to)
+      .catch(err => {
+        this.errHandler.handleError(err);
+      })
+      this.storage.getApartment().then(data => {
+      console.log('apartment: ', data)
+      console.log('data.property.images: ', data.property.images)
+      this.apartment = this.object_init.initializeApartment2(data);
+      //this.loader.dismiss()
+      if(data.prop_id){
+        this.accom_svc.getPropertyById(data.prop_id)
+        .pipe(take(1))
+        .subscribe(ppty =>{
+          this.property = this.object_init.initializeProperty2(ppty);
+          console.log('nearbys ', this.property.nearbys)
         })
+      }else if(data.property.prop_id){
+        this.accom_svc.getPropertyById(data.property.prop_id)
+        .pipe(take(1))
+        .subscribe(ppty =>{
+          this.property = this.object_init.initializeProperty2(ppty);
+          console.log('nearbys ', this.property.nearbys)
+        })
+      }
+      
+      this.storage.getUser().then(user => {
+        this.user = this.object_init.initializeUser2(user)
+        //if(this.user.firstime == true) this.showAlert();
+        if(data.user_id){
+          this.user_svc.getUser(data.user_id)
+          .pipe(take(1))
+          .subscribe(host =>{
+            //this.chatMessage = this.object_init.initializeChatMessageInComp(user, host);
+            this.to = {
+              displayName: host.firstname,
+              dp: host.photoURL,
+              uid: host.uid,
+              topic: `Interest in your ${this.apartment.room_type} at ${this.apartment.property.address ? this.apartment.property.address.description : ''}`
+            }
+            this.storage.setMessageDetails(this.to)
+          })
+        }else if(data.property.user_id){
+          this.user_svc.getUser(data.property.user_id)
+          .pipe(take(1))
+          .subscribe(host =>{
+            //this.chatMessage = this.object_init.initializeChatMessageInComp(user, host);
+            this.to = {
+              displayName: host.firstname,
+              dp: host.photoURL,
+              uid: host.uid,
+              topic: `Interest in your ${this.apartment.room_type} at ${this.apartment.property.address ? this.apartment.property.address.description : ''}`
+            }
+            this.storage.setMessageDetails(this.to)
+          })
+        }else if(data.agent){
+          this.user_svc.getUser(data.agent)
+          .pipe(take(1))
+          .subscribe(host =>{
+            //this.chatMessage = this.object_init.initializeChatMessageInComp(user, host);
+            this.to = {
+              displayName: host.firstname,
+              dp: host.photoURL,
+              uid: host.uid,
+              topic: `Interest in your ${this.apartment.room_type} at ${this.apartment.property.address ? this.apartment.property.address.description : ''}`
+            }
+            this.storage.setMessageDetails(this.to)
+          })
+        }
         if(user.liked_apartments.indexOf(data.apart_id) != -1){
           this.heart = 'ios-heart';
         }else{
@@ -107,69 +144,151 @@ export class InfoPage {
         this.apartment.property.nearbys = [];
       }
       this.images = [];
-      this.images = Object.keys(data.images).map(imageId =>{
+      let tempImages = []
+
+      console.log('property images: ', data.property.images)
+      //Populating tempImages with the apartments images
+      tempImages = Object.keys(data.images).map(imageId =>{
         this.imagesLoaded.push(false);
         return data.images[imageId]
       })
-      console.log(this.images);
-  	})
+
+      console.log('tempImages: ', tempImages)
+      //Populating propImages with the apartments property images
+      let propImages = Object.keys(data.property.images).map(imageId =>{
+        this.imagesLoaded.push(false);
+        return data.property.images[imageId]
+      })
+      //Transferring apartment images
+      console.log('propImages: ', propImages)
+      tempImages.forEach(mg =>{
+        console.log(mg)
+        if(mg != undefined) this.images.push(mg)
+      })
+      //Transferring property images
+      console.log('images after adding temp: ', this.images)
+      propImages.forEach(mg =>{
+        console.log(mg)
+        if(mg != undefined) this.images.push(mg)
+      })
+      console.log('images after adding prop: ', this.images)
+    })
     .catch(err => {
       this.errHandler.handleError(err);
-      this.loading = false;
+      //this.loader.dismiss()
     })
+  }
+
+  ionViewWillLoad(){
+    this.storage.getPaymentWarningSeen()
+    .then(val =>{
+      if(val == undefined){
+        this.showAlert();
+      }
+    })
+    
+
+  	
  }
 
  gotoApartment(apartment: Apartment){
     this.storage.setApartment(apartment).then(data => this.navCtrl.push('EditApartmentPage'))
     .catch(err => {
       console.log(err);
-      this.loading = false;
     });
   }
 
+  gotoMap(){
+    this.navCtrl.push('MapPage');
+  }
+
   gotoAppointment(){
+    this.navCtrl.parent.select(1)
     this.navCtrl.push('AppointmentPage')
   }
 
   gotoSecure(){
+    this.navCtrl.parent.select(2)
     this.navCtrl.push('SecurePage')
   }
 
   addToLiked(){
+    let ldr = this.loadingCtrl.create();
+    ldr.present()
     if(this.user.liked_apartments.indexOf(this.apartment.apart_id) != -1){
       this.heart = 'ios-heart-outline';
       this.user.liked_apartments.splice(this.user.liked_apartments.indexOf(this.apartment.apart_id), 1);
       this.user_svc.updateUser(this.user)
+      .then(() =>{
+        ldr.dismiss()
+      })
     }else{
       this.heart = 'ios-heart';
       this.user.liked_apartments.push(this.apartment.apart_id);
       this.user_svc.updateUser(this.user).then(() =>{
-        this.toast_svc.showToast("Apartment added to your 'liked apartments' ")
+        ldr.dismiss()
+        .then(dat =>{
+          this.toast_svc.showToast("Apartment added to your 'liked apartments' ")
+        })
       })
-      .catch(err => console.log(err))
+      .catch(err => {
+        ldr.dismiss()
+        console.log(err)
+      })
     }
   }
 
   sendMessage(){
-    this.navCtrl.push('MessageInputPopupPage')
+    let to: any;
+      to = {
+        name: '',
+        uid: this.apartment.user_id ? this.apartment.user_id : this.apartment.property.user_id  ,
+        dp: this.apartment.dP,
+        topic: `Regarding the ${this.apartment.room_type} in ${this.returnFirst(this.apartment.property.address.description)}`
+      }
+
+    this.storage.setMessageDetails(to).then(val =>{
+      this.navCtrl.push('MessageInputPopupPage', to);
+    })
+  }
+
+  returnFirst(input: string): string{
+    if(input == undefined) return '';
+    return input.split(" ")[0];
   }
 
   showAlert() {
     let showPaymentSaftey: boolean = false;
     let alertC = this.alertCtrl.create({
-      title: 'ALERT !',
-      message: `Please note that if you want to secure an apartment immediately, we highly recommend that you use the Clickinn payment system by pressing MAKE DEPOSIT NOW below ( it is a much safer option than paying money directly to the advertiser )`,
+      title: 'Payment Alert ',
+      cssClass: 'alertNoty',
+      message: `Please note that if you want to secure an apartment immediately, we highly recommend that you use the Clickinn payment system by clicking on the shopping cart icon below ( it is a much safer option than paying money directly to the advertiser )`,
+      inputs:[
+        {
+           name: 'dismis',
+           type: 'checkbox',
+           checked: false,
+           label: 'Do not show this again',
+           value: "false"
+        }
+      ],
       buttons: [
         {
           role: 'cancel',
           text: "OK",
           handler: data =>{
+            if(data.length > 0){
+              this.storage.setPaymentWarningSeen()
+            }
             showPaymentSaftey = false;
           }
         },
         {
           text: 'Find out more',
           handler: data =>{
+            if(data.length > 0){
+              this.storage.setPaymentWarningSeen()
+            }
             showPaymentSaftey = true;
           }
         }
@@ -177,9 +296,23 @@ export class InfoPage {
     });
     alertC.present();
     alertC.onDidDismiss(data =>{
+      
       if(showPaymentSaftey){
         this.navCtrl.push('PaymentDetailsPage');
       }
+    })
+  }
+
+  callLandlord(uid: string){
+    this.toast_svc.showToast('Please note that network charges may apply for making this call...')
+    this.user_svc.getUser(uid)
+    .pipe(take(1))
+    .subscribe(user =>{
+      
+        this.callNumber.callNumber(user.phoneNumber, false)
+        .catch(err =>{
+          this.errHandler.handleError(err)
+        })
     })
   }
 

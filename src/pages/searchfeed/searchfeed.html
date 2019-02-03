@@ -1,50 +1,65 @@
 
-<ion-header>
+<ion-header >
   <ion-navbar color="clickinn">
-    <ion-title text-center>Search feed</ion-title>
+    <ion-title text-center>People's Searches</ion-title>
   </ion-navbar>
 </ion-header>
 
 <ion-content style="background: #f4f4f4;">
-	<ion-grid no-padding>
+	<ion-grid no-padding style="margin-top: 0">
 		<ion-row>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
-			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-				<ion-buttons text-center margin-top>
-					<button ion-button *ngIf="user?.user_type != 'landlord'" (click)="gotoLandlordSearch()"  >Get Landlords</button>
-					<button ion-button *ngIf="user?.user_type != 'landlord'" (click)="gotoMyLandlords()"  >My Landlords</button>
-					<button ion-button  *ngIf="user?.user_type == 'landlord'" (click)="gotoMyAgents()"  >My Agents</button>
-				</ion-buttons>
-				<ion-card padding margin-vertical>
-					<strong style="color: #488aff; text-align: center; margin-bottom: 7px">Filter for searches of a particular location</strong>
+			<ion-col col-12 col-sm-12 col-md-12 col-lg-6 >
+				<ion-item no-lines style="background: #000020">
+					<ion-buttons text-center >
+						<button ion-button  padding-vertical style="border-bottom: 0.5px solid #f4f4f4" full color="clickinn" *ngIf="user?.user_type != 'landlord'" (click)="gotoLandlordSearch()">
+							Get Landlords
+						</button> 
+						<button ion-button padding-vertical full color="clickinn" *ngIf="user?.user_type != 'landlord'" (click)="gotoMyLandlords()">
+							My Landlords
+						</button>
+						<button ion-button padding-vertical full color="clickinn" *ngIf="user?.user_type == 'landlord'" (click)="gotoMyAgents()">
+							My Agents
+						</button>
+					</ion-buttons>
+				</ion-item>
+				<div>
+					<span>
+						<button ion-button clear (click)="refresh()" >
+							<ion-icon name="refresh" style="font-size: 30px">
+							</ion-icon>
+						</button>
+					</span>
+					<ion-label text-center style=" margin-bottom: 2px; letter-spacing: 2px">Filter Searches By Location</ion-label>
 					<ion-searchbar type="search" [(ngModel)]="pointOfInterest.description" 
-		              placeholder="e.g. Wits or liberty life  or  Braamfontein" (ionInput)="getPredictions($event)" mode="ios">
+		              placeholder="e.g. Braamfontein" (ionInput)="getPredictions($event)" mode="ios">
 		            </ion-searchbar>
-		        </ion-card>
-	            <div *ngIf="predictionLoading" style="background: rgba(0, 0, 0, 0.8); color: white; padding-top: 5px; padding-bottom: 5px;  text-align: center; z-index: 1">
-	              <ion-spinner name="ios"></ion-spinner> &nbsp;&nbsp;
-	              Loading predictions...
-	            </div>
-	            <ion-list *ngIf="predictions">
-	              <button ion-item *ngFor="let pred of predictions" (click)="selectPlace(pred)">{{pred?.description}}</button>
-	            </ion-list>
+			            <div *ngIf="predictionLoading" style="background: rgba(0, 0, 0, 0.8); color: white; padding-top: 5px; padding-bottom: 5px;  text-align: center; z-index: 1">
+		              <ion-spinner name="ios"></ion-spinner> &nbsp;&nbsp;
+		              Loading predictions...
+		            </div>
+		            <ion-list *ngIf="predictions">
+		              <button ion-item *ngFor="let pred of predictions" (click)="selectPlace(pred)">{{pred?.description}}</button>
+		            </ion-list>
+		        </div>
+	            
 				<ion-card *ngFor="let srch of searchfeed_svc?.data | async; let idx = index">
 				  <ion-item>
 				    <ion-avatar item-start>
 				      <img src="{{srch?.searcher_dp}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" />
-				      <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[idx]" />
+				      <img src="assets/imgs/genPlaceholder.png" [hidden]="imagesLoaded[idx]" />
 				    </ion-avatar>
 				    <h2> <strong>{{srch?.searcher_name != 'undefined undefined' ? srch?.searcher_name : 'Anonymous'}} </strong></h2>
 				  </ion-item>
 				  <ion-card-content>
 				    <p text-center>
-				    	Hi, I am looking for <b style="color: green">{{srch?.apartment_type == 'Any' ? 'any type of room/apartment' : 
+				    	Looking for <b style="color: green">{{srch?.apartment_type == 'Any' ? 'any type of room/apartment' : 
 				    	 ' a ' + srch?.apartment_type}}</b> around 
-				    	<b style="color: green">{{srch?.Address?.sublocality_lng}}, {{srch?.Address?.locality_lng}} 
+				    	<b style="color: green">{{srch?.Address?.sublocality_lng}} 
 				    	</b>.
 				    </p>
-				    <h2 text-center style="color: #488aff">The place meet have the following requirements</h2>
+				    <h2 text-center style="color: #488aff">The place must meet the following requirements</h2>
 				    <p text-center>
 				    	 Rent between <b style="color: green">R{{srch?.minPrice}}.00</b> and <b style="color: green">R{{srch?.maxPrice}}.00</b>
 				    	<b style="color: green">
@@ -62,6 +77,12 @@
 				        <div>Make offer</div>
 				      </button>
 				    </ion-col>
+				    <ion-col>
+		    			<button ion-button small icon-start clear (click)="callSearcher(srch?.searcher_id)" >
+		    				<ion-icon name="call"></ion-icon>
+		    				<div>Call</div>
+		    			</button>
+		    		</ion-col>
 				    <ion-col center text-center>
 				      <ion-note>
 				        {{srch?.timeStamp | timeAgo | async}}

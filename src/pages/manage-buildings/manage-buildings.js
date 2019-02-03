@@ -30,6 +30,9 @@ var ManageBuildingsPage = /** @class */ (function () {
     ManageBuildingsPage.prototype.gotoBuildings = function () {
         this.navCtrl.push('BuildingsPage');
     };
+    ManageBuildingsPage.prototype.gotoAparts = function () {
+        this.navCtrl.push('SavedApartmentsPage');
+    };
     ManageBuildingsPage = __decorate([
         IonicPage(),
         Component({

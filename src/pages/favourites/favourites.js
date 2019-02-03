@@ -8,11 +8,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, LoadingController } from 'ionic-angular';
 //import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 //import { AccommodationsComponent } from '../../components/accommodations/accommodations';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
+import { take } from 'rxjs-compat/operators/take';
+import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 /**
  * Generated class for the FavouritesPage page.
  *
@@ -20,39 +22,66 @@ import { LocalDataProvider } from '../../providers/local-data/local-data';
  * Ionic pages and navigation.
  */
 var FavouritesPage = /** @class */ (function () {
-    function FavouritesPage(navCtrl, navParams, accom_svc, storage) {
+    function FavouritesPage(navCtrl, navParams, accom_svc, storage, toast_svc, loadingCtrl) {
         var _this = this;
         this.navCtrl = navCtrl;
         this.navParams = navParams;
         this.accom_svc = accom_svc;
         this.storage = storage;
-        this.apartments = [];
-        this.loading = true;
-        this.apartmentSub = null;
+        this.toast_svc = toast_svc;
+        this.loadingCtrl = loadingCtrl;
+        this.loader = this.loadingCtrl.create();
+        this.done = false;
+        //apartmentSub: Subscription = null;
+        this.noLiked = false;
+        //@ViewChild(Content) content: Content;
         this.imagesLoaded = [false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false
         ];
+        /*this.accom_svc.loading.subscribe(data =>{
+          this.loadingMore = data;
+        })
+    
+        this.accom_svc.done.subscribe(data =>{
+          this.done = data;
+          if(this.done == true) this.loadingMore = false;
+        })*/
+        this.loader.present();
         this.storage.getUser().then(function (data) {
-            _this.apartmentSub = _this.accom_svc.getUserFavourites(data.liked_apartments)
+            _this.user = data;
+            _this.apartments = _this.accom_svc.getUserFavourites(data.liked_apartments);
+            _this.accom_svc.getUserFavourites(data.liked_apartments)
+                .pipe(take(1))
                 .subscribe(function (aparts) {
-                _this.apartments = aparts;
-                _this.loading = false;
+                if (aparts.length > 0) {
+                    aparts.forEach(function (apart) {
+                        _this.imagesLoaded.push(false);
+                    });
+                    _this.loader.dismiss();
+                }
+                else {
+                    //this.toast_svc.showToast('You have not liked any apartments yet...')
+                    _this.noLiked = true;
+                    _this.loader.dismiss();
+                }
             });
         });
     }
     FavouritesPage.prototype.ionViewDidLoad = function () {
-        console.log('ionViewDidLoad FavouritesPage');
+        //this.monitorEnd()
     };
     FavouritesPage.prototype.ionViewDidLeave = function () {
-        if (this.apartmentSub)
-            this.apartmentSub.unsubscribe();
     };
     FavouritesPage.prototype.gotoApartment = function (apartment) {
         var _this = this;
-        this.storage.setApartment(apartment).then(function (data) { return _this.navCtrl.push('ApartmentDetailsPage'); })
+        //delete apartment.doc
+        this.storage.setApartment(apartment).then(function (data) {
+            //this.accom_svc.reset();
+            _this.navCtrl.push('ApartmentDetailsPage');
+        })
             .catch(function (err) {
             console.log(err);
         });
@@ -66,7 +95,9 @@ var FavouritesPage = /** @class */ (function () {
         __metadata("design:paramtypes", [NavController,
             NavParams,
             AccommodationsProvider,
-            LocalDataProvider])
+            LocalDataProvider,
+            ToastSvcProvider,
+            LoadingController])
     ], FavouritesPage);
     return FavouritesPage;
 }());

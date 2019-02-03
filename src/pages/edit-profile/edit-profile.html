@@ -15,7 +15,7 @@
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>
 	        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-				<ion-item no-lines style="background: #000050; color: white">
+				<ion-item no-lines  style="background: #000050; color: white">
 					<ion-buttons end>
 					  	<button ion-button style="background: #000010; color: white" (click)="changeDp()" ><ion-icon name="image"></ion-icon> &nbsp;&nbsp; Photo</button>
 					</ion-buttons>
@@ -29,7 +29,7 @@
 				  	</h1>
 				</ion-item>
 				 	
-				<div padding>
+				<div  padding>
 			    	<h2 text-center>Edit details</h2>
 				    <ion-item >
 				      	<ion-label stacked>Display Name</ion-label>
@@ -60,41 +60,10 @@
 						<span></span>
 						<span><button ion-button>ID copy</button></span>
 					</ion-item> -->
-					<fieldset>
-    					<legend>Banking details (For agents commision payout)</legend>
-    					<ion-item text-wrap>
-					        <ion-label>Bank</ion-label>
-					        <ion-select [(ngModel)]="user.bank" required>
-					          <ion-option value="ABSA">ABSA</ion-option>
-					          <ion-option value="African Bank">African Bank</ion-option>
-					          <ion-option value="Capitec">Capitec</ion-option>
-					          <ion-option value="FNB">FNB</ion-option>
-					          <ion-option value="Nedbank">Nedbank</ion-option>
-					          <ion-option value="Standard bank">Standard bank</ion-option>
-					        </ion-select>
-					    </ion-item>
-					    <ion-item >
-							<ion-label stacked>Account holder</ion-label>
-							<ion-input type="text" [(ngModel)]="user.account_holder" name="acc_holder" autocorrect="off"></ion-input>
-						</ion-item>
-	    				<ion-item >
-							<ion-label stacked>Account number</ion-label>
-							<ion-input type="text" [(ngModel)]="user.account_number" name="acc_number" autocorrect="off"></ion-input>
-						</ion-item>
-						<ion-item >
-							<ion-label stacked>Branch code</ion-label>
-							<ion-input type="text" [(ngModel)]="user.bank_code" name="b_code" autocorrect="off"></ion-input>
-						</ion-item>
-    				</fieldset>
 				</div>
-				<progress-bar *ngIf="uploading" [progress]="progress" [color]="'#488aff'">
-				</progress-bar> 
 				<ion-buttons end padding>
 					<button ion-button (click)="save()"><ion-icon name="cloud-upload" start></ion-icon> &nbsp;&nbsp; Save</button>
 				</ion-buttons>
-			  	<div *ngIf="loading" class="centered_on_screen">
-			    	<ion-spinner name="ios"></ion-spinner>
-			  	</div>
 			  </ion-col>
 			  <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>

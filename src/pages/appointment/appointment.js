@@ -8,76 +8,84 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, ToastController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, ToastController, AlertController, LoadingController } from 'ionic-angular';
 import { DatePicker } from '@ionic-native/date-picker';
 import { Calendar } from '@ionic-native/calendar';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
-import { AngularFirestore } from 'angularfire2/firestore';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-//import { ConfirmationPage } from '../confirmation/confirmation';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { AppointmentsProvider } from '../../providers/appointments/appointments';
 import { take } from 'rxjs-compat/operators/take';
+import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
+/* This page handles the process of the accommodation seeker making an appointment to view an accommodation */
 var AppointmentPage = /** @class */ (function () {
-    function AppointmentPage(navCtrl, navParams, datePicker, calender, confirmtCtrl, storage, toast, afs, errHandler, object_init, appointment_svc, alertCtrl) {
+    function AppointmentPage(navCtrl, datePicker, calender, storage, toast, errHandler, object_init, appointment_svc, accom_svc, alertCtrl, loadingCtrl) {
         var _this = this;
         this.navCtrl = navCtrl;
-        this.navParams = navParams;
         this.datePicker = datePicker;
         this.calender = calender;
-        this.confirmtCtrl = confirmtCtrl;
         this.storage = storage;
         this.toast = toast;
-        this.afs = afs;
         this.errHandler = errHandler;
         this.object_init = object_init;
         this.appointment_svc = appointment_svc;
+        this.accom_svc = accom_svc;
         this.alertCtrl = alertCtrl;
+        this.loadingCtrl = loadingCtrl;
         this.myDate = null;
-        this.loading = false;
+        this.loader = this.loadingCtrl.create();
         this.imageLoaded = false;
-        this.apartment = this.object_init.initializeApartment();
-        this.appointment = this.object_init.initializeAppointment();
-        this.user = this.object_init.initializeUser();
-        this.loading = true;
-        this.storage.getApartment().then(function (data) {
-            _this.afs.collection("Apartments").doc(data.apart_id).valueChanges()
+        this.loader.present();
+        this.apartment = this.object_init.initializeApartment(); //Initialize an empty apartment object
+        this.appointment = this.object_init.initializeAppointment(); //Initialize an empty appointment object
+        this.user = this.object_init.initializeUser(); //Initialize an empty user object
+        /*
+          Retrieving the cached apartment and pulling an updated version of it from the firestore database
+        */
+        this.storage.getApartment().then(function (cachedApart) {
+            _this.accom_svc.getApartmentById(cachedApart.apart_id)
                 .pipe(take(1))
                 .subscribe(function (apartment) {
-                _this.storage.getUser().then(function (data) {
-                    _this.user = data;
-                    _this.appointment.booker_name = data.displayName ? data.displayName : data.firstname;
-                    _this.appointment.booker_id = data.uid;
-                    _this.appointment.bookerDp = data.photoURL ? data.photoURL : 'assets/imgs/placeholder.png';
+                _this.storage.getUser().then(function (user) {
+                    _this.user = _this.object_init.initializeUser2(user); //Populating the user
+                    //Populating some fields in the appointment object
+                    _this.appointment.booker_name = user.displayName ? user.displayName : user.firstname;
+                    _this.appointment.booker_id = user.uid;
+                    _this.appointment.bookerDp = user.photoURL ? user.photoURL : 'assets/imgs/placeholder.png';
                 }).then(function () {
-                    _this.apartment = apartment;
+                    //Populating more fields in the appointment object
+                    _this.imageLoaded = true;
+                    _this.apartment = _this.object_init.initializeApartment2(apartment); //Populating the apartment
                     _this.appointment.apart_id = apartment.apart_id;
                     _this.appointment.apart_type = apartment.room_type;
                     _this.appointment.room_type = apartment.room_type;
-                    _this.loading = false;
+                    _this.loader.dismiss();
+                })
+                    .catch(function (err) {
+                    _this.loader.dismiss();
+                    _this.errHandler.handleError(err);
                 });
             }, function (err) {
+                _this.loader.dismiss();
                 _this.errHandler.handleError(err);
-                _this.loading = false;
             });
         }).catch(function (err) {
             _this.errHandler.handleError(err);
-            _this.loading = false;
+            _this.loader.dismiss();
         });
     }
+    /* This function prompts the user to confirm the appointment and creates the appointment on the database if granted */
     AppointmentPage.prototype.book = function () {
-        this.loading = true;
-        this.promptConfirmation();
-    };
-    AppointmentPage.prototype.promptConfirmation = function () {
         var _this = this;
+        var ldr = this.loadingCtrl.create();
+        ldr.present();
         var confirm = false;
         var alert = this.alertCtrl.create({
-            title: "Confirm intention",
+            title: "Make Appointment",
             message: "Are you sure you want to make this appointment and all the details are correct ?",
             buttons: [
                 {
-                    text: 'Confirm',
+                    text: 'Yes Make Appointment',
                     handler: function (data) {
                         confirm = true;
                     }
@@ -98,21 +106,28 @@ var AppointmentPage = /** @class */ (function () {
                 _this.updateAppointmentVals();
                 _this.appointment_svc.createBooking(_this.appointment).then(function (data) {
                     _this.appointment.appointment_id = data.id;
-                    _this.appointment_svc.updateBooking(_this.appointment);
-                    _this.toast.create({
-                        message: "Appointment successfully created",
-                        showCloseButton: true,
-                        closeButtonText: 'Ok',
-                        position: 'middle',
-                        cssClass: 'toast_margins full_width'
-                    }).present();
-                    _this.loading = false;
+                    _this.appointment_svc.updateBooking(_this.appointment)
+                        .then(function () {
+                        _this.loader.dismiss();
+                        _this.toast.create({
+                            message: "Appointment successfully created",
+                            showCloseButton: true,
+                            closeButtonText: 'Ok',
+                            position: 'middle',
+                            cssClass: 'toast_margins full_width'
+                        }).present();
+                    })
+                        .catch(function (err) {
+                        ldr.dismiss();
+                        _this.errHandler.handleError(err);
+                    });
                 }).catch(function (err) {
+                    ldr.dismiss();
                     _this.errHandler.handleError(err);
-                    _this.loading = false;
                 });
             }
             else {
+                ldr.dismiss();
                 _this.toast.create({
                     message: "Appointment cancelled",
                     showCloseButton: true,
@@ -120,7 +135,6 @@ var AppointmentPage = /** @class */ (function () {
                     position: 'middle',
                     cssClass: 'toast_margins full_width'
                 }).present();
-                _this.loading = false;
             }
         });
     };
@@ -135,7 +149,9 @@ var AppointmentPage = /** @class */ (function () {
         this.appointment.address = this.apartment.property.address.description;
         this.appointment.apart_dp = this.apartment.dP.url;
         this.appointment.timeStamp = Date.now();
+        this.appointment.timeStampModified = Date.now();
     };
+    /*This method handles the presenting of the native android date-time app and saves the date in myDate */
     AppointmentPage.prototype.showDatePicker = function () {
         var _this = this;
         return this.datePicker.show({
@@ -148,36 +164,40 @@ var AppointmentPage = /** @class */ (function () {
         })
             .catch(function (err) {
             _this.errHandler.handleError(err);
-            _this.loading = false;
         });
     };
+    /* This method takes the value of myDate and writes a custom calender event to an android fone */
     AppointmentPage.prototype.createCalenderEvent = function () {
         var _this = this;
         this.calender.hasReadWritePermission().then(function (permission) {
-            _this.calender.createEvent('Clickinn Viewing Appointment', _this.apartment.property.address.sublocality_lng, "You requested to view the " + _this.apartment.room_type + " at " + _this.apartment.property.address.description + ".", new Date(), _this.myDate);
+            _this.calender.createEvent('Clickinn Viewing Appointment', _this.returnFirstTwo(_this.apartment.property.address.description), "You requested to view the " + _this.apartment.room_type + " at " + _this.returnFirstTwo(_this.apartment.property.address.description) + ".", new Date(), _this.myDate);
         }, function (denied) {
             _this.calender.requestReadWritePermission().then(function (approved) {
-                _this.calender.createEvent('Clickinn Viewing Appointment', _this.apartment.property.address.sublocality_lng, "You requested to view the " + _this.apartment.room_type + " at " + _this.apartment.property.address.description + ".", new Date(), _this.myDate);
+                _this.calender.createEvent('Clickinn Viewing Appointment', _this.returnFirstTwo(_this.apartment.property.address.description), "You requested to view the " + _this.apartment.room_type + " at " + _this.returnFirstTwo(_this.apartment.property.address.description) + ".", new Date(), _this.myDate);
             }, function (err) {
                 _this.errHandler.handleError(err);
-                _this.loading = false;
             });
         })
             .catch(function (err) {
             _this.errHandler.handleError(err);
-            _this.loading = false;
         });
     };
+    /* This function delegates the tasks of showing the date-time picker and creating the calender event once the datePicker closes */
     AppointmentPage.prototype.makeAppointment = function () {
         var _this = this;
         this.showDatePicker().then(function () {
             if (_this.myDate)
-                _this.createCalenderEvent();
+                _this.book();
         })
             .catch(function (err) {
             _this.errHandler.handleError(err);
-            _this.loading = false;
         });
+    };
+    //This helper function returns the first two strings in a comma delimited string array
+    AppointmentPage.prototype.returnFirstTwo = function (input) {
+        if (input == undefined)
+            return '';
+        return input.split(',')[0] + ', ' + input.split(',')[1];
     };
     AppointmentPage = __decorate([
         IonicPage(),
@@ -186,17 +206,16 @@ var AppointmentPage = /** @class */ (function () {
             templateUrl: 'appointment.html',
         }),
         __metadata("design:paramtypes", [NavController,
-            NavParams,
             DatePicker,
             Calendar,
-            ModalController,
             LocalDataProvider,
             ToastController,
-            AngularFirestore,
             ErrorHandlerProvider,
             ObjectInitProvider,
             AppointmentsProvider,
-            AlertController])
+            AccommodationsProvider,
+            AlertController,
+            LoadingController])
     ], AppointmentPage);
     return AppointmentPage;
 }());

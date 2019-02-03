@@ -1,5 +1,5 @@
 import { Component} from '@angular/core';
-import { IonicPage, NavController, ModalController, ToastController, Platform, AlertController} from 'ionic-angular';
+import { IonicPage, NavController, ModalController, ToastController, Platform, AlertController, LoadingController} from 'ionic-angular';
 import { MapsProvider } from '../../providers/maps/maps';
 import { Address } from '../../models/location/address.interface';
 import { AngularFirestore } from 'angularfire2/firestore';
@@ -7,7 +7,9 @@ import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
-import { Subscription } from 'rxjs-compat/Subscription';
+//import { Subscription } from 'rxjs-compat/Subscription';
+import { UserSvcProvider } from '../../providers/user-svc/user-svc';
+import { take } from 'rxjs-compat/operators/take';
 
 
 
@@ -22,8 +24,8 @@ export class WelcomePage {
   pointOfInterest: Address;
   user: User;
   search: boolean = false;
-  userSubs: Subscription;
-  loading: boolean = false;
+  //userSubs: Subscription;
+  
   predictionLoading: boolean = false;
   connectionError: boolean = false;
   online: boolean = false;
@@ -37,43 +39,39 @@ export class WelcomePage {
     private object_init: ObjectInitProvider, 
     private toastCtrl: ToastController,
     private platform: Platform,
-    private alertCtrl: AlertController){
+    private alertCtrl: AlertController,
+    private loadingCtrl: LoadingController,
+    private user_svc: UserSvcProvider){
     this.platform.ready().then(value =>{
-      this.loading = true; //indicate that data is being loaded from the database
+      let ldng = this.loadingCtrl.create();
+      ldng.present();
       this.user = this.object_init.initializeUser(); //Initialize user object with default values
       this.pointOfInterest = this.object_init.initializeAddress(); //Initialize the point of interest with default values
       this.pointOfInterest.description = ''; //Initialize the description of the the POI with an empty string (for some strange reason)
       this.storage.getUser().then(data =>{ //Get a cached copy of user
           //Subscribing to the most recent user object in the database
-          this.userSubs = this.afs.collection('Users').doc<User>(data.uid).valueChanges().subscribe(user =>{
-            this.user = user;
-            this.loading = false;
-          }, 
-          err =>{
-            //If theres an error getting the user info from the firestore database display the error message from firestore and stop the spinner
-            this.errHandler.handleError(err);
-            this.loading = false;
-          })
+          this.user = this.object_init.initializeUser2(data);
+          ldng.dismiss();
+          console.log('User in Welcome: ', this.user)
+          console.log('User in storage: ', data)
         })
         .catch(() => {
           //If there's an error getting the user from the local storage display the message below and stop the spinner
           this.errHandler.handleError({message: "Could not find local user", code: 101});
-          this.loading = false;
+          ldng.dismiss()
         })
     })
+    
   }
 
   //Unsubscribe from all subscriptions before leaving the page
-  ionViewDidLeave(){
-    console.log('Welcome page unsubscrinbing...')
-    this.userSubs.unsubscribe();
+  ionViewWilLeave(){
+
   }
 
   //Navigating to the chats page
   gotoChats(){
-    this.loading = true;
     this.navCtrl.push('ChatsPage');
-    this.loading = false;
   }
   
 /*Navigating to the next page, which is the PrefferencesPage and passing the pointOfInterest object along*/
@@ -81,8 +79,8 @@ export class WelcomePage {
     //If the POI is not set by a google maps response throw an error otherwise cache the POI and navigate to the next page
     if(this.pointOfInterest.lat == 0 && this.pointOfInterest.lng == 0){
       this.showWarnig(
-        'Enter area or institution!',
-        'Please enter the name of your institution or the area (city) where you want us to search for your accommodation.'
+        'Enter Place Or Institution!',
+        'Please enter the name of your institution or the place (city / town / township) where you want us to search for your accommodation.'
         )
       return;
     }
@@ -91,7 +89,6 @@ export class WelcomePage {
     })
     .catch(err => {
       this.errHandler.handleError({message: 'Could not set POI', code: 102});
-      this.loading = false;
     })
   }
 
@@ -130,6 +127,13 @@ export class WelcomePage {
       this.predictionLoading = false;
       this.showToast('You are not connected to the internet...')
     }
+    setTimeout(() =>{
+      if(this.pointOfInterest.lat == 0 && this.pointOfInterest.lng == 0 && this.predictions == [] && this.pointOfInterest.description == ''){
+        console.log('poi: ', this.pointOfInterest)
+        console.log('predictions: ', this.predictions)
+        this.handleNetworkError();
+      }
+    }, 10000)
   }
 
   showToast(message){
@@ -159,17 +163,57 @@ export class WelcomePage {
   }
 
   gotoOwners(){
-    this.loading = true;
-    this.navCtrl.push('OwnersDashboardPage')
-    this.loading = false;
+    this.storage.getFirstTime()
+    .then(val =>{
+      if(val == true){
+        this.user.user_type = 'landlord';
+        this.storage.setUser(this.user)
+        .then(dat =>{
+          console.log('User before update: ', this.user)
+          
+          this.navCtrl.push('OwnersDashboardPage')
+        })
+      }else{
+        this.user.user_type = 'landlord';
+        this.storage.setUser(this.user)
+        .then(dat =>{
+          console.log('User before update: ', this.user)
+          
+          this.navCtrl.push('OwnersDashboardPage')
+        })
+      }
+    })
+    .catch(err =>{
+      console.log('User before update: ', this.user)
+        
+        this.navCtrl.push('OwnersDashboardPage')
+    })
+    
   }
 
   gotoLandlordDash(){
-    this.loading = true;
-    this.storage.setUserType('Landlord')
-    .then(val =>{
-      this.navCtrl.push('LandlordDashboardPage');
-      this.loading = false;
+    this.storage.getFirstTime()
+    .then(dat =>{
+      if(dat == true){
+        this.user.user_type = 'agent';
+        this.storage.setUser(this.user)
+        .then(val =>{
+          this.navCtrl.push('LandlordDashboardPage');
+        })
+      }else{
+        this.user.user_type = 'agent';
+        this.storage.setUser(this.user)
+        .then(val =>{
+          this.navCtrl.push('LandlordDashboardPage');
+        })
+      }
+    })
+    .catch(err =>{
+      this.user.user_type = 'agent';
+      this.storage.setUser(this.user)
+      .then(val =>{
+        this.navCtrl.push('LandlordDashboardPage');
+      })
     })
   }
 

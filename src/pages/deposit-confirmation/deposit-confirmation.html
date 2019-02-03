@@ -6,7 +6,7 @@
 -->
 <ion-header>
   <ion-navbar color="clickinn">
-    <ion-title style="font-family: 'Ubuntu', sans-serif;">Deposit confirmation</ion-title>
+    <ion-title style="font-family: 'Ubuntu', sans-serif;">Confirmation</ion-title>
   </ion-navbar>
 </ion-header>
 
@@ -18,11 +18,6 @@
 			</ion-icon>
 		</button>
 	</ion-fab>
-	<div *ngIf="loading" class="centered_on_screen" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; 
-    border-radius: 10px;padding: 20px; text-align: center; z-index: 1">
-    <ion-spinner name="ios"></ion-spinner>
-    <h3 text-center>Loading...</h3>
-  </div>
   
   <ion-grid>
 	    <ion-row>
@@ -42,7 +37,7 @@
 				</ion-item>
 				<div style="background: #000020">
 					<h3 text-center padding style="color: white">Apartment pictures</h3>
-					<ion-slides  loop="true" slidesPerView="2" class="image_container" [pager]="true">
+					<ion-slides *ngIf="images && images.length" loop="true" slidesPerView="2" class="image_container" [pager]="true">
 						<ion-slide *ngFor="let image of images; let idx = index">
 							<img src="{{image?.url}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" imageViewer class="thumb-img" />
 							<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[idx]" />
@@ -73,52 +68,60 @@
 			    <h1 *ngIf="host" style="text-align: center; color: #488aff">Accept Deposit ?</h1>
 				<p *ngIf="host" style="text-align: center;">Please accept this deposit only if you are sure that the apartment is available, otherwise send the seeker a chat by pressing on the bottom right chat icon. </p>
 				<h1 *ngIf="!host && !movedIn" style="text-align: center; color: #488aff">Deposit &amp; Confirm</h1>
-				<p *ngIf="!host && !movedIn" style="text-align: center;">Please go ahead with the deposit using the details below </p>
+				<p *ngIf="!host && !movedIn" style="text-align: center;">Please go ahead with the deposit( EFT more recommended !) using the details below </p>
 				<p *ngIf="!host && !movedIn" style="text-align: center;">This transaction <strong style="color: red"> expires within the next 3 hours </strong> and the landlord reserves the right to give this apartment away on failure to confirm the deposit within the given time.<strong style="color: #32db64"> Communicate any delays with the landlord via the Clickinn Chat button at the bottom right.</strong></p>
 				<p *ngIf="!host && !movedIn">Press the confirm button once the deposit is done, to alert the landlord</p>
-				<div *ngIf="!host && !movedIn" style="background: lightblue; margin-top: 10px; margin-bottom: 15px; padding: 4px; border-radius: 4px" >
+				<div *ngIf="!host && !movedIn" style="background: #f4f4f4; margin-top: 10px; margin-bottom: 15px; padding: 4px; border-radius: 4px" >
 					<ion-row>
-						<ion-col>
+						<ion-col col-5>
 							<strong>Bank</strong> 
 						</ion-col>
-						<ion-col>
+						<ion-col col-7>
 							FNB
 						</ion-col>
 					</ion-row>
 					<ion-row>
-						<ion-col>
+						<ion-col col-5>
 							<strong>Accountholder</strong> 
 						</ion-col>
-						<ion-col text-wrap>
+						<ion-col col-7 text-wrap>
 							Metalojiq Solutions (Pty)Ltd 
 						</ion-col>
 					</ion-row>
 					<ion-row>
-						<ion-col>
+						<ion-col col-5>
 							<strong>Account number</strong> 
 						</ion-col>
-						<ion-col text-wrap>
-							7097898876543 
+						<ion-col col-7 text-wrap>
+							62794553993 
 						</ion-col>
 					</ion-row>
 					<ion-row>
-						<ion-col>
+						<ion-col col-5>
+							<strong>Branch Code</strong> 
+						</ion-col>
+						<ion-col col-7 text-wrap>
+							250641 
+						</ion-col>
+					</ion-row>
+					<ion-row>
+						<ion-col col-5>
 							<strong>Deposit Amount</strong> 
 						</ion-col>
-						<ion-col text-wrap>
+						<ion-col col-7 text-wrap>
 							R{{deposit?.apartment?.deposit}}
 						</ion-col>
 					</ion-row>
 					<ion-row>
-						<ion-col>
+						<ion-col col-5>
 							<strong>Deposit Refference</strong> 
 						</ion-col>
-						<ion-col text-wrap>
-							{{deposit?.ref ? deposit?.ref : 'None provided'}} 
+						<ion-col col-7 text-wrap>
+							House number + Street Name + Apartment number + Your name and Surname  
 						</ion-col>
 					</ion-row>
 				</div>
-				<h1 *ngIf="!host && movedIn" style="text-align: center; color: #488aff">Confirm Landlord Details</h1>
+				<h1 *ngIf="!host && movedIn" style="text-align: center; color: #488aff">Confirm Move In</h1>
 				<p *ngIf="!host && movedIn" style="text-align: center;">Please confirm you landlord's banking details ( as appears on the contract ), so that the landlord and their agent may recieve their payments</p>
 
 				<fieldset *ngIf="!host && movedIn">
@@ -147,13 +150,9 @@
 							<ion-input type="text" [(ngModel)]="deposit.bank_code" name="b_code" autocorrect="off"></ion-input>
 						</ion-item>
     				</fieldset>
-    			<div *ngIf="processing" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; 
-				    border-radius: 10px;padding: 20px; text-align: center; z-index: 1">
-				    <ion-spinner name="ios"></ion-spinner>
-				    <h3 text-center>Processing action...</h3>
-				</div>
+    			
     			<ion-buttons text-center margin-top *ngIf="!host && movedIn">
-					<button ion-button round (click)="confirmMoveIn()" >Confirm move in</button>
+					<button ion-button color="golden-yellow" round (click)="confirmMoveIn()" >Confirm move in</button>
 				</ion-buttons>
 
 				<ion-buttons text-center margin-top *ngIf="host">

@@ -253,21 +253,22 @@ place service*/
     return this.getPlaceById(place.place_id)
   }
 /*Initialises and returns markers with click listeners that reveal information about each place*/
-addApartmentMarkersWithClickListeners(places: Apartment[], poi: Address, map: any): Array<any>{
-  if(places.length > 0){
+addApartmentMarkersWithClickListeners(places: Apartment[], poi: Address, map: any): Promise<any[]>{
+  return new Promise<any[]>((resolve, reject) =>{
+    if(places.length > 0){
     var lineCoordinates = [
-          {lat: places[0].property.address.lat, lng: places[0].property.address.lng},
-          {lat: poi.lat, lng: poi.lng}
-        ];
-        var line = new google.maps.Polyline({
-          path: lineCoordinates,
-          geodesic: true,
-          strokeColor: '#3A86B7',
-          strokeOpacity: 1.0,
-          strokeWeight: 15
-        });
-        line.setMap(map); 
-    return places.map(place => {
+      {lat: places[0].property.address.lat, lng: places[0].property.address.lng},
+      {lat: poi.lat, lng: poi.lng}
+    ];
+    var line = new google.maps.Polyline({
+      path: lineCoordinates,
+      geodesic: true,
+      strokeColor: '#3A86B7',
+      strokeOpacity: 1.0,
+      strokeWeight: 15
+    });
+    line.setMap(map); 
+    let markers = places.map(place => {
     const location = new google.maps.LatLng(place.property.address.lat, place.property.address.lng);
     const markerOptions: MarkerOptions = 
     {
@@ -282,7 +283,41 @@ addApartmentMarkersWithClickListeners(places: Apartment[], poi: Address, map: an
     });
     return marker;
   })
-  }else return [] ;
+  resolve(markers)
+  }else resolve(null) ;
+  })
+}
+/*Initialises and returns markers with click listeners that reveal information about each place*/
+addApartmentMarkerWithClickListeners(place: Apartment, poi: Address, map: any): Promise<any[]>{
+  return new Promise<any[]>((resolve, reject) =>{
+    if(place){
+    var lineCoordinates = [
+      {lat: place.property.address.lat, lng: place.property.address.lng},
+      {lat: poi.lat, lng: poi.lng}
+    ];
+    var line = new google.maps.Polyline({
+      path: lineCoordinates,
+      geodesic: true,
+      strokeColor: '#3A86B7',
+      strokeOpacity: 1.0,
+      strokeWeight: 15
+    });
+    line.setMap(map); 
+    const location = new google.maps.LatLng(place.property.address.lat, place.property.address.lng);
+    const markerOptions: MarkerOptions = 
+    {
+      position: location, 
+      map: map, 
+      title: place.description, 
+      icon: {url: 'assets/imgs/png/price_tag.png'} 
+    }
+    var marker = this.addMarker(markerOptions, place.price);
+    marker.addListener('click', () =>{
+      this.gotoApartment(place);
+    });
+    resolve(marker)
+  }else resolve([]) ;
+  })
 }
 /*Initialises and returns markers without event listeners*/
 addMarkers(places: Address[], poi: Address, map: any): Array<any>{

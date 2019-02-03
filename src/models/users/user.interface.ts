@@ -8,6 +8,7 @@ export interface User{
 	locations?: any[];
 	email: string;
 	fcm_token?: string;
+	firstime?: boolean;
 	is_host: boolean;
 	phoneNumber?: string;
 	photoURL?: string;

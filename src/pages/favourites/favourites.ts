@@ -1,12 +1,12 @@
-import { Component, ViewChild } from '@angular/core';
-import { IonicPage, NavController, NavParams, Content } from 'ionic-angular';
+import { Component} from '@angular/core';
+import { IonicPage, NavController, NavParams, LoadingController } from 'ionic-angular';
 //import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 //import { AccommodationsComponent } from '../../components/accommodations/accommodations';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { Observable } from 'rxjs-compat/Observable';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
-import { Subscription } from 'rxjs-compat/Subscription';
+//import { Subscription } from 'rxjs-compat/Subscription';
 import { User } from '../../models/users/user.interface';
 import { take } from 'rxjs-compat/operators/take';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
@@ -26,24 +26,25 @@ import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 export class FavouritesPage {
   apartments: Observable<Apartment[]> ;
   user: User;
-  loading: boolean = true;
-  loadingMore: boolean = false;
+  loader = this.loadingCtrl.create();
   done: boolean = false;
-  apartmentSub: Subscription = null;
-  @ViewChild(Content) content: Content;
+  //apartmentSub: Subscription = null;
+  noLiked: boolean = false;
+  //@ViewChild(Content) content: Content;
   imagesLoaded: boolean[] = 
-      [false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false, 
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false
-       ];
+  [ false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, 
+    false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false
+  ];
   constructor(
   	public navCtrl: NavController, 
   	public navParams: NavParams,
   	private accom_svc: AccommodationsProvider,
   	private storage: LocalDataProvider,
-    private toast_svc: ToastSvcProvider) {
+    private toast_svc: ToastSvcProvider,
+    private loadingCtrl: LoadingController) {
     /*this.accom_svc.loading.subscribe(data =>{
       this.loadingMore = data;
     })
@@ -52,11 +53,11 @@ export class FavouritesPage {
       this.done = data;
       if(this.done == true) this.loadingMore = false;
     })*/
-    this.loading = true;
+    this.loader.present()
   	this.storage.getUser().then(data =>{
       this.user = data;
       this.apartments = this.accom_svc.getUserFavourites(data.liked_apartments)
-  		this.apartmentSub = this.accom_svc.getUserFavourites(data.liked_apartments)
+  		this.accom_svc.getUserFavourites(data.liked_apartments)
       .pipe(
         take(1)
        )
@@ -65,10 +66,11 @@ export class FavouritesPage {
           aparts.forEach(apart =>{
             this.imagesLoaded.push(false);
           })
-          this.loading = false;
+          this.loader.dismiss()
         }else{
-          this.toast_svc.showToast('You have not liked any apartments yet...')
-          this.loading = false;
+          //this.toast_svc.showToast('You have not liked any apartments yet...')
+          this.noLiked = true;
+          this.loader.dismiss()
         }
   		})
   	})
@@ -80,8 +82,7 @@ export class FavouritesPage {
   }
 
   ionViewDidLeave(){
-    //this.accom_svc.reset();
-    if(this.apartmentSub) this.apartmentSub.unsubscribe();
+   
   }
 
   gotoApartment(apartment: any){

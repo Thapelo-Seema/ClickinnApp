@@ -44,6 +44,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import { AngularFirestore } from 'angularfire2/firestore';
 import { Injectable } from '@angular/core';
+import 'rxjs/add/operator/do';
+import 'rxjs/add/operator/scan';
+import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/merge';
+import { map } from 'rxjs-compat/operators/map';
+import { take } from 'rxjs/operators/take';
 /*
   Generated class for the DepositProvider provider.
 
@@ -51,9 +57,16 @@ import { Injectable } from '@angular/core';
   and Angular DI.
 */
 var DepositProvider = /** @class */ (function () {
+    /*private _done = new BehaviorSubject(false);
+    private _loading = new BehaviorSubject(false);
+    private _data = new BehaviorSubject([]);*/
+    // Observable data
+    /*data: Observable<any>;
+    done: Observable<boolean> = this._done.asObservable();
+    loading: Observable<boolean> = this._loading.asObservable();*/
     function DepositProvider(afs) {
         this.afs = afs;
-        console.log('Hello DepositProvider Provider');
+        //console.log('Hello DepositProvider Provider');
     }
     DepositProvider.prototype.addDeposit = function (deposit) {
         return __awaiter(this, void 0, void 0, function () {
@@ -71,6 +84,16 @@ var DepositProvider = /** @class */ (function () {
             });
         });
     };
+    DepositProvider.prototype.updateUserBalance = function (uid, amount) {
+        var _this = this;
+        this.afs.collection('Users').doc(uid).valueChanges()
+            .pipe(take(1))
+            .subscribe(function (user) {
+            var newUser = user;
+            newUser.balance += amount;
+            _this.afs.collection('Users').doc(uid).set(newUser);
+        });
+    };
     DepositProvider.prototype.updateDeposit = function (deposit) {
         return this.afs.collection('Deposits').doc(deposit.id).set(deposit);
     };
@@ -82,8 +105,44 @@ var DepositProvider = /** @class */ (function () {
             .valueChanges();
     };
     DepositProvider.prototype.getHostDeposits = function (uid) {
-        return this.afs.collection('Deposits', function (ref) { return ref.where('to.uid', '==', uid); });
+        return this.afs.collection('Deposits', function (ref) {
+            return ref.where('to.uid', '==', uid);
+        }).valueChanges();
     };
+    DepositProvider.prototype.getTenantDeposits = function (uid) {
+        return this.afs.collection('Deposits', function (ref) {
+            return ref.where('by.uid', '==', uid);
+        }).valueChanges();
+    };
+    DepositProvider.prototype.getUserDeposits = function (uid) {
+        return this.afs.collection('Deposits', function (ref) { return ref.orderBy('time_initiated', 'desc'); }).valueChanges()
+            .pipe(map(function (deps) { return deps.filter(function (dep) { return (dep.by.uid == uid) || (dep.to.uid == uid); }); }));
+    };
+    /*initGetHostDeposits(uid: string){
+      const first = this.afs.collection('Deposits', ref =>
+        ref.where('to.uid', '==', uid)
+        .orderBy('timeStamp', 'desc')
+        .limit(15)
+      )
+  
+      this.mapAndUpdate(first)
+  
+      this.data = this._data.asObservable()
+      .scan((acc, val) =>{
+        return acc.concat(val)
+      })
+    }*/
+    /*moreHostDeposits(uid: string){
+      const cursor = this.getCursor()
+      const more = this.afs.collection('Deposits', ref =>
+        ref.where('to.uid', '==', uid)
+        .orderBy('timeStamp', 'desc')
+        .limit(15)
+        .startAfter(cursor)
+      )
+  
+      this.mapAndUpdate(more)
+    }*/
     DepositProvider.prototype.getTenantDepsits = function (uid) {
         return this.afs.collection('Deposits', function (ref) { return ref.where('by.uid', '==', uid); });
     };

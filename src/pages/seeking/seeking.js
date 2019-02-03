@@ -8,7 +8,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { IonicPage, NavController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController, LoadingController } from 'ionic-angular';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
@@ -18,7 +18,7 @@ import { ErrorHandlerProvider } from '../../providers/error-handler/error-handle
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { take } from 'rxjs-compat/operators/take';
 var SeekingPage = /** @class */ (function () {
-    function SeekingPage(navCtrl, accom_svc, alertCtrl, storage, errHandler, object_init) {
+    function SeekingPage(navCtrl, accom_svc, alertCtrl, storage, errHandler, object_init, loadingCtrl) {
         var _this = this;
         this.navCtrl = navCtrl;
         this.accom_svc = accom_svc;
@@ -26,11 +26,13 @@ var SeekingPage = /** @class */ (function () {
         this.storage = storage;
         this.errHandler = errHandler;
         this.object_init = object_init;
+        this.loadingCtrl = loadingCtrl;
         this.apartments = [];
         this.numberOfApartments = 0;
-        this.dataLoaded = false;
+        this.loader = this.loadingCtrl.create();
         this.showList = false;
         this.more = false;
+        this.loader.present();
         this.pointOfInterest = this.object_init.initializeAddress();
         this.bestMatch = this.object_init.initializeApartment();
         this.search_object = this.object_init.initializeSearch();
@@ -47,12 +49,12 @@ var SeekingPage = /** @class */ (function () {
             })
                 .catch(function (err) {
                 _this.errHandler.handleError(err);
-                _this.dataLoaded = true;
+                _this.loader.dismiss();
             });
         })
             .catch(function (err) {
             _this.errHandler.handleError(err);
-            _this.dataLoaded = true;
+            _this.loader.dismiss();
         });
     }
     SeekingPage.prototype.getApartments = function (obj) {
@@ -81,18 +83,18 @@ var SeekingPage = /** @class */ (function () {
                     _this.bestMatch = ratedArray[0];
                     ratedArray.splice(0, 1);
                     _this.apartments = ratedArray;
+                    _this.loader.dismiss();
                     _this.showAlert();
                     console.log(ratedArray);
-                    _this.dataLoaded = true;
                 }
             }
             else {
-                _this.dataLoaded = true;
+                _this.loader.dismiss();
                 _this.showNull();
             }
         }, function (err) {
+            _this.loader.dismiss();
             _this.errHandler.handleError(err);
-            _this.dataLoaded = true;
         });
     };
     SeekingPage.prototype.gotoApartment = function (apartment) {
@@ -100,7 +102,6 @@ var SeekingPage = /** @class */ (function () {
         this.storage.setApartment(apartment).then(function (data) { return _this.navCtrl.push('ApartmentDetailsPage'); })
             .catch(function (err) {
             _this.errHandler.handleError(err);
-            _this.dataLoaded = true;
         });
     };
     SeekingPage.prototype.toggleList = function () {
@@ -148,9 +149,13 @@ var SeekingPage = /** @class */ (function () {
             selector: 'page-seeking',
             templateUrl: 'seeking.html',
         }),
-        __metadata("design:paramtypes", [NavController, AccommodationsProvider,
-            AlertController, LocalDataProvider,
-            ErrorHandlerProvider, ObjectInitProvider])
+        __metadata("design:paramtypes", [NavController,
+            AccommodationsProvider,
+            AlertController,
+            LocalDataProvider,
+            ErrorHandlerProvider,
+            ObjectInitProvider,
+            LoadingController])
     ], SeekingPage);
     return SeekingPage;
 }());

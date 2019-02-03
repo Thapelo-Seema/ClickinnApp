@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ToastController, AlertController} from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ToastController, AlertController, LoadingController} from 'ionic-angular';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface';
@@ -21,12 +21,11 @@ export class EditProfilePage {
 
   user: User;
   image: any = "assets/imgs/placeholder.png";
-  loading: boolean = false;
+  loader = this.loadingCtrl.create({dismissOnPageChange: true});
   dpChanged: boolean = false;
   recentDp: FileUpload;
   imageLoaded: boolean = false;
   progress: number = 0;
-  uploading: boolean = false;
 
   constructor(
     public navCtrl: NavController, 
@@ -39,25 +38,30 @@ export class EditProfilePage {
     private afstorage: AngularFireStorage, 
     private object_init: ObjectInitProvider,
     private user_svc: UserSvcProvider,
-    private alertCtrl: AlertController){
+    private alertCtrl: AlertController,
+    private loadingCtrl: LoadingController){
+    this.loader.present()
     this.user = this.object_init.initializeUser();
     this.recentDp = this.object_init.initializeFileUpload();
-      this.loading = true;
-  		this.storage.getUser().then(data =>{
-        this.user_svc.getUser(data.uid)
-        .pipe(
-          take(1)
-        )
-        .subscribe(user =>{
-          this.user = user;
-          if(user.photoURL !== '' || user.photoURL == undefined) this.image = user.photoURL;
-          this.loading = false;
-        })
-	  		
+    
+  	this.storage.getUser().then(data =>{
+      this.user_svc.getUser(data.uid)
+      .pipe(
+        take(1)
+      )
+      .subscribe(user =>{
+        this.user = this.object_init.initializeUser2(user);
+        if(user.photoURL !== '' || user.photoURL == undefined) this.image = user.photoURL;
+        this.loader.dismiss()
+      })	
 	  }).catch(err => {
       this.errHandler.handleError(err);
-      this.loading = false;
+      this.loader.dismiss()
     })
+  }
+
+  ionViewWillLoad(){
+
   }
 
   save(){
@@ -84,20 +88,16 @@ export class EditProfilePage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm){
-        this.uploading = true;
         if(!this.dpChanged){
           this.persistChanges();
-          this.uploading = false;
         }else{
           this.uploadDp()
           .then(image =>{
             this.user.photoURL = image.url;
             this.persistChanges();
-            this.uploading = false;
           })
           .catch(err => {
               this.errHandler.handleError({message: 'Please check your internet connection...picture not uploaded'});
-              this.uploading = false;
           })
         }
       }
@@ -125,7 +125,6 @@ export class EditProfilePage {
      this.dpChanged = true;
     }).catch(err => {
       this.errHandler.handleError({errCode: 'IMAGE_NOT_SELECTED', message: 'No image selected'});
-      this.loading = false;
     })
   }
 
@@ -133,7 +132,7 @@ export class EditProfilePage {
     const storageRef =   this.afstorage.ref(`UserDisplayImages/${this.user.uid}`);
      const uploadTask = storageRef.putString(this.recentDp.file, 'data_url');
      return new Promise<Image>((resolve, reject) => {
-      uploadTask.snapshotChanges().subscribe(
+      let subs = uploadTask.snapshotChanges().subscribe(
         (snapshot) =>{
           //update the progress property of the upload object
           uploadTask.percentageChanges().subscribe(progress =>{
@@ -144,19 +143,16 @@ export class EditProfilePage {
         },
         (err) =>{
           //if there's an error log it in the console
-          
-          this.loading = false;
           reject(err.message)
         },
         () =>{
           let tempUrl = '';
           //on success of the upload, update the url property of the upload object
-          storageRef.getDownloadURL().subscribe(down_url =>{
+          let subs2 = storageRef.getDownloadURL().subscribe(down_url =>{
             tempUrl = down_url;
             }, 
             err =>{
               reject(err.message)
-              this.loading = false;
             },
             () =>{
               let image: Image = {
@@ -166,6 +162,8 @@ export class EditProfilePage {
                 path: this.recentDp.path
               }
               this.user.photoURL = image.url;
+              subs.unsubscribe();
+              subs2.unsubscribe();
               resolve(image)
             }
           ) 
@@ -175,6 +173,8 @@ export class EditProfilePage {
   }
 
   persistChanges(){
+    let ldr = this.loadingCtrl.create()
+    ldr.present();
     this.afs.collection('Users').doc(this.user.uid).update(this.user).then(() =>{
         this.toast.create({
           message: "Profile successfully updated",
@@ -183,14 +183,12 @@ export class EditProfilePage {
             position: 'middle',
             cssClass: 'toast_margins full_width'
       }).present().then(() =>{
-          this.loading = false;
-          this.uploading = false;
+          ldr.dismiss()
       })
         
       }).catch(err => {
         this.errHandler.handleError(err);
-        this.loading = false;
-        this.uploading = false;
+        ldr.dismiss()
       })
   }
 

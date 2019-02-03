@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, ToastController, Platform, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, ToastController, Platform, AlertController, LoadingController } from 'ionic-angular';
 import { MapsProvider } from '../../providers/maps/maps';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 import { AngularFirestore } from 'angularfire2/firestore';
@@ -12,6 +12,7 @@ import { SearchfeedProvider } from '../../providers/searchfeed/searchfeed';
 import { Observable } from 'rxjs-compat/Observable';
 import { take } from 'rxjs-compat/operators/take';
 import { ServiceDeal } from '../../models/service_deal.interface';
+import { CallNumber } from '@ionic-native/call-number';
 /**
  * Generated class for the LandlordSearchPage page.
  *
@@ -29,7 +30,7 @@ export class LandlordSearchPage {
   user: User;
   landlords: Observable<User[]>;
   userSubs: Subscription;
-  loading: boolean = false;
+  loader = this.loadingCtrl.create();
   predictionLoading: boolean = false;
   connectionError: boolean = false;
   online: boolean = false;
@@ -54,13 +55,15 @@ export class LandlordSearchPage {
     private platform: Platform,
     private alertCtrl: AlertController,
     private user_svc: UserSvcProvider,
-    private searchfeed_svc: SearchfeedProvider) {
-    this.loading = true;
+    private searchfeed_svc: SearchfeedProvider,
+    private loadingCtrl: LoadingController,
+    private callNumber: CallNumber) {
+    this.loader.present()
   	this.landlords = this.searchfeed_svc.getAllLandLords();
     this.searchfeed_svc.getAllLandLords()
     .pipe(take(1))
     .subscribe(data =>{
-      this.loading = false;
+      this.loader.dismiss()
       if(data.length > 0){
         data.forEach(dat =>{
           this.imagesLoaded.push(false);
@@ -136,7 +139,7 @@ export class LandlordSearchPage {
       this.searchfeed_svc.getLandLordsByLocation(data)
       .pipe(take(1))
       .subscribe(dat =>{
-        this.loading = false;
+        this.predictionLoading = false;
       if(dat.length > 0){
         
       }else{
@@ -210,46 +213,59 @@ export class LandlordSearchPage {
   }
 
   save(){
-  	this.loading = true;
+  	let ldr = this.loadingCtrl.create()
+    ldr.present();
   	this.user.user_type = 'landlord';
   	this.user_svc.updateUser(this.user)
   	.then(() =>{
-  		this.loading = false;
+  		ldr.dismiss()
   		this.showToast('Landlord profile successfully updated!')
   	})
   	.catch(err =>{
-  		this.loading = false;
+  		ldr.dismiss()
   		this.errHandler.handleError(err)
   	})
   }
 
   propose(landlord: User){
-    this.loading = true;
+    let ldr = this.loadingCtrl.create()
+    ldr.present()
     let deal: ServiceDeal = {
       landlord_firstname: landlord.firstname,
       landlord_lastname: landlord.lastname,
       landlord_uid: landlord.uid,
       landlord_dp: landlord.photoURL,
       landlord_phoneNumber: landlord.phoneNumber,
-      agent_firstname: landlord.firstname,
-      agent_lastname: landlord.lastname,
-      agent_uid: landlord.uid,
-      agent_dp: landlord.photoURL,
-      agent_phoneNumber: landlord.phoneNumber,
+      agent_firstname: this.user.firstname,
+      agent_lastname: this.user.lastname,
+      agent_uid: this.user.uid,
+      agent_dp: this.user.photoURL,
+      agent_phoneNumber: this.user.phoneNumber,
       landlord_agreed: false,
       landlord_disagree: false,
       agent_cancelled: false,
       timeStamp: Date.now(),
       id: ''
     }
-
     this.searchfeed_svc.proposeAgentService(deal)
     .then(() =>{
-      this.loading = false;
-      this.showToast('Proposal sent, please wait for the landlords response')
+      ldr.dismiss()
+      .then(() =>{
+        this.showToast('Proposal sent, please wait for the landlords response')
+      })
     })
     .catch(err =>{
-      this.loading = false;
+      ldr.dismiss()
+      .then(() =>{
+        this.errHandler.handleError(err)
+      })
+    })
+  }
+
+  callLandlord(user: User){
+    this.showToast('Please note that network charges may apply for making this call...')
+    this.callNumber.callNumber(user.phoneNumber, false)
+    .catch(err =>{
       this.errHandler.handleError(err)
     })
   }

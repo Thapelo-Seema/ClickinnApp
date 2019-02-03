@@ -51,7 +51,8 @@ var FileUploadSvcProvider = /** @class */ (function () {
                         url: tempUrl,
                         name: image.name,
                         progress: image.progress,
-                        path: image.path
+                        path: image.path,
+                        loaded: false
                     };
                     resolve(image_out);
                 });

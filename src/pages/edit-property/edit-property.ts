@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { IonicPage, NavController, NavParams, ToastController, AlertController, Content } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ToastController, AlertController, Content, LoadingController } from 'ionic-angular';
 import { Property } from '../../models/properties/property.interface';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
@@ -31,9 +31,7 @@ export class EditPropertyPage {
   property: Property;
   @ViewChild(Content) content: Content;
   apartments: Observable<Apartment[]>;
-  loading: boolean = true;
-  loadingMore: boolean = false;
-  done: boolean = false;
+  loader = this.loadingCtrl.create();
   images: Image[] = [];
   fileUploads: FileUpload[] = [];
   propImgCount: number = 0;
@@ -68,7 +66,9 @@ export class EditPropertyPage {
     private errHandler: ErrorHandlerProvider,
     private file_upload_svc: FileUploadSvcProvider,
     private map_svc: MapsProvider,
-    private alertCtrl: AlertController) {
+    private alertCtrl: AlertController,
+    private loadingCtrl: LoadingController) {
+    this.loader.present();
     /*this.accom_svc.loading.subscribe(data =>{
       this.loadingMore = data;
     })
@@ -83,16 +83,19 @@ export class EditPropertyPage {
   			this.property = this.object_init.initializeProperty2(prop);
   			this.images = [];
         if(!(prop.images.length > 0)){
-  		    this.images = Object.keys(prop.images).map(imageId =>{
+  		    let images = Object.keys(prop.images).map(imageId =>{
             this.imagesLoaded.push(false);
   		      return prop.images[imageId]
   		    })
-          this.loading = false;
+          images.forEach(mg =>{
+            if(mg != undefined) this.images.push(mg)
+          })
+          this.loader.dismiss()
         }else{
           console.log('apart images: ', prop.images)
           this.images = prop.images;
           this.propImgCount = prop.images.length;
-          this.loading = false;
+          this.loader.dismiss()
         }
   			this.apartments = this.accom_svc.getPropertyApartments(prop.prop_id);
   			this.accom_svc.getPropertyApartments(prop.prop_id)
@@ -128,7 +131,6 @@ export class EditPropertyPage {
     this.local_db.setApartment(apartment).then(data => this.navCtrl.push('EditApartmentPage'))
     .catch(err => {
       console.log(err);
-      this.loading = false;
     });
   }
 
@@ -185,11 +187,12 @@ export class EditPropertyPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm){
-        this.loading = true;
+        let ldr = this.loadingCtrl.create()
+        ldr.present();
         this.property.images = this.images;
         this.accom_svc.updateProperty(this.property)
         .then(() =>{
-          this.loading = false;
+          ldr.dismiss()
           this.toastCtrl.create({
             message: 'The property was successfully updated !',
             duration: 5000
@@ -232,13 +235,14 @@ export class EditPropertyPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm){
-        this.loading = true;
+        let ldr = this.loadingCtrl.create()
+        ldr.present();
         this.file_upload_svc.uploadPics(this.fileUploads)
         .then(imag =>{
           imag.forEach(im =>{
             this.images.push(im);
           })
-          this.loading = false;
+          ldr.dismiss()
           this.toastCtrl.create({
             message: 'Pictures updated !',
             duration: 3000
@@ -251,7 +255,7 @@ export class EditPropertyPage {
             duration: 4000
           })
           .present()
-          this.loading = false;
+          ldr.dismiss()
         })
       }
     })
@@ -307,7 +311,6 @@ export class EditPropertyPage {
     })
     .catch(err => {
       this.errHandler.handleError({errCode: 'IMAGE_NOT_SELECTED', message: 'No image selected'});
-      this.loading = false;
     })
   }
 

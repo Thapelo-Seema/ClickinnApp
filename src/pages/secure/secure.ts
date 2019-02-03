@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, AlertController, ModalController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController, ModalController, LoadingController } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
@@ -26,7 +26,7 @@ import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 export class SecurePage {
   apartment: Apartment;
   reference: string = '';
-  loading: boolean = false;
+  loader = this.loadingCtrl.create();
   imageLoaded: boolean  = false;
   user: User;
   deposit: ATMDeposit = null;
@@ -39,52 +39,34 @@ export class SecurePage {
     private errHandler: ErrorHandlerProvider, 
     //private file: File, 
    // private fileTransfer: FileTransfer,
-   private user_svc: UserSvcProvider,
+    private user_svc: UserSvcProvider,
     private object_init: ObjectInitProvider,
     private deposit_svc: DepositProvider,
-    private modalCtrl: ModalController){
+    private modalCtrl: ModalController,
+    private loadingCtrl: LoadingController){
+    this.loader.present()
     this.deposit = this.object_init.initializeDeposit();
     this.apartment = this.object_init.initializeApartment();
     this.user = this.object_init.initializeUser();
     this.storage.getUser().then(user =>{
-      this.user_svc.getUser(user.uid)
-      .pipe(
-        take(1)
-      )
-      .subscribe(data =>{
-        this.user = data;
-        this.deposit.by.firstname = data.firstname;
-        this.deposit.by.lastname = data.lastname;
-        this.deposit.by.dp = data.photoURL;
-        this.deposit.by.uid = data.uid;
+      this.user = this.object_init.initializeUser2(user);
+      this.deposit.by.firstname = user.firstname;
+      this.deposit.by.lastname = user.lastname;
+      this.deposit.by.dp = user.photoURL;
+      this.deposit.by.uid = user.uid;
+      this.storage.getApartment().then(data => {
+        this.apartment = this.object_init.initializeApartment2(data);
+        this.deposit.apartment = this.object_init.initializeApartment2(data);;
+        this.loader.dismiss()
+      })
+      .catch(err => {
+        this.loader.dismiss();
+        this.errHandler.handleError(err);
       })
     })
-    this.storage.getApartment().then(data => {
-      this.apartment = data;
-      this.deposit.apartment = data;
-      this.user_svc.getUser(data.property.user_id)
-      .pipe(
-        take(1)
-      )
-      .subscribe(host =>{
-        this.deposit.to.firstname = host.firstname;
-        this.deposit.to.lastname = host.lastname;
-        this.deposit.to.dp = host.photoURL;
-        this.deposit.to.uid = host.uid;
-      })
-    })
-    .catch(err => {
+    .catch(err =>{
+      this.loader.dismiss();
       this.errHandler.handleError(err);
-      this.loading = false;
-    })
-
-    this.deposit_svc.getPricing()
-    .pipe(
-      take(1)
-    )
-    .subscribe(data =>{
-      this.deposit.landlord_credit = this.apartment.deposit - (this.apartment.deposit * data.deposit_commision);
-      this.deposit.agent_commision = this.apartment.deposit*data.deposit_commision*(1 - 0.4)
     })
   }
 
@@ -96,7 +78,7 @@ export class SecurePage {
  promptConfirm(){
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
-      title: "Confirm intention",
+      title: "Secure place",
       message: "Are you sure you want to deposit this apartment RIGHT NOW ?",
       buttons: [
         {
@@ -116,23 +98,50 @@ export class SecurePage {
     })
     alert.present();
     alert.onDidDismiss(data =>{
-      if(confirm){
-        this.sendingRequest = true;
-        //this.generateRef()
-        this.deposit.time_initiated = new Date();
-        this.deposit_svc.addDeposit(this.deposit).then(() =>{
-          this.sendingRequest = false;
-          this.showAlert();
-        })
-        .catch(err =>{
-          console.log(err);
-          this.sendingRequest = false;
+      if(confirm == true){
+        let ldr = this.loadingCtrl.create()
+        ldr.present()
+        this.deposit_svc.getPricing()
+        .pipe(take(1))
+        .subscribe(data =>{
+          this.deposit.landlord_credit = this.apartment.price - (this.apartment.price * data.deposit_commision);
+          if(this.deposit.apartment.agent != ''){
+            this.deposit.agent_commision = this.apartment.price*data.deposit_commision*(1 - 0.4);
+            console.log('Agent commision: ', this.deposit.agent_commision)
+            this.deposit.uploader_commision = this.deposit.agent_commision*(1 - 0.7);
+            console.log('uploader commision: ', this.deposit.uploader_commision)
+            this.deposit.agent_commision -= 0.3*this.deposit.agent_commision;
+            console.log('Agent commision: ', this.deposit.agent_commision)
+          }else{
+            this.deposit.agent_commision = this.apartment.price*data.deposit_commision*(1 - 0.4);
+          }
+          this.deposit.time_initiated = new Date();
+          this.user_svc.getUser(this.apartment.property.user_id)
+          .pipe(take(1))
+          .subscribe(host =>{
+            this.deposit.to.firstname = host.firstname;
+            this.deposit.to.lastname = host.lastname;
+            this.deposit.to.dp = host.photoURL;
+            this.deposit.to.uid = host.uid;
+            this.deposit_svc.addDeposit(this.deposit).then(() =>{
+              ldr.dismiss()
+              this.showAlert();
+            })
+            .catch(err =>{
+              ldr.dismiss()
+              console.log(err);
+            })
+          })
+        },
+        err =>{
+          ldr.dismiss();
+          this.errHandler.handleError(err)
         })
       }
     })
  }
 
-  generateRef(){
+  /*generateRef(){
   	this.reference = this.apartment.room_type.substring(2,4) + 
                      this.apartment.property.user_id.substring(2,4) +
                      this.user.firstname.substring(0, 2) +
@@ -141,7 +150,7 @@ export class SecurePage {
                      new Date().getMinutes().toString().substring(0,1);
     this.deposit.ref = this.reference;
     this.showAlert();
-  }
+  }*/
 
   showAlert() {
     let alert = this.alertCtrl.create({
@@ -175,7 +184,6 @@ export class SecurePage {
     this.navCtrl.push('PaymentDetailsPage', {payment_method: paymentMethod})
     .catch(err => {
       this.errHandler.handleError(err);
-      this.loading = false;
     })
   }
 

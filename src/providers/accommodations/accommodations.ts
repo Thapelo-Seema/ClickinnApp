@@ -19,6 +19,8 @@ import { take } from 'rxjs-compat/operators/take';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
+import { ObjectInitProvider } from '../object-init/object-init';
+import { Placement } from '../../models/placement.interface';
 
 @Injectable()
 export class AccommodationsProvider {
@@ -32,7 +34,7 @@ export class AccommodationsProvider {
   data: Observable<any>;
   done: Observable<boolean> = this._done.asObservable();
   loading: Observable<boolean> = this._loading.asObservable();
-  constructor( private afs: AngularFirestore){}
+  constructor( private afs: AngularFirestore, private object_init: ObjectInitProvider){}
 
    // Determines the doc snapshot to paginate query 
   private getCursor() {
@@ -81,7 +83,7 @@ export class AccommodationsProvider {
 
   }
 
-  getAllApartments(){
+  /*getAllApartments(){
     let first = this.afs.collection<Apartment>('Apartments', ref =>{
       return ref.orderBy('timeStamp', 'desc')
                 .limit(10)
@@ -93,6 +95,23 @@ export class AccommodationsProvider {
     .scan((acc, val) =>{
       return acc.concat(val)
     })
+  }*/
+
+  async makePlacement(placement: Placement){
+    let pl = placement;
+    let ref = await this.afs.collection('Placements')
+    .add(placement)
+    pl.placement_id = ref.id
+    return this.afs.collection('Placements').doc(ref.id).update(pl)
+  }
+
+  getAllApartments(){
+    return this.afs.collection<Apartment>('Apartments', ref =>{
+      return ref.where('available', '==', true)
+      .orderBy('timeStamp', 'desc')
+      .limit(50)
+    })
+    .valueChanges()
   }
 
   moreAllApartments() {
@@ -305,19 +324,24 @@ export class AccommodationsProvider {
       ref.where('address.vicinity', '==', vicinity)).valueChanges()
   }
 
+
   search(search_obj: Search):Observable<Apartment[]>{
     console.log('search_obj: ', search_obj);
-    this.afs.collection('Apartments')
+    this.afs.collection('Apartments', ref =>
+      ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
+      .orderBy('timeStamp', 'desc')
+    )
     .valueChanges()
     .pipe(take(1))
     .subscribe(data =>{
-      console.log('All aarts: ',data)
+      console.log('All aparts: ',data)
     })
    if(search_obj.apartment_type !== 'Any' && search_obj.parking && search_obj.wifi && search_obj.nsfas && search_obj.laundry){
      console.log('case 1');
      return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.parking', '==', search_obj.parking)
@@ -325,133 +349,144 @@ export class AccommodationsProvider {
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 2');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 3');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 4');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 5');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 6');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 7');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.parking', '==', search_obj.parking)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 8');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 9');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
      console.log('case 10');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 11');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.parking', '==', search_obj.parking)
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 12');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }
    else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && !search_obj.nsfas && !search_obj.parking){
@@ -459,6 +494,7 @@ export class AccommodationsProvider {
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
@@ -469,10 +505,11 @@ export class AccommodationsProvider {
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }
    else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking){
@@ -480,24 +517,26 @@ export class AccommodationsProvider {
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.parking', '==', search_obj.parking)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 16');
      return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.nsfas', '==', search_obj.nsfas)
-           .limit(15)
+           .limit(100)
            .orderBy('price', 'asc')
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking){
@@ -505,189 +544,206 @@ export class AccommodationsProvider {
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 18');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 19');
      return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.parking', '==', search_obj.parking)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 20');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.parking', '==', search_obj.parking)
            .where('property.wifi', '==', search_obj.wifi)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 21');
          return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.parking', '==', search_obj.parking)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 22');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.parking', '==', search_obj.parking)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 23');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 24');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.parking', '==', search_obj.parking)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 24');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.parking', '==', search_obj.parking)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 25');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.parking', '==', search_obj.parking)
            .where('property.nsfas', '==', search_obj.nsfas)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 26');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.parking', '==', search_obj.parking)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 27');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 28');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .where('property.parking', '==', search_obj.parking)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && !search_obj.laundry && search_obj.nsfas && search_obj.parking){
      console.log('case 29');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.parking', '==', search_obj.parking)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type === 'Any' && !search_obj.wifi && search_obj.laundry && search_obj.nsfas && !search_obj.parking){
      console.log('case 30');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('property.nsfas', '==', search_obj.nsfas)
            .where('property.laundry', '==', search_obj.laundry)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else if(search_obj.apartment_type !== 'Any' && search_obj.wifi && !search_obj.laundry && !search_obj.nsfas && search_obj.parking){
      console.log('case 31');
        return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .where('price', "<=", search_obj.maxPrice)
            .where('room_type', '==', search_obj.apartment_type)
            .where('property.parking', '==', search_obj.parking)
            .where('property.wifi', '==', search_obj.wifi)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
           ).valueChanges()
    }else{
       console.log('case 32');
       return this.afs.collection<Apartment>('/Apartments', ref => 
         ref.where('property.address.locality_short', '==', search_obj.Address.locality_short)
            .where('available', '==', true)
+           //.where('complete', '==', true)
            .orderBy('price', 'asc')
-           .limit(15)
+           .limit(100)
         ).valueChanges()
     } 
   }
@@ -800,5 +856,24 @@ export class AccommodationsProvider {
       })
     })
   }*/
+
+  
+  changeApartments(){
+    this.afs.collection<Apartment>('Apartments')
+    .valueChanges()
+    .pipe(take(1))
+    .subscribe(aparts =>{
+      aparts.forEach(apart =>{
+        let newApt = this.object_init.initializeApartment2(apart);
+        newApt.complete = true;
+        newApt.available = true;
+        console.log(newApt)
+        this.updateApartment(newApt)
+        .then(() =>{
+          console.log('updated...')
+        })
+      })
+    })
+  }
 
 }

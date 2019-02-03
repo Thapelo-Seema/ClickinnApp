@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, ToastController, Platform, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, ToastController, Platform, AlertController, LoadingController } from 'ionic-angular';
 import { MapsProvider } from '../../providers/maps/maps';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 import { AngularFirestore } from 'angularfire2/firestore';
@@ -25,7 +25,7 @@ export class LandlordRegistrationPage {
   predictions: any[] = [];
   user: User;
   userSubs: Subscription;
-  loading: boolean = false;
+  loader = this.loadingCtrl.create();
   predictionLoading: boolean = false;
   connectionError: boolean = false;
   online: boolean = false;
@@ -42,12 +42,16 @@ export class LandlordRegistrationPage {
     private toastCtrl: ToastController,
     private platform: Platform,
     private alertCtrl: AlertController,
-    private user_svc: UserSvcProvider) {
+    private user_svc: UserSvcProvider,
+    private loadingCtrl: LoadingController) {
+    this.loader.present()
   	this.user = this.object_init.initializeUser();
   	this.storage.getUser()
   	.then(data =>{
+      console.log(data)
   		this.user = this.object_init.initializeUser2(data);
   		console.log('Landlord: ', this.user)
+      this.loader.dismiss();
   	})
   }
 
@@ -176,15 +180,16 @@ export class LandlordRegistrationPage {
   }
 
   save(){
-  	this.loading = true;
+  	let ldr = this.loadingCtrl.create()
+    ldr.present();
   	this.user.user_type = 'landlord';
   	this.user_svc.updateUser(this.user)
   	.then(() =>{
-  		this.loading = false;
+  		ldr.dismiss()
   		this.showToast('Landlord profile successfully updated!')
   	})
   	.catch(err =>{
-  		this.loading = false;
+  		ldr.dismiss()
   		this.errHandler.handleError(err)
   	})
   }

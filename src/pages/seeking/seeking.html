@@ -10,7 +10,7 @@
   </ion-navbar>
 </ion-header>
 <ion-content text-center>
-	<ion-grid *ngIf="showList && dataLoaded">
+	<ion-grid no-padding>
     <ion-row>
       <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
       </ion-col>
@@ -21,15 +21,31 @@
 			<p text-center padding style="color: whitesmoke">
 				This is the apartment that best matches the description of the place you want.
 			</p>
-			<accommodations [apartment]="bestMatch" (click)="gotoApartment(bestMatch)"></accommodations>
+			<!-- <accommodations [apartment]="bestMatch" (click)="gotoApartment(bestMatch)"></accommodations> -->
+			<button ion-item margin-vertical text-wrap  (click)="gotoApartment(bestMatch)" >
+		      <ion-avatar item-start>
+		        <img src="{{bestMatch?.dP?.url}}" (load)="bestMatchLoaded = true" [hidden]="!bestMatchLoaded" imageViewer/>
+		        <img src="assets/imgs/placeholder.jpg" [hidden]="bestMatchLoaded" />
+		      </ion-avatar>
+		      <p>{{bestMatch?.room_type}}, R{{bestMatch?.price}}</p>
+		      <p>{{bestMatch?.property?.vicinity}}</p>
+		    </button>
 		</ion-item>
-		<button *ngIf="!more" ion-button clear margin (click)="toggleMore()">show more</button>
-		<button *ngIf="more" ion-button clear margin (click)="toggleMore()">show less</button>
-		<ion-item *ngIf="more" no-lines text-wrap>
+		<!-- <button *ngIf="!more" ion-button clear margin (click)="toggleMore()">show more</button>
+		<button *ngIf="more" ion-button clear margin (click)="toggleMore()">show less</button> -->
+		<ion-item  no-lines text-wrap>
 			<h1 text-center>More Apartments</h1>
 			<p padding text-center>This is an ordered list of more apartments from more recommended going down</p>
-			<accommodations *ngFor="let apartment of apartments" (click)="gotoApartment(apartment)" [apartment]="apartment">
-			</accommodations>
+			<!-- <accommodations *ngFor="let apartment of apartments" (click)="gotoApartment(apartment)" [apartment]="apartment">
+			</accommodations> -->
+			<button ion-item margin-vertical text-wrap *ngFor="let apartment of apartments ; let i = index" (click)="gotoApartment(apartment)" >
+		      <ion-avatar item-start>
+		        <img src="{{apartment?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
+		        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
+		      </ion-avatar>
+		      <p>{{apartment?.room_type}}, R{{apartment?.price}}</p>
+		      <p>{{apartment?.property?.vicinity}}</p>
+		    </button>
 		</ion-item>
 	</div>
       </ion-col>
@@ -37,11 +53,8 @@
       </ion-col>
     </ion-row>
   </ion-grid>
-	<div style="height: 100%" *ngIf="!showList && dataLoaded">
+	<!-- <div style="height: 100%" *ngIf="!showList ">
 		<clickinn-maps [pointOfInterest]="pointOfInterest" [search]="search_object"></clickinn-maps>
-	</div>
-	<div *ngIf="!dataLoaded" class="centered_on_screen">
-	    <ion-spinner name="ios"></ion-spinner>
 	</div>
 	
 	<ion-fab bottom right *ngIf="showList">
@@ -49,5 +62,5 @@
 	</ion-fab>
 	<ion-fab bottom right *ngIf="!showList">
 		<button ion-fab icon-only (click)="toggleList()"><ion-icon name="list" end></ion-icon></button>
-	</ion-fab>
+	</ion-fab> -->
 </ion-content>

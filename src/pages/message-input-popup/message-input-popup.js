@@ -13,6 +13,7 @@ import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
+import { take } from 'rxjs-compat/operators/take';
 /**
  * Generated class for the MessageInputPopupPage page.
  *
@@ -32,7 +33,7 @@ var MessageInputPopupPage = /** @class */ (function () {
         this.message = this.objectInit.initializeChatMessage();
         this.user = this.objectInit.initializeUser();
         this.storage.getUser().then(function (user) {
-            _this.chat_svc.getThreads(user).subscribe(function (threads) {
+            _this.chat_svc.getThreads(user).pipe(take(1)).subscribe(function (threads) {
                 _this.threads = threads;
             });
             console.log('curentUers : ', user);

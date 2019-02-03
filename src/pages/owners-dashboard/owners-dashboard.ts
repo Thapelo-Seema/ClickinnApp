@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
-
+import { AppointmentsProvider } from '../../providers/appointments/appointments'
 /**
  * Generated class for the OwnersDashboardPage page.
  *
@@ -19,7 +19,10 @@ export class OwnersDashboardPage {
   tab2Root: any = 'ManageBuildingsPage';
   tab3Root: any = 'BookingsPage';
   tab4Root: any = 'ChatsPage';
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
+  constructor(
+    public navCtrl: NavController, 
+    public navParams: NavParams,
+    private appt_svc: AppointmentsProvider) {
   }
 
   ionViewDidLoad() {
@@ -27,7 +30,7 @@ export class OwnersDashboardPage {
   }
 
   gotoHome(){
-    //this.appt_svc.reset();
+    this.appt_svc.reset();
     this.navCtrl.setRoot('WelcomePage');
   }
 

@@ -1,0 +1,93 @@
+
+<ion-header>
+  <ion-navbar color="clickinn">
+    <ion-title style="font-family: 'Ubuntu', sans-serif;">Personal Details</ion-title>
+  </ion-navbar>
+</ion-header>
+<ion-content>
+  <ion-grid no-padding>
+    <ion-row>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+      <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+        <ion-item no-lines style="background: #000050; color: white">
+    <ion-buttons end>
+        <button ion-button style="background: #000010; color: white" (click)="gotoEdit()" >
+          <ion-icon name="ios-create" start></ion-icon> &nbsp;&nbsp; Edit Profile</button>
+      </ion-buttons>
+    <div text-center>
+      <img src="{{user?.photoURL}}" (load)="imageLoaded = true" [hidden]="!imageLoaded" class="round" width="200px" height="200px" alt="User display picture" />
+      <img src="assets/imgs/genPlaceholder.png" [hidden]="imageLoaded" class="round" width="200px" height="200px" alt="User display picture"/>
+    </div>
+    <h1 text-center>  
+        {{user?.displayName}} 
+    </h1>
+  </ion-item>
+  
+    <div>
+      <ion-item padding-horizontal (click)="gotoEdit()">
+        
+        <strong>Display Name</strong><p>{{user?.displayName ? user?.displayName: 'none provided'}}</p>
+      </ion-item>
+      <ion-item padding-horizontal (click)="gotoEdit()">
+        
+        <strong>Firstname</strong> <p>{{user?.firstname ? user?.firstname: 'none provided'}}</p>
+      </ion-item>
+      <ion-item padding-horizontal (click)="gotoEdit()">
+        
+        <strong>Lastname</strong> <p>{{user?.lastname ? user?.lastname: 'none provided'}}</p>
+      </ion-item>
+      <ion-item padding-horizontal (click)="gotoEdit()">
+        
+        <strong>Email</strong> <p>{{user?.email ? user?.email: 'none provided'}}</p>
+      </ion-item>
+      <ion-item padding-horizontal (click)="gotoEdit()">
+        
+        <strong>Phone</strong> <p> {{user?.phoneNumber ? user?.phoneNumber: 'none provided'}}</p>
+      </ion-item>
+      <ion-item padding-horizontal (click)="gotoEdit()">
+        
+        <strong>Occupation</strong><p> {{user?.occupation ? user?.occupation: 'none provided'}}</p>
+      </ion-item>
+      <!-- <div style="background: lightblue; margin-top: 15px; margin-bottom: 15px; padding: 4px; border-radius: 4px" >
+        <h1 text-center> Banking details </h1>
+          <ion-row>
+            <ion-col>
+              <strong>Bank</strong> 
+            </ion-col>
+            <ion-col>
+              {{user?.bank}}
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <strong>Accountholder</strong> 
+            </ion-col>
+            <ion-col text-wrap>
+             {{ user?.account_holder}}
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <strong>Account number</strong> 
+            </ion-col>
+            <ion-col text-wrap>
+              {{user?.account_number}} 
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <strong>Branch code</strong> 
+            </ion-col>
+            <ion-col text-wrap>
+              {{user?.bank_code}} 
+            </ion-col>
+          </ion-row>
+        </div> -->
+    </div>
+      </ion-col>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

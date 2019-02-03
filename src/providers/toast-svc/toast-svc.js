@@ -22,7 +22,8 @@ var ToastSvcProvider = /** @class */ (function () {
     ToastSvcProvider.prototype.showToast = function (message) {
         var toast = this.toastCtrl.create({
             message: message,
-            duration: 4000
+            duration: 3000,
+            dismissOnPageChange: true
         });
         toast.present();
     };

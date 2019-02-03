@@ -13,7 +13,38 @@ import { Thread } from '../../models/thread.interface';
 export class LocalDataProvider {
 
   constructor(private storage: Storage) {
-   
+  }
+
+  getPaymentWarningSeen(){
+    return this.storage.get('paymentWarningSeen');
+  }
+
+  setPaymentWarningSeen(){
+    return this.storage.set('paymentWarningSeen', true);
+  }
+
+  setPersonalDetailsEdit(){
+    return this.storage.set('edit', 'personal-details')
+  }
+
+  setBankingDetailsEdit(){
+    return this.storage.set('edit', 'banking-details')
+  }
+
+  getProfileEdit(){
+    return this.storage.get('edit')
+  }
+
+  setFirstTime(){
+    return this.storage.set('firstime', true)
+  }
+
+  setNotFirstime(){
+    return this.storage.set('firstime', false)
+  }
+
+  getFirstTime(){
+    return this.storage.get('firstime');
   }
 
   setChannelID(channel_id: string){

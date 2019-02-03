@@ -1,4 +1,7 @@
+import { Apartment } from './properties/apartment.interface';
+
 export interface ChatMessage{
+	attachment?: Apartment
 	timeStamp: number;
 	to: {uid: string, dp: string, displayName:string};
 	by: {uid: string, dp: string, displayName:string};
@@ -7,4 +10,6 @@ export interface ChatMessage{
 	read: boolean;
 	text: string;
 	topic?: string;
+	id?: string;
+	seen ?: boolean;
 }

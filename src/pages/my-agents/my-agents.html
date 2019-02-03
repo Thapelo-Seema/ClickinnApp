@@ -17,21 +17,35 @@
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-				<ion-item  *ngFor="let landlord of landlords | async ; let i = index">
+				<div *ngIf="noAgents == true" style="color: lightgray; text-align: center;"> 
+					<h1>No Agents</h1>
+					<p>You have no agents who have proposed services to you yet</p>
+				</div>
+				<ion-item  *ngFor="let deal of serviceDeals | async ; let i = index">
 					<ion-avatar item-start>
-		        		<img src="{{landlord?.landlord_dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
+		        		<img src="{{deal?.agent_dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
 			        	<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 		        	</ion-avatar>
-		        	<strong> {{landlord?.agent_firstname}} {{landlord?.agent_lastname}}</strong>
-		        	<p margin-top > {{landlord?.agent_phoneNumber}} </p>
+		        	<strong> {{deal?.agent_firstname}} {{deal?.agent_lastname}}</strong>
+		        	<p margin-top > {{deal?.agent_phoneNumber}} </p>
 		        	<ion-row>
+		        		<ion-col *ngIf="deal?.landlord_agreed == false" >
+		        			<button color="secondary" ion-button clear (click)="acceptDeal(deal)" >
+		        				<ion-icon name="checkmark"></ion-icon>
+		        			</button>
+		        		</ion-col>
 		        		<ion-col>
-		        			<button color="secondary" ion-button clear (click)="showInput(landlord)" >
+		        			<button  ion-button clear (click)="showInput(deal)" >
+		        				<ion-icon name="call"></ion-icon>
+		        			</button>
+		        		</ion-col>
+		        		<ion-col>
+		        			<button ion-button clear (click)="showInput(deal)" >
 		        				<ion-icon name="chatboxes"></ion-icon>
 		        			</button>
 		        		</ion-col>
 		        		<ion-col>
-		        			<button color="danger" ion-button clear (click)="cancelDeal(landlord)" >
+		        			<button color="danger" ion-button clear (click)="cancelDeal(deal)" >
 		        				<ion-icon name="close"></ion-icon>
 		        			</button>
 		        		</ion-col>

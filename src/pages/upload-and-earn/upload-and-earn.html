@@ -10,11 +10,11 @@
   </ion-navbar>
 </ion-header>
 <ion-content>
-  <div *ngIf="loading" class="centered_on_screen" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; 
+  <!-- <div *ngIf="loading" class="centered_on_screen" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; 
     border-radius: 10px;padding: 20px; text-align: center; z-index: 1">
     <ion-spinner name="ios"></ion-spinner>
     <h3 text-center>Saving progress...</h3>
-  </div>
+  </div> -->
   <!-- <div *ngIf="uploading" class="centered_on_screen" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; 
     border-radius: 10px;padding: 20px; text-align: center; z-index: 1">
     <ion-spinner name="ios"></ion-spinner>
@@ -26,10 +26,11 @@
       </ion-col>
       <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
         <ion-stepper #stepper mode="horizontal" (selectIndexChange)="selectChange($event)">
-    <ion-step>
+      <ion-step>
       <h1 text-center>Apartment Details</h1>
-      <ion-item no-lines margin-vertical text-wrap style="letter-spacing: 2px;border-radius: 7px; background: #f4f4f4;">
-        <p text-center>
+      <ion-item no-lines margin-vertical text-wrap style="letter-spacing: 2px;border-radius: 7px;
+       background: rgba(0,0,0, 0.5); color: white;">
+        <p text-center style="color: white">
           <strong>Please fill out the details of the apartment in full</strong> 
         </p>
         <ion-buttons end>
@@ -47,31 +48,48 @@
           <ion-option value="Agent">Agent</ion-option>
         </ion-select>
       </ion-item>
+      <div *ngIf="apartment?.by && apartment?.by =='Agent' ">
+        <ion-item *ngIf="noLandlords == false" text-wrap>
+          <ion-label>Apartment owner</ion-label>
+          <ion-select [(ngModel)]="apartment.owner" required>
+            <ion-option  *ngFor="let landlord of landlords" value="landlord?.landlord_uid">{{landlord?.landlord_firstname}}</ion-option>
+          </ion-select>
+        </ion-item>
+        <ion-item *ngIf="noLandlords == true" text-wrap>
+          <h1>Ask the landlord to download the app</h1>
+        </ion-item>
+      </div>
       <ion-item text-wrap>
         <ion-label>Apartment Type</ion-label>
         <ion-select [(ngModel)]="apartment.room_type" required>
           <ion-option value="Back room">Back room</ion-option>
-          <ion-option value="2 Bedroom flat">2 Bedroom flat</ion-option>
-          <ion-option value="1 Bedroom flat">1 Bedroom flat</ion-option>
-          <ion-option value="Bachelor flat">Bachelor/Studio flat</ion-option>
           <ion-option value="Cottage">Cottage</ion-option>
           <ion-option value="Single Room">Single room</ion-option>
           <ion-option value="2 Sharing Room">2 Sharing room</ion-option>
           <ion-option value="3 Sharing Room">3 Sharing room</ion-option>
+          <ion-option value="Bachelor flat">Bachelor/Studio flat</ion-option>
+          <ion-option value="4 Bedroom flat">4 Bedroom flat</ion-option>
+          <ion-option value="3 Bedroom flat">3 Bedroom flat</ion-option>
+          <ion-option value="2 Bedroom flat">2 Bedroom flat</ion-option>
+          <ion-option value="1 Bedroom flat">1 Bedroom flat</ion-option>
+          <ion-option value="4 Bedroom house">4 Bedroom house</ion-option>
+          <ion-option value="3 Bedroom house">3 Bedroom house</ion-option>
+          <ion-option value="2 Bedroom house">2 Bedroom house</ion-option>
+          <ion-option value="1 Bedroom house">1 Bedroom house</ion-option>
           <ion-option value="Any">Any</ion-option>
         </ion-select>
       </ion-item>
       <ion-item text-wrap>
-        <ion-label floating style="letter-spacing: 2px; font-weight: 5px; font-stretch: 10px"><strong>Quantity of same apartments available</strong></ion-label>
-        <ion-input type="number" [(ngModel)]="apartment.quantity_available" required></ion-input>
+        <ion-label stacked style="letter-spacing: 2px; font-weight: 5px; font-stretch: 10px"><strong>Quantity of same apartments available</strong></ion-label>
+        <ion-input type="number" [(ngModel)]="quantity" required></ion-input>
       </ion-item>
       <ion-item text-wrap>
-        <ion-label floating style="letter-spacing: 2px; font-weight: 5px; font-stretch: 10px"><strong>Monthly Rent (Rands)</strong></ion-label>
-        <ion-input type="number" [(ngModel)]="apartment.price" required></ion-input>
+        <ion-label stacked style="letter-spacing: 2px; font-weight: 5px; font-stretch: 10px"><strong>Monthly Rent (Rands)</strong></ion-label>
+        <ion-input type="number" [(ngModel)]="price" required></ion-input>
       </ion-item>
       <ion-item text-wrap >
-        <ion-label floating style="letter-spacing: 2px; font-weight: 5px; font-stretch: 10px"><strong>Deposit/Securing fee ( including 1st month rent ) (Rands)</strong></ion-label>
-        <ion-input type="number" [(ngModel)]="apartment.deposit" required></ion-input>
+        <ion-label stacked style="letter-spacing: 2px; font-weight: 5px; font-stretch: 10px"><strong>Deposit/Securing fee ( excluding 1st month rent ) (Rands)</strong></ion-label>
+        <ion-input type="number" [(ngModel)]="deposit" required></ion-input>
       </ion-item>
       <ion-item  margin-vertical no-lines>
         <ion-textarea text-center rows="5"
@@ -79,18 +97,20 @@
             [(ngModel)]="apartment.description">
          </ion-textarea>
       </ion-item>
+
       <ion-buttons end>
         <button ion-button color="clickinn" round outline ionicStepperNext (click)="apartmentUpdateOrInit(); scrollToTop()">
           <strong>Next</strong>&nbsp;&nbsp;
           <ion-icon name="arrow-round-forward"></ion-icon>
         </button>
       </ion-buttons>
+      
       </ion-step>
       <ion-step>
         <h1 text-center>Apartment Pictures</h1>
-        <ion-item no-lines text-wrap style="border-radius: 7px; background: #f4f4f4; letter-spacing: 2px">
-        <p text-center>
-          Select pictures of only the interior of the apartment (Select the images one by one and crop to prescribed size)  
+        <ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0,0,0, 0.5); color: white; letter-spacing: 2px">
+        <p text-center style="color: white">
+          Select pictures of the apartment that will give the user a clear idea of what to expect   
         </p>
         <ion-buttons end>
           <button ion-button small clear>
@@ -142,8 +162,8 @@
       </ion-step>
       <ion-step>
         <h1 text-center>Building Details</h1>
-        <ion-item no-lines text-wrap style="border-radius: 7px; background: #f4f4f4; letter-spacing: 2px">
-        <p text-center>
+        <ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0,0,0, 0.5); color: white; letter-spacing: 2px">
+        <p text-center style="color: white">
           Select building from the list of building profile you have already created or fill details of the new building which the apartment belongs to  
         </p>
         <ion-buttons end>
@@ -224,9 +244,9 @@
       </ion-step>
       <ion-step>
         <h1 text-center *ngIf="!buildingSelected">Building Pictures</h1>
-        <h1 text-center *ngIf="buildingSelected">Upload Building</h1>
-        <ion-item *ngIf="!buildingSelected" no-lines text-wrap style="border-radius: 7px; background: #f4f4f4; letter-spacing: 2px">
-          <p text-center>
+        <h1 text-center *ngIf="buildingSelected">Finish Upload</h1>
+        <ion-item *ngIf="!buildingSelected" no-lines text-wrap style="border-radius: 7px; background: rgba(0,0,0, 0.5); color: white; letter-spacing: 2px">
+          <p text-center style="color: white">
             Add pictures of the communal areas of the building, like bathrooms, kitchen, laundry, pool etc
             (Add pictures one at a time and crop to the specified dimensions)  
           </p>

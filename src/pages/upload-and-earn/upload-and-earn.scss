@@ -1,13 +1,6 @@
 page-upload-and-earn {
 
-	ion-content{
-		background-color: white;
-	    background: url('../assets/imgs/abstract.jpg') no-repeat center center fixed; 
-	    -webkit-background-size: cover;
-	    -moz-background-size: cover;
-	    -o-background-size: cover;
-	    background-size: cover;
-	}
+	
 
 	.upload_buttons{
 		padding: 60px 20px; 
@@ -20,6 +13,26 @@ page-upload-and-earn {
 	ion-icon {
         font-size: 30px; //Preferred size here
     }
+
+    ion-input:first-child {
+	    border: 1px solid lightgray;
+	    border-radius: 4px;
+	}
+
+  	ion-input:last-child {
+    	border: 1px solid lightgray;
+    	border-radius: 4px;
+  	}
+
+  	ion-item {
+	    border-bottom: 0px !important;
+	    box-shadow: none !important;
+	}
+
+	.item-inner {
+		border-bottom-color: transparent !important;
+		box-shadow: none !important;
+	}
 
 
 }

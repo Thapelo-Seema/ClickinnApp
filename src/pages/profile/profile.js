@@ -9,44 +9,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { Component } from '@angular/core';
 import { IonicPage, NavController } from 'ionic-angular';
-import { LocalDataProvider } from '../../providers/local-data/local-data';
-import { AngularFirestore } from 'angularfire2/firestore';
-import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-//import { EditProfilePage } from '../edit-profile/edit-profile';
-import { ObjectInitProvider } from '../../providers/object-init/object-init';
 var ProfilePage = /** @class */ (function () {
-    function ProfilePage(navCtrl, storage, afs, errHandler, object_init) {
-        var _this = this;
+    function ProfilePage(navCtrl) {
         this.navCtrl = navCtrl;
-        this.storage = storage;
-        this.afs = afs;
-        this.errHandler = errHandler;
-        this.object_init = object_init;
-        this.image = "assets/imgs/placeholder.png";
-        this.loading = false;
-        this.imageLoaded = false;
-        this.user = this.object_init.initializeUser();
-        this.loading = true;
-        this.storage.getUser().then(function (data) {
-            _this.afs.collection('Users').doc(data.uid).valueChanges().subscribe(function (user) {
-                _this.user = user;
-                if (_this.user.photoURL !== '')
-                    _this.image = _this.user.photoURL;
-                else
-                    console.log(_this.user.photoURL);
-                _this.loading = false;
-            }, function (err) {
-                _this.errHandler.handleError(err);
-                _this.loading = false;
-            });
-        })
-            .catch(function (err) {
-            _this.errHandler.handleError(err);
-            _this.loading = false;
-        });
+        this.tab0Root = 'PersonalDetailsPage';
+        this.tab1Root = 'BankingDetailsPage';
+        this.tab2Root = 'UserDocumentsPage';
     }
-    ProfilePage.prototype.gotoEdit = function () {
-        this.navCtrl.push('EditProfilePage');
+    ProfilePage.prototype.gotoHome = function () {
+        this.navCtrl.setRoot('WelcomePage');
     };
     ProfilePage = __decorate([
         IonicPage(),
@@ -54,8 +25,7 @@ var ProfilePage = /** @class */ (function () {
             selector: 'page-profile',
             templateUrl: 'profile.html',
         }),
-        __metadata("design:paramtypes", [NavController, LocalDataProvider,
-            AngularFirestore, ErrorHandlerProvider, ObjectInitProvider])
+        __metadata("design:paramtypes", [NavController])
     ], ProfilePage);
     return ProfilePage;
 }());

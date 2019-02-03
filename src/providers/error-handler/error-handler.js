@@ -22,7 +22,7 @@ var ErrorHandlerProvider = /** @class */ (function () {
         this.toast = toast;
     }
     ErrorHandlerProvider.prototype.handleError = function (err) {
-        console.log(err.message);
+        console.log(err);
         //this.loading = false;
         this.toast.create({
             message: err.message,

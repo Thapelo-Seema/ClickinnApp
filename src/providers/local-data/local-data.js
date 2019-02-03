@@ -13,6 +13,36 @@ var LocalDataProvider = /** @class */ (function () {
     function LocalDataProvider(storage) {
         this.storage = storage;
     }
+    LocalDataProvider.prototype.getPaymentWarningSeen = function () {
+        return this.storage.get('paymentWarningSeen');
+    };
+    LocalDataProvider.prototype.setPaymentWarningSeen = function () {
+        return this.storage.set('paymentWarningSeen', true);
+    };
+    LocalDataProvider.prototype.setPersonalDetailsEdit = function () {
+        return this.storage.set('edit', 'personal-details');
+    };
+    LocalDataProvider.prototype.setBankingDetailsEdit = function () {
+        return this.storage.set('edit', 'banking-details');
+    };
+    LocalDataProvider.prototype.getProfileEdit = function () {
+        return this.storage.get('edit');
+    };
+    LocalDataProvider.prototype.setFirstTime = function () {
+        return this.storage.set('firstime', true);
+    };
+    LocalDataProvider.prototype.setNotFirstime = function () {
+        return this.storage.set('firstime', false);
+    };
+    LocalDataProvider.prototype.getFirstTime = function () {
+        return this.storage.get('firstime');
+    };
+    LocalDataProvider.prototype.setChannelID = function (channel_id) {
+        return this.storage.set('channel_id', channel_id);
+    };
+    LocalDataProvider.prototype.getChannelID = function () {
+        return this.storage.get('channel_id');
+    };
     LocalDataProvider.prototype.setTransactionState = function (state) {
         return this.storage.set('transaction_state', state);
     };

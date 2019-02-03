@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ToastController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, ToastController, AlertController, LoadingController } from 'ionic-angular';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
@@ -9,14 +9,14 @@ import { FileUpload } from '../../models/file-upload.interface';
 import { Camera, CameraOptions } from '@ionic-native/camera';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 import { FileUploadSvcProvider } from '../../providers/file-upload-svc/file-upload-svc';
-
+import { SearchfeedProvider } from '../../providers/searchfeed/searchfeed';
+import { take } from 'rxjs-compat/operators/take';
 /**
  * Generated class for the EditApartmentPage page.
  *
  * See https://ionicframework.com/docs/components/#navigation for more info on
  * Ionic pages and navigation.
  */
-
 @IonicPage()
 @Component({
   selector: 'page-edit-apartment',
@@ -24,69 +24,105 @@ import { FileUploadSvcProvider } from '../../providers/file-upload-svc/file-uplo
 })
 export class EditApartmentPage {
   apartment: Apartment;
-  loading: boolean = true;
+  loader = this.loadingCtrl.create();
   images: Image[] = [];
   fileUpload: FileUpload;
   apartImgCount: number = 0;
   apartmentImagesAdded: boolean = false;
   connectionError: boolean = false;
+  landlords: any[] = [];
+  noLandlords: boolean = false;
   imagesLoaded: boolean[] = 
-      [false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false, 
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false
-       ];
+  [
+      false, false, false, false, false, false, false, false, false, false,
+      false, false, false, false, false, false, false, false, false, false, 
+      false,false, false, false, false, false, false, false, false, false,
+      false,false, false, false, false, false, false, false, false, false,
+      false,false, false, false, false, false, false, false, false, false
+  ];
   constructor(
   	public navCtrl: NavController, 
-  	public navParams: NavParams,
-  	private local_db: LocalDataProvider,
+  	private storage: LocalDataProvider,
   	private accom_svc: AccommodationsProvider,
   	private object_init: ObjectInitProvider,
   	private toastCtrl: ToastController,
   	private camera: Camera,
   	private errHandler: ErrorHandlerProvider,
   	private file_upload_svc: FileUploadSvcProvider,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private loadingCtrl: LoadingController,
+    private searchfeed_svc: SearchfeedProvider
     ) {
-  	this.cancelPic()
-
-  	this.apartment = this.object_init.initializeApartment();
-  	this.local_db.getApartment()
+    this.loader.present();
+  	this.cancelPic() //Initializing the fileUpload object (just reusing an inappropriatley named method)
+  	this.apartment = this.object_init.initializeApartment(); //Initializing an empty apartment object
+  	this.storage.getApartment()
   	.then(apart =>{
+      //Check if theres an apartment form cache before proceed
+      
   		if(apart){
   			console.log('apartment: ', apart )
-  			this.apartment = apart;
-  			this.loading  = false;
+  			this.apartment = this.object_init.initializeApartment2(apart); //Populating the apartment fields with those from the cache
+        this.storage.getUser()
+        .then(user =>{
+          this.searchfeed_svc.getAgentsLandlords(user.uid)
+          .pipe(take(1))
+          .subscribe(landlords =>{
+            if(landlords.length > 0){
+              landlords.forEach(lnd =>{
+                this.landlords.push(lnd)
+              })
+            }else{
+              this.noLandlords = true;
+            }
+          })
+        })
+  			this.loader.dismiss()
+        /*If the images of the apartment are not in array format put them in array otherwise use as is */
   			if(!(apart.images.length > 0)){
-  				console.log('apart images: ', apart.images)
-  				this.images = Object.keys(apart.images).map(imageId =>{
+  				//console.log('apart images: ', apart.images)
+  				let images = Object.keys(apart.images).map(imageId =>{
               this.imagesLoaded.push(false);
 			      	return apart.images[imageId]
 			    })
+          images.forEach(mg =>{
+            if(mg != undefined) this.images.push(mg)
+          })
 			    this.apartImgCount = this.images.length;
   			}else{
-          
-  				console.log('apart images: ', apart.images)
-  				this.images = apart.images;
+  				//console.log('apart images: ', apart.images)
+  				apart.images.forEach(mg =>{
+            if(mg != undefined) this.images.push(mg)
+          })
   				this.apartImgCount = apart.images.length;
   			}
-  			
   		}else{
-  			this.loading = false;
-  			console.log('no apartment...')
+  			this.loader.dismiss()
   		}
   	})
+    .catch(err =>{
+      this.loader.dismiss()
+      this.errHandler.handleError(err)
+    })
   }
 
   ionViewDidLoad() {
-    console.log('ionViewDidLoad EditApartmentPage');
+    
   }
 
+  gotoBuilding(){
+    this.storage.setProperty(this.apartment.property)
+    .then(() =>{
+      this.navCtrl.push('EditPropertyPage')
+    })
+    
+  }
+
+  //Method for handling deletion of apartment pictures
   remove(index: number){
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
-      title: "Confirm picture deletion",
+      title: "Delete",
       message: "Are you sure you want to delete this picture ?",
       buttons: [
         {
@@ -112,10 +148,11 @@ export class EditApartmentPage {
     })
   }
 
+  //Save the changes made to the apartment
   save(){
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
-      title: "Confirm intention",
+      title: "Save",
       message: "Are you sure you want to save the changes ?",
       buttons: [
         {
@@ -136,11 +173,25 @@ export class EditApartmentPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm){
-        this.loading = true;
+        let ldr = this.loadingCtrl.create()
+        ldr.present();
         this.apartment.images = this.images;
+        console.log(this.images[0])
+        if(this.images.length > 0){
+          if(this.images[0].url != '' && this.images[0].url != 'assets/imgs/placeholder.jpg'){
+            this.apartment.dP = this.images[0]
+          }else if(this.images[1].url != '' && this.images[1].url != 'assets/imgs/placeholder.jpg'){
+            this.apartment.dP = this.images[1]
+          }
+        }
+        if(this.apartment.quantity_available > 0){
+          this.apartment.available = true;
+        }else{
+          this.apartment.available = false;
+        }
         this.accom_svc.updateApartment(this.apartment)
         .then(() =>{
-          this.loading = false;
+          ldr.dismiss()
           this.toastCtrl.create({
             message: 'The apartment was successfully updated !',
             duration: 5000
@@ -148,7 +199,7 @@ export class EditApartmentPage {
           .present()
         })
         .catch(err =>{
-          this.loading = false;
+          ldr.dismiss()
           this.toastCtrl.create({
             message: err.message,
             duration: 4000
@@ -159,10 +210,11 @@ export class EditApartmentPage {
     })
   }
 
+  //Method that handles the uploading of apartment images to firebase storage
   uploadApartmentImage(){
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
-      title: "Confirm picture upload",
+      title: "Upload",
       message: "Are sure you want to add this image to the apartment profile ?",
       buttons: [
         {
@@ -183,11 +235,12 @@ export class EditApartmentPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm){
-        this.loading = true;
+        let ldr = this.loadingCtrl.create()
+        ldr.present();
         this.file_upload_svc.uploadPic(this.fileUpload)
         .then(imag =>{
           this.images.push(imag);
-          this.loading = false;
+          ldr.dismiss()
           this.connectionError = false;
           this.toastCtrl.create({
             message: 'Picture added !',
@@ -196,7 +249,7 @@ export class EditApartmentPage {
           .present()
         })
         .catch(err =>{
-          this.loading = false;
+          ldr.dismiss()
           if(this.connectionError == true)
           this.toastCtrl.create({
             message: 'Please check your internet connection...images could not be uploaded',
@@ -209,6 +262,7 @@ export class EditApartmentPage {
     })
   }
 
+  //Cancel the current image details
   cancelPic(){
   	this.fileUpload = {
   		file: null,
@@ -219,6 +273,7 @@ export class EditApartmentPage {
   	}
   }
 
+  //Add a picture to the current apartment image array
   addPicture(){
     const options: CameraOptions = {
       quality: 90,
@@ -248,7 +303,6 @@ export class EditApartmentPage {
     })
     .catch(err => {
       this.errHandler.handleError({errCode: 'IMAGE_NOT_SELECTED', message: 'No image selected'});
-      this.loading = false;
     })
   }
 

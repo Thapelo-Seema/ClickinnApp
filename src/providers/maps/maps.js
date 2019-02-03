@@ -173,7 +173,8 @@ var MapsProvider = /** @class */ (function () {
             return new Promise(function (resolve, reject) {
                 service.getPlacePredictions({ input: searchText, componentRestrictions: { country: 'za' } }, function (predictions, status) {
                     if (status != google.maps.places.PlacesServiceStatus.OK) {
-                        reject(new Error(status));
+                        console.log('Error: ', status);
+                        reject(status);
                     }
                     resolve(predictions);
                 });

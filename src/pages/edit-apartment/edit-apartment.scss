@@ -1,14 +1,42 @@
 page-edit-apartment {
 
-	ion-content{
-		background-color: white;
-	    background: url('../assets/imgs/abstract.jpg') no-repeat center center fixed; 
-	    -webkit-background-size: cover;
-	    -moz-background-size: cover;
-	    -o-background-size: cover;
-	    background-size: cover;
+ion-slide{
+      height: 30vh !important;
+    }
+
+	.swiper-pagination-bullet {
+    	background: white;
+   	}  
+
+	.swiper-pagination-bullet-active {
+    	background: #ffdf00;
 	}
+
+ion-input:first-child {
+	    border: 1px solid lightgray;
+	    border-radius: 4px;
+	}
+
+  	ion-input:last-child {
+    	border: 1px solid lightgray;
+    	border-radius: 4px;
+  	}
+
+  	ion-item {
+	    border-bottom: 0px !important;
+	    box-shadow: none !important;
+	}
+
+	.item-inner {
+		border-bottom-color: transparent !important;
+		box-shadow: none !important;
+	}
+
 	
+	ion-slide img{
+      height: 20vh !important;
+    }
+
 	ion-slide.swiper-slide{
  		left: 25%;
  	}

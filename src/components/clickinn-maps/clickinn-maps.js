@@ -11,6 +11,8 @@ import { Component, ViewChild, ElementRef, Input } from '@angular/core';
 import { MapsProvider } from '../../providers/maps/maps';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import 'rxjs/add/operator/take';
+import { take } from 'rxjs-compat/operators/take';
+import { LocalDataProvider } from '../../providers/local-data/local-data';
 /**
  * Generated class for the ClickinnMapsComponent component.
  *
@@ -18,32 +20,37 @@ import 'rxjs/add/operator/take';
  * Components.
  */
 var ClickinnMapsComponent = /** @class */ (function () {
-    function ClickinnMapsComponent(maps_svc, accom_svc) {
+    function ClickinnMapsComponent(maps_svc, accom_svc, storage) {
         this.maps_svc = maps_svc;
         this.accom_svc = accom_svc;
+        this.storage = storage;
         this.apartments = [];
     }
     ClickinnMapsComponent.prototype.ngOnInit = function () {
-        this.constructMap(this.pointOfInterest);
-    };
-    ClickinnMapsComponent.prototype.ngOnDestroy = function () {
-        this.apartmentSubs$.unsubscribe();
+        var _this = this;
+        this.storage.getPOI()
+            .then(function (poi) {
+            _this.constructMap(poi);
+        });
     };
     ClickinnMapsComponent.prototype.constructMap = function (place) {
         var _this = this;
-        this.apartmentSubs$ = this.accom_svc.getRatedApartments(this.search).subscribe(function (apartments) {
-            //console.log('search results in clickinn-maps: ', apartments);
-            _this.apartments = apartments;
-            _this.maps_svc.initialiseMap(place.lat, place.lng, _this.mapRef)
-                .then(function (map) {
-                //this.map = map;
-                _this.maps_svc.addMarker({
-                    position: { lat: place.lat, lng: place.lng },
-                    map: map,
-                    icon: { url: 'assets/imgs/png/poi.png' }
+        this.storage.getSearch()
+            .then(function (search) {
+            _this.accom_svc.getRatedApartments(search).pipe(take(1)).subscribe(function (apartments) {
+                //console.log('search results in clickinn-maps: ', apartments);
+                _this.apartments = apartments;
+                _this.maps_svc.initialiseMap(place.lat, place.lng, _this.mapRef)
+                    .then(function (map) {
+                    //this.map = map;
+                    _this.maps_svc.addMarker({
+                        position: { lat: place.lat, lng: place.lng },
+                        map: map,
+                        icon: { url: 'assets/imgs/png/poi.png' }
+                    });
+                    var markers = _this.maps_svc.addApartmentMarkersWithClickListeners(apartments, place, map);
+                    var markerClusterer = new MarkerClusterer(map, markers);
                 });
-                var markers = _this.maps_svc.addApartmentMarkersWithClickListeners(apartments, place, map);
-                var markerClusterer = new MarkerClusterer(map, markers);
             });
         });
     };
@@ -64,7 +71,9 @@ var ClickinnMapsComponent = /** @class */ (function () {
             selector: 'clickinn-maps',
             templateUrl: 'clickinn-maps.html'
         }),
-        __metadata("design:paramtypes", [MapsProvider, AccommodationsProvider])
+        __metadata("design:paramtypes", [MapsProvider,
+            AccommodationsProvider,
+            LocalDataProvider])
     ], ClickinnMapsComponent);
     return ClickinnMapsComponent;
 }());

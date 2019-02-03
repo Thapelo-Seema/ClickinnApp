@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, AlertController } from 'ionic-angular';
+import { Component, ViewChild } from '@angular/core';
+import { IonicPage, NavController, ModalController, AlertController, Content, LoadingController } from 'ionic-angular';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { DepositProvider } from '../../providers/deposit/deposit';
 import { ATMDeposit } from '../../models/atmdeposit.interface';
@@ -27,24 +27,24 @@ export class DepositConfirmationPage {
   deposit: ATMDeposit;
   message: ChatMessage;
   depositSubs: Subscription;
-  loading: boolean = true;
+  @ViewChild(Content) content: Content;
+  loader = this.loadingCtrl.create();
   host: boolean = false;
-  images: any;
-  processing: boolean = false;
+  images: any[] = [];
   apartImgCount: number;
   imageLoaded: boolean = false;
   movedIn: boolean = false;
   
   imagesLoaded: boolean[] = 
-      [false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false, 
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false
-       ];
+  [ false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, 
+    false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false
+  ];
   constructor(
   	public navCtrl: NavController, 
-  	public navParams: NavParams,
+  	//public navParams: NavParams,
   	private storage: LocalDataProvider,
   	private deposit_svc: DepositProvider,
   	private object_init: ObjectInitProvider,
@@ -52,35 +52,44 @@ export class DepositConfirmationPage {
     private chat_svc: ChatServiceProvider,
     private user_svc: UserSvcProvider,
     private modal: ModalController,
-    private alertCtrl: AlertController) {
-    this.loading = true;
+    private alertCtrl: AlertController,
+    private loadingCtrl: LoadingController) {
+    this.loader.present()
   	this.deposit = this.object_init.initializeDeposit();
     this.message = this.object_init.initializeChatMessage();
   	
   }
 
   ionViewDidLoad() {
+    
     this.storage.getTransactionState()
     .then(state =>{
       if(state.type == 'host_accept_deposit') this.host = true;
       this.depositSubs = this.deposit_svc.getDepositById(state.id)
       .subscribe(deposit =>{
         this.deposit = this.object_init.initializeDeposit2(deposit);
-        this.loading = false;
+        this.loader.dismiss()
         if(deposit.tenant_confirmed && ! this.host) this.movedIn = true;
         if(!(deposit.apartment.images.length > 0)){
-          this.images = Object.keys(deposit.apartment.images).map(imageId =>{
+          let images = Object.keys(deposit.apartment.images).map(imageId =>{
               this.imagesLoaded.push(false);
               return deposit.apartment.images[imageId]
           })
+          images.forEach(mg =>{
+            if(mg != undefined) this.images.push(mg)
+          })
           this.apartImgCount = this.images.length;
+          this.content.scrollToBottom();
         }else{
-          this.images = deposit.apartment.images;
+          deposit.apartment.images.forEach(mg =>{
+            if(mg != undefined) this.images.push(mg)
+          });
           this.apartImgCount = deposit.apartment.images.length;
+          this.content.scrollToBottom();
         }
       }, err =>{
         this.toast_svc.showToast(err.message);
-        this.loading = false;
+        this.loader.dismiss()
       })
     })
   }
@@ -124,8 +133,8 @@ export class DepositConfirmationPage {
   acceptDeposit(){
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
-      title: "ACCEPT DEPOSIT",
-      message: "Are you sure you want to accept this deposit ?",
+      title: "Accept Payment",
+      message: "Are you sure you want to accept this deposit payment ?",
       buttons: [
         {
           text: 'Accept',
@@ -145,18 +154,19 @@ export class DepositConfirmationPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm){
-        this.processing = true;
+        let ldr = this.loadingCtrl.create()
+        ldr.present();
         this.generateRef();
         this.deposit.agent_goAhead = true;
         this.deposit.time_agent_confirm = Date.now();
         this.deposit.timeStampModified = Date.now();
         this.deposit_svc.updateDeposit(this.deposit)
         .then(() =>{
-          this.processing = false;
+          ldr.dismiss()
           this.toast_svc.showToast('You have accepted this deposit payment')
         })
         .catch( err => {
-          this.processing = false;
+          ldr.dismiss()
           console.log(err)
         })
       }else{
@@ -168,8 +178,8 @@ export class DepositConfirmationPage {
   rejectDeposit(){
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
-      title: "DECLINE DEPOSIT",
-      message: "Are you sure you want to decline this deposit ?",
+      title: "Decline Deposit Payment",
+      message: "Are you sure you want to decline this deposit payment ?",
       buttons: [
         {
           text: 'Decline',
@@ -189,7 +199,8 @@ export class DepositConfirmationPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm == true){
-        this.processing = true;
+        let ldr = this.loadingCtrl.create()
+        ldr.present();
         this.message.topic = `Regarding your deposit of R${this.deposit.apartment.price} for the ${this.deposit.apartment.room_type}`
         this.message.text = `Hi ${this.deposit.by.firstname}, I can not accept your deposit request, text me back if you want reasons`
         this.message.to.uid = this.deposit.by.uid;
@@ -199,9 +210,7 @@ export class DepositConfirmationPage {
         this.message.by.dp = this.deposit.to.dp;
         this.message.by.displayName = this.deposit.to.firstname;
         this.user_svc.getUser(this.deposit.to.uid)
-        .pipe(
-          take(1)
-        )
+        .pipe(take(1))
         .subscribe(user =>{
           this.message.timeStamp = Date.now();
           this.chat_svc.sendMessage(this.message, user.threads)
@@ -211,11 +220,11 @@ export class DepositConfirmationPage {
         this.deposit.time_agent_confirm = Date.now();
         this.deposit_svc.updateDeposit(this.deposit)
         .then(() =>{
-          this.processing = false
+          ldr.dismiss()
           this.toast_svc.showToast('You have rejected this deposit payment')
         })
         .catch( err => {
-          this.processing = false;
+          ldr.dismiss()
           console.log(err)
         })
 
@@ -228,7 +237,7 @@ export class DepositConfirmationPage {
   cancelDeposit(){
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
-      title: "CANCEL DEPOSIT",
+      title: "Cancel Payment",
       message: "Are you sure you want to cancel this deposit payment ?",
       buttons: [
         {
@@ -249,7 +258,8 @@ export class DepositConfirmationPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm == true){
-        this.processing = true;
+        let ldr = this.loadingCtrl.create()
+        ldr.present();
         this.message.topic = `Regarding the deposit of R${this.deposit.apartment.price} for the ${this.deposit.apartment.room_type}`
         this.message.text = `Hi ${this.deposit.to.firstname}, I couldn't complete the deposit, text me back if you want reasons`
         this.message.to.uid = this.deposit.to.uid;
@@ -259,9 +269,7 @@ export class DepositConfirmationPage {
         this.message.by.dp = this.deposit.by.dp;
         this.message.by.displayName = this.deposit.by.firstname;
         this.user_svc.getUser(this.deposit.by.uid)
-        .pipe(
-          take(1)
-        )
+        .pipe(take(1))
         .subscribe(user =>{
           this.message.timeStamp = Date.now();
           this.chat_svc.sendMessage(this.message, user.threads)
@@ -271,11 +279,11 @@ export class DepositConfirmationPage {
         this.deposit.tenant_confirmed = false;
         this.deposit_svc.updateDeposit(this.deposit)
         .then(() =>{
-          this.processing = false;
+          ldr.dismiss()
           this.toast_svc.showToast('You have cancelled this deposit payment')
         })
         .catch( err => {
-          this.processing = false;
+          ldr.dismiss()
           console.log(err)
         })
       }else{
@@ -288,8 +296,8 @@ export class DepositConfirmationPage {
   confirmDeposit(){
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
-      title: "CONFIRM DEPOSIT",
-      message: "Are you sure you want to confirm this deposit ?",
+      title: "Confirm Payment",
+      message: "Are you sure you have paid the required amount in full ?",
       buttons: [
         {
           text: 'Confirm',
@@ -309,17 +317,18 @@ export class DepositConfirmationPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm){
-        this.processing = true;
+        let ldr = this.loadingCtrl.create()
+        ldr.present();
         this.deposit.tenant_confirmed = true;
         this.deposit.time_tenant_confirmed = Date.now();
         this.deposit.timeStampModified = Date.now();
         this.deposit_svc.updateDeposit(this.deposit)
         .then(() =>{
-          this.processing =  false;
+          ldr.dismiss()
           this.toast_svc.showToast('You have confirmed this deposit payment')
         })
         .catch( err => {
-          this.processing = false;
+          ldr.dismiss()
           console.log(err)
         })
       }else{
@@ -352,16 +361,17 @@ export class DepositConfirmationPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm){
-        this.processing = true;
+        let ldr = this.loadingCtrl.create()
+        ldr.present();
         this.deposit.tenantMovedIn = true;
         this.deposit.timeStampModified = Date.now();
         this.deposit_svc.updateDeposit(this.deposit)
         .then(() =>{
-          this.processing =  false;
+          ldr.dismiss()
           this.toast_svc.showToast('You have confirmed your move in successfully, enjoy your stay !')
         })
         .catch( err => {
-          this.processing = false;
+          ldr.dismiss()
           console.log(err)
         })
       }else{

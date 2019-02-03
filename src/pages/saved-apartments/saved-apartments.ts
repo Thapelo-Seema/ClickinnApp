@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, LoadingController } from 'ionic-angular';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { Subscription } from 'rxjs-compat/Subscription';
@@ -22,22 +22,23 @@ import { Apartment } from '../../models/properties/apartment.interface';
 })
 export class SavedApartmentsPage {
   user: User;
-  loading: boolean = false;
+  loader = this.loadingCtrl.create();
   apartments: Observable<Apartment[]>
   imagesLoaded: boolean[] = 
-      [false, false, false, false, false, false, false, false, false, false,
+    [false, false, false, false, false, false, false, false, false, false,
        false, false, false, false, false, false, false, false, false, false, 
        false,false, false, false, false, false, false, false, false, false,
        false,false, false, false, false, false, false, false, false, false,
        false,false, false, false, false, false, false, false, false, false
-       ];
+    ];
   constructor(
   	public navCtrl: NavController, 
   	public navParams: NavParams,
   	private accom_svc: AccommodationsProvider,
   	private local_db: LocalDataProvider,
-    private toast_svc: ToastSvcProvider){
-  	this.loading = true;
+    private toast_svc: ToastSvcProvider,
+    private loadingCtrl: LoadingController){
+  	this.loader.present()
   	this.local_db.getUser()
   	.then(user =>{
   		this.user = user;
@@ -49,9 +50,9 @@ export class SavedApartmentsPage {
   				aparts.forEach(apart =>{
 	  				this.imagesLoaded.push(false)
 	  			})
-	  			this.loading = false;
+	  			this.loader.dismiss()
   			}else{
-  				this.loading = false;
+  				this.loader.dismiss()
   				this.toast_svc.showToast('You have not apartments linked to this profile, go ahead and upload some...')
   			}
   		})
@@ -63,7 +64,10 @@ export class SavedApartmentsPage {
   }
 
   gotoEditApartment(apartment: Apartment){
-  	this.navCtrl.push('UploadAndEarnPage', apartment)
+    this.local_db.setApartment(apartment).then(data => this.navCtrl.push('EditApartmentPage'))
+    .catch(err => {
+      console.log(err);
+    });
   }
 
 }

@@ -20,16 +20,16 @@ import { User } from '../../models/users/user.interface';
 */
 @Injectable()
 export class DepositProvider {
-  private _done = new BehaviorSubject(false);
+  /*private _done = new BehaviorSubject(false);
   private _loading = new BehaviorSubject(false);
-  private _data = new BehaviorSubject([]);
+  private _data = new BehaviorSubject([]);*/
 
   // Observable data
-  data: Observable<any>;
+  /*data: Observable<any>;
   done: Observable<boolean> = this._done.asObservable();
-  loading: Observable<boolean> = this._loading.asObservable();
+  loading: Observable<boolean> = this._loading.asObservable();*/
   constructor(private afs: AngularFirestore) {
-    console.log('Hello DepositProvider Provider');
+    //console.log('Hello DepositProvider Provider');
   }
 
   async addDeposit(deposit: ATMDeposit): Promise<void>{
@@ -40,12 +40,12 @@ export class DepositProvider {
   }
 
   updateUserBalance(uid: string, amount: number){
-    return this.afs.collection('Users').doc<User>(uid).valueChanges()
+    this.afs.collection('Users').doc<User>(uid).valueChanges()
     .pipe(take(1))
     .subscribe(user =>{
       let newUser = user;
-      newUser.balance = user.balance + amount;
-     return this.afs.collection('Users').doc<User>(uid).set(newUser)
+      newUser.balance += amount;
+     this.afs.collection('Users').doc<User>(uid).set(newUser)
     })
   }
 
@@ -74,7 +74,7 @@ export class DepositProvider {
       ).valueChanges()
   }
 
-  getUserDeposits(uid: string){
+  getUserDeposits(uid: string): Observable<ATMDeposit[]>{
     return this.afs.collection<ATMDeposit>('Deposits', ref => ref.orderBy('time_initiated', 'desc')
       ).valueChanges()
     .pipe(
@@ -82,7 +82,7 @@ export class DepositProvider {
     )
   }
 
-  initGetHostDeposits(uid: string){
+  /*initGetHostDeposits(uid: string){
     const first = this.afs.collection('Deposits', ref => 
       ref.where('to.uid', '==', uid)
       .orderBy('timeStamp', 'desc')
@@ -95,9 +95,9 @@ export class DepositProvider {
     .scan((acc, val) =>{
       return acc.concat(val)
     })
-  }
+  }*/
 
-  moreHostDeposits(uid: string){
+  /*moreHostDeposits(uid: string){
     const cursor = this.getCursor()
     const more = this.afs.collection('Deposits', ref => 
       ref.where('to.uid', '==', uid)
@@ -107,13 +107,13 @@ export class DepositProvider {
     )
 
     this.mapAndUpdate(more)
-  }
+  }*/
 
   getTenantDepsits(uid: string){
   	return this.afs.collection('Deposits', ref => ref.where('by.uid', '==', uid))
   }
 
-  initGetTenantDeposits(uid: string){
+  /*initGetTenantDeposits(uid: string){
     const first = this.afs.collection('Deposits', ref => 
       ref.where('by.uid', '==', uid)
       .orderBy('timeStamp', 'desc')
@@ -126,33 +126,33 @@ export class DepositProvider {
     .scan((acc, val) =>{
       return acc.concat(val)
     })
-  }
+  }*/
 
-  moreTenantDeposits(uid: string){
-    const cursor = this.getCursor()
-    const more = this.afs.collection('Deposits', ref => 
-      ref.where('by.uid', '==', uid)
-      .orderBy('timeStamp', 'desc')
-      .limit(15)
-      .startAfter(cursor)
-    )
+  // moreTenantDeposits(uid: string){
+  //   const cursor = this.getCursor()
+  //   const more = this.afs.collection('Deposits', ref => 
+  //     ref.where('by.uid', '==', uid)
+  //     .orderBy('timeStamp', 'desc')
+  //     .limit(15)
+  //     .startAfter(cursor)
+  //   )
 
-    this.mapAndUpdate(more)
+  //   this.mapAndUpdate(more)
 
-  }
+  // }
 
    // Determines the doc snapshot to paginate query 
-  private getCursor() {
+  /*private getCursor() {
     const current = this._data.value
     if (current.length) {
       return current[current.length - 1].doc 
     }
     return null
-  }
+  }*/
 
 
   // Maps the snapshot to usable format the updates source
-  private mapAndUpdate(col: AngularFirestoreCollection<any>) {
+  /*private mapAndUpdate(col: AngularFirestoreCollection<any>) {
 
     if (this._done.value || this._loading.value) { return };
 
@@ -181,6 +181,6 @@ export class DepositProvider {
     .take(1)
     .subscribe()
 
-  }
+  }*/
 
 }

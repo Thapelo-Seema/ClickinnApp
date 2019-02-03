@@ -8,7 +8,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ToastController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ToastController, AlertController, LoadingController } from 'ionic-angular';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
@@ -18,7 +18,7 @@ import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { take } from 'rxjs-compat/operators/take';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 var EditProfilePage = /** @class */ (function () {
-    function EditProfilePage(navCtrl, navParams, storage, toast, afs, errHandler, camera, afstorage, object_init, user_svc, alertCtrl) {
+    function EditProfilePage(navCtrl, navParams, storage, toast, afs, errHandler, camera, afstorage, object_init, user_svc, alertCtrl, loadingCtrl) {
         var _this = this;
         this.navCtrl = navCtrl;
         this.navParams = navParams;
@@ -31,29 +31,31 @@ var EditProfilePage = /** @class */ (function () {
         this.object_init = object_init;
         this.user_svc = user_svc;
         this.alertCtrl = alertCtrl;
+        this.loadingCtrl = loadingCtrl;
         this.image = "assets/imgs/placeholder.png";
-        this.loading = false;
+        this.loader = this.loadingCtrl.create({ dismissOnPageChange: true });
         this.dpChanged = false;
         this.imageLoaded = false;
         this.progress = 0;
-        this.uploading = false;
+        this.loader.present();
         this.user = this.object_init.initializeUser();
         this.recentDp = this.object_init.initializeFileUpload();
-        this.loading = true;
         this.storage.getUser().then(function (data) {
             _this.user_svc.getUser(data.uid)
                 .pipe(take(1))
                 .subscribe(function (user) {
-                _this.user = user;
+                _this.user = _this.object_init.initializeUser2(user);
                 if (user.photoURL !== '' || user.photoURL == undefined)
                     _this.image = user.photoURL;
-                _this.loading = false;
+                _this.loader.dismiss();
             });
         }).catch(function (err) {
             _this.errHandler.handleError(err);
-            _this.loading = false;
+            _this.loader.dismiss();
         });
     }
+    EditProfilePage.prototype.ionViewWillLoad = function () {
+    };
     EditProfilePage.prototype.save = function () {
         var _this = this;
         var confirm = false;
@@ -79,21 +81,17 @@ var EditProfilePage = /** @class */ (function () {
         alert.present();
         alert.onDidDismiss(function (data) {
             if (confirm) {
-                _this.uploading = true;
                 if (!_this.dpChanged) {
                     _this.persistChanges();
-                    _this.uploading = false;
                 }
                 else {
                     _this.uploadDp()
                         .then(function (image) {
                         _this.user.photoURL = image.url;
                         _this.persistChanges();
-                        _this.uploading = false;
                     })
                         .catch(function (err) {
-                        _this.errHandler.handleError(err);
-                        _this.uploading = false;
+                        _this.errHandler.handleError({ message: 'Please check your internet connection...picture not uploaded' });
                     });
                 }
             }
@@ -121,7 +119,6 @@ var EditProfilePage = /** @class */ (function () {
             _this.dpChanged = true;
         }).catch(function (err) {
             _this.errHandler.handleError({ errCode: 'IMAGE_NOT_SELECTED', message: 'No image selected' });
-            _this.loading = false;
         });
     };
     EditProfilePage.prototype.uploadDp = function () {
@@ -138,16 +135,14 @@ var EditProfilePage = /** @class */ (function () {
                 });
             }, function (err) {
                 //if there's an error log it in the console
-                _this.errHandler.handleError(err);
-                _this.loading = false;
+                reject(err.message);
             }, function () {
                 var tempUrl = '';
                 //on success of the upload, update the url property of the upload object
                 storageRef.getDownloadURL().subscribe(function (down_url) {
                     tempUrl = down_url;
                 }, function (err) {
-                    _this.errHandler.handleError(err);
-                    _this.loading = false;
+                    reject(err.message);
                 }, function () {
                     var image = {
                         url: tempUrl,
@@ -163,6 +158,8 @@ var EditProfilePage = /** @class */ (function () {
     };
     EditProfilePage.prototype.persistChanges = function () {
         var _this = this;
+        var ldr = this.loadingCtrl.create();
+        ldr.present();
         this.afs.collection('Users').doc(this.user.uid).update(this.user).then(function () {
             _this.toast.create({
                 message: "Profile successfully updated",
@@ -171,13 +168,11 @@ var EditProfilePage = /** @class */ (function () {
                 position: 'middle',
                 cssClass: 'toast_margins full_width'
             }).present().then(function () {
-                _this.loading = false;
-                _this.uploading = false;
+                ldr.dismiss();
             });
         }).catch(function (err) {
             _this.errHandler.handleError(err);
-            _this.loading = false;
-            _this.uploading = false;
+            ldr.dismiss();
         });
     };
     EditProfilePage = __decorate([
@@ -196,7 +191,8 @@ var EditProfilePage = /** @class */ (function () {
             AngularFireStorage,
             ObjectInitProvider,
             UserSvcProvider,
-            AlertController])
+            AlertController,
+            LoadingController])
     ], EditProfilePage);
     return EditProfilePage;
 }());

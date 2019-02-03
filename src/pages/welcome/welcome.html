@@ -26,16 +26,45 @@
         </ion-col>
         <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
           <div *ngIf="!search">
-            <h1  style="color: white">Choose your option {{user ? returnFirst(user?.displayName): ''}}</h1>
-            <ion-buttons>
-              <button ion-button round outline (click)="showSearch()">Search for Accommodation</button>
-              <button ion-button round outline margin-vertical (click)="gotoLandlordDash()">I am an agent</button>
-              <button ion-button round outline (click)="gotoOwners()" >I am a landlord</button>
+            <ion-slides loop="true" [autoplay]="3500">
+              <ion-slide >
+                <h1  style="color: white">Welcome to the Clickinn community {{user ? returnFirst(user?.displayName): ''}} !</h1>
+              </ion-slide>
+              <ion-slide >
+                <h1 style="color: white">Looking for a good place to rent ?</h1>
+                <!-- <img src="assets/imgs/apartment.jpeg"/> -->
+                <ion-buttons margin-bottom>
+                  <button ion-button round  (click)="showSearch()">Yes, I need a place</button>
+                </ion-buttons>
+              </ion-slide>
+              <ion-slide >
+                <h1 style="color: white">Wana become an agent in your neighbourhood ?</h1>
+                <!-- <img src="assets/imgs/apartment.jpeg"/> -->
+                <ion-buttons margin-bottom>
+                  <button ion-button round  color="metallic-gold" style="color: white"  (click)="gotoLandlordDash()">
+                    Yes, I want in ! 
+                  </button>
+                </ion-buttons>
+              </ion-slide>
+              <ion-slide >
+                <h1 style="color: white">You a landlord looking for tenants ?</h1>
+                <!-- <img src="assets/imgs/apartment.jpeg"/> -->
+                <ion-buttons margin-bottom>
+                  <button ion-button round color="secondary" (click)="gotoOwners()" >
+                    Yes, I want tenants
+                  </button>
+                </ion-buttons>
+              </ion-slide>
+            </ion-slides>
+            
+            <ion-buttons margin-top>
+              <button ion-button outline round (click)="showSearch()">Search for Accommodation</button>
+              <button ion-button outline round margin-vertical (click)="gotoLandlordDash()">Help others find a place</button>
+              <button ion-button outline round (click)="gotoOwners()" >I am a landlord</button>
             </ion-buttons>
           </div>
           <div *ngIf="search" >
-            <h1  style="color: white">Moving closer to school or work {{user ? returnFirst(user?.displayName): ''}}?</h1>
-            <p style="color: white">Enter the name of the school, company or the area below and press next.</p>
+            <h2 style="color: white">Enter name of school, company or place you're moving to </h2>
             <ion-searchbar type="search" [(ngModel)]="pointOfInterest.description" 
               placeholder="e.g. Wits or liberty life  or  Braamfontein" (ionInput)="getPredictions($event)" mode="ios">
             </ion-searchbar>

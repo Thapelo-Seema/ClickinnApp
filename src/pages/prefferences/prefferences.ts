@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, AlertController, LoadingController } from 'ionic-angular';
 import { Address } from '../../models/location/address.interface';
 import { Search } from '../../models/search.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
@@ -21,7 +21,7 @@ export class PrefferencesPage {
   search_object: Search;
   pointOfInterest: Address ;
   more: boolean = false;
-  loading: boolean = false;
+  loader = this.loadingCtrl.create();
   user: User;
 
   constructor(
@@ -32,31 +32,39 @@ export class PrefferencesPage {
     private afs: AngularFirestore,
     private errHandler: ErrorHandlerProvider,
     private object_init: ObjectInitProvider,
-    private alertCtrl: AlertController){
+    private alertCtrl: AlertController, 
+    private loadingCtrl: LoadingController){
+    this.loader.present()
     this.user = this.object_init.initializeUser();
     this.pointOfInterest = this.object_init.initializeAddress();
     this.search_object = this.object_init.initializeSearch();
-    this.storage.getUser().then(user => this.user = user)
+    this.storage.getUser()
+    .then(user => {
+      this.user = this.object_init.initializeUser2(user);
+      this.storage.getPOI()
+      .then(data => {
+        this.pointOfInterest = data;
+        this.loader.dismiss()
+      })
+      .catch(err => {
+        this.errHandler.handleError(err);
+        this.loader.dismiss()
+      })
+    })
     .catch(err => {
       this.errHandler.handleError(err);
-      this.loading = false;
+      this.loader.dismiss()
     })
-  	this.storage.getPOI()
-    .then(data => this.pointOfInterest = data)
-    .catch(err => {
-      this.errHandler.handleError(err);
-      this.loading = false;
-    })
+  	
   }
 
   gotoSeekPage(){
-    this.loading = true;
+    
      if(this.search_object.maxPrice == 0 || this.search_object.maxPrice == null){
       this.showWarnig(
           'Price limit not set!',
           'The maximum price (rent) must be entered before you can proceed.'
         );
-      this.loading = false;
       return;
     }
     this.search_object.searcher_id = this.user.uid;
@@ -73,19 +81,15 @@ export class PrefferencesPage {
     this.search_object.minPrice = Number(this.search_object.minPrice);
     this.search_object.timeStamp = Date.now();
     this.afs.collection('Searches2').add(this.search_object).then(data =>{
-      this.loading = false;
     })
     .catch(err => {
       this.errHandler.handleError(err);
-      this.loading = false;
     })
     this.storage.setSearch(this.search_object).then(data =>{
-      this.loading = false;
     	this.navCtrl.push('SeekingPage', {search: this.search_object, poi: this.pointOfInterest});
     })
     .catch(err => {
       this.errHandler.handleError(err);
-      this.loading = false;
     })
   }
 

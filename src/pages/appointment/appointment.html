@@ -3,7 +3,7 @@
     <ion-title style="font-family: 'Ubuntu', sans-serif;">Viewing Appointment</ion-title>
   </ion-navbar>
 </ion-header>
-<ion-content style="background: #f4f4f4;">
+<ion-content>
 	<ion-grid no-padding>
 	    <ion-row>
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
@@ -11,38 +11,36 @@
 	        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
 				<ion-item text-wrap text-center no-lines style="background: #000020">
 					<div text-center>
-						<img src="{{apartment?.dP?.url}}" (load)="imageLoaded = true" height="200px" width="200px" 
+						<img src="{{apartment?.dP?.url}}" (load)="imageLoaded = true" height="200px" width="300px" 
 						[hidden]="!imageLoaded" imageViewer/>
 						<div [hidden]="imageLoaded">
 							<div style="position: relative; top:0; left: 0; width:100%; height: 100%; ">
 						    	<img src="assets/imgs/placeholder.jpg" >
 						    </div>
-						    <ion-spinner name="ios" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-						    </ion-spinner>
 						</div>
 					</div>
-					<h1 margin-vertical style="color: white;">Wana go check this place out ?</h1> 
+					<h2 margin-vertical style="color: white;">Want to view this place ?</h2> 
 					<p style="color: white; padding-bottom: 20px">Set an appointment below</p>
 				</ion-item>
-				<ion-item margin-bottom text-wrap text-center>
-					<h1>Apartment</h1>
-					<p>
-					    {{apartment?.room_type}}, R{{apartment?.price}}.00
-					</p>
-				</ion-item>
-				<ion-item margin-bottom text-wrap text-center>
-					<h1>Address</h1>
-					<p>
-					    {{apartment?.property?.description}}
-					</p>
-				</ion-item>
-				<ion-item margin-bottom text-wrap text-center (click)="showDatePicker()">
+				<ion-item margin-bottom text-wrap text-center padding-horizontal (click)="showDatePicker()">
 					<h1>Appointment Date</h1>
 					<p style="color: #488aff">
 					    {{myDate ? myDate : 'Select appointment date'}}
 					</p>
 				</ion-item>
-				<ion-buttons padding end>
+				<ion-item margin-bottom text-wrap text-center padding-horizontal>
+					<h1>Apartment</h1>
+					<p>
+					    {{apartment?.room_type}}, R{{apartment?.price}}.00
+					</p>
+				</ion-item>
+				<ion-item margin-bottom text-wrap text-center padding-horizontal>
+					<h1>Address</h1>
+					<p>
+					    {{apartment?.property?.description}}
+					</p>
+				</ion-item>
+				<ion-buttons padding center>
 					<button *ngIf="myDate" ion-button full margin-vertical padding (click)="makeAppointment()">Change appointment</button>
 					<button ion-button bottom-right color="secondary" (click)="book()">
 						Confirm&nbsp;&nbsp; <ion-icon  end name="checkmark"></ion-icon>

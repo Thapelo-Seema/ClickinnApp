@@ -35,4 +35,8 @@ export class UserSvcProvider {
     return this.afs.collection(`Users/${uid}/threads`).valueChanges();
   }
 
+  getAllUsers(){
+    return this.afs.collection<User>(`Users`).valueChanges();
+  }
+
 }

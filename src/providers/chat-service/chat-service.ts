@@ -9,6 +9,7 @@ import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
 import { SupportMessage } from '../../models/support_message.interface';
+import { ObjectInitProvider } from '../object-init/object-init';
 
 @Injectable()
 export class ChatServiceProvider {
@@ -20,7 +21,7 @@ export class ChatServiceProvider {
   data: Observable<any>;
   done: Observable<boolean> = this._done.asObservable();
   loading: Observable<boolean> = this._loading.asObservable();
-  constructor(private afs: AngularFirestore){
+  constructor(private afs: AngularFirestore, private object_init: ObjectInitProvider){
   }
   /**This function checks if the sender has the reciever already as part of their contact list and if so it will return 
     an object that contains the thread_id on which the two users chat else the object returned will contain an empty string
@@ -56,7 +57,10 @@ export class ChatServiceProvider {
     //let thread_id = await this.db.list('Threads').push({}).key;
     let docRef = await this.afs.collection('Threads').add({});
     let thread_id = docRef.id;
-    this.afs.collection(`Threads/${thread_id}/chats`).add(msg);
+    let msg2 = this.object_init.initializeChatMessag2(msg);
+    let chat = await this.afs.collection(`Threads/${thread_id}/chats`).add(msg);
+    msg2.id = chat.id;
+    this.afs.collection(`Threads`).doc(thread_id).collection('chats').doc(msg2.id).set(msg2)
     /*console.log('Thread id', thread_id);
   	this.db.list(`Threads/${thread_id}`).push(msg);*/
   	this.afs.collection(`Users`)
@@ -80,15 +84,24 @@ export class ChatServiceProvider {
   	})
   }
 
-  sendMessage(msg: ChatMessage, threads: Thread[]){
+  async sendMessage(msg: ChatMessage, threads: Thread[]){
     console.log('Message: ', msg)
     let results = this.isContact(msg.to.uid, threads);
     console.log('results: ', results);
   	if(results.match){
-      this.afs.collection(`Threads`).doc(results.thread_id).collection('chats').add(msg);
+      let msg2 = this.object_init.initializeChatMessag2(msg);
+      console.log('First message...', msg2)
+      let chat = await this.afs.collection(`Threads`).doc(results.thread_id).collection('chats').add(msg);
+      msg2.id = chat.id;
+      console.log('Second message', msg2)
+      return this.afs.collection(`Threads`).doc(results.thread_id).collection('chats').doc(msg2.id).set(msg2);
   	}else{
   		this.createNewThread(msg);
   	}
+  }
+
+  markAsSeen(thread_id, msg: ChatMessage){
+    return this.afs.collection(`Threads`).doc(thread_id).collection('chats').doc(msg.id).update({seen: true})
   }
 
   sendSupportMessage(msg: SupportMessage){
@@ -121,7 +134,13 @@ export class ChatServiceProvider {
     .valueChanges();
   }
 
-  initGetThreadChats(thread_id){
+  getUnseenThreadChats(thread_id){
+    return this.afs.collection(`Threads`).doc(thread_id)
+    .collection<ChatMessage>('chats', ref => ref.where('seen', '==', false))
+    .valueChanges();
+  }
+
+  /*initGetThreadChats(thread_id){
     console.log('initGetThreadChats...')
     const first = this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref => 
       ref.orderBy('timeStamp', 'asc')
@@ -135,9 +154,9 @@ export class ChatServiceProvider {
       console.log('chats: ', acc)
       return acc.concat(val)
     })
-  }
+  }*/
 
-  moreThreadChats(thread_id){
+  /*moreThreadChats(thread_id){
     const cursor = this.getCursor();
 
     const more = this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref => 
@@ -147,13 +166,13 @@ export class ChatServiceProvider {
      )
 
     this.mapAndUpdate(more);
-  }
+  }*/
 
   getThreads(user: User): Observable<Thread[]>{
 		return this.afs.collection('Users').doc(user.uid).collection<Thread>('threads').valueChanges();
   }
 
-  initGetThreads(user: User){
+  /*initGetThreads(user: User){
     console.log('initGetThreads...')
     const first = this.afs.collection('Users').doc(user.uid).collection<Thread>('threads', ref =>{
       return ref.limit(15)
@@ -194,7 +213,7 @@ export class ChatServiceProvider {
     this._data.next([])
     this._done.next(false);
   }
-
+*/
 
   // Maps the snapshot to usable format the updates source
   private mapAndUpdate(col: AngularFirestoreCollection<any>) {
@@ -225,7 +244,10 @@ export class ChatServiceProvider {
     })
     .take(1)
     .subscribe()
+  }
 
+  updateMessage(thread_id: string, msg: ChatMessage){
+    return this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats').doc(msg.id).set(msg)
   }
 
 

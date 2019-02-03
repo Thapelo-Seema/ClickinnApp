@@ -1,18 +1,18 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, ToastController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController,  ToastController, AlertController, LoadingController } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { DatePicker } from '@ionic-native/date-picker';
 import { Calendar } from '@ionic-native/calendar';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
-import { AngularFirestore } from 'angularfire2/firestore';
-//import { AngularFireAuth } from 'angularfire2/auth';
 import { Appointment } from '../../models/appointment.interface';
 import { User } from '../../models/users/user.interface';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-//import { ConfirmationPage } from '../confirmation/confirmation';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { AppointmentsProvider } from '../../providers/appointments/appointments';
 import { take } from 'rxjs-compat/operators/take';
+import { AccommodationsProvider } from '../../providers/accommodations/accommodations'
+
+/* This page handles the process of the accommodation seeker making an appointment to view an accommodation */
 
 @IonicPage()
 @Component({
@@ -22,70 +22,76 @@ import { take } from 'rxjs-compat/operators/take';
 export class AppointmentPage {
   apartment: Apartment;
   myDate: Date = null;
-  loading: boolean = false;
+  loader = this.loadingCtrl.create();
   appointment: Appointment;
   user: User;
   imageLoaded: boolean = false;
 
   constructor(
-    public navCtrl: NavController, 
-    public navParams: NavParams, 
+    public navCtrl: NavController,  
     private datePicker: DatePicker, 
-  	private calender: Calendar, 
-    private confirmtCtrl: ModalController, 
+  	private calender: Calendar,
     private storage: LocalDataProvider,
-    private toast: ToastController, 
-    private afs: AngularFirestore, 
+    private toast: ToastController,
     private errHandler: ErrorHandlerProvider,
     private object_init: ObjectInitProvider, 
     private appointment_svc: AppointmentsProvider,
-    private alertCtrl: AlertController){	
-    this.apartment = this.object_init.initializeApartment();
-    this.appointment = this.object_init.initializeAppointment();
-    this.user = this.object_init.initializeUser();
-    this.loading = true;
-    this.storage.getApartment().then(data =>{
-      this.afs.collection("Apartments").doc<Apartment>(data.apart_id).valueChanges()
-      .pipe(
-        take(1)
-      )
+    private accom_svc: AccommodationsProvider,
+    private alertCtrl: AlertController,
+    private loadingCtrl: LoadingController){
+    this.loader.present()	
+    this.apartment = this.object_init.initializeApartment(); //Initialize an empty apartment object
+    this.appointment = this.object_init.initializeAppointment(); //Initialize an empty appointment object
+    this.user = this.object_init.initializeUser(); //Initialize an empty user object
+   
+    /* 
+      Retrieving the cached apartment and pulling an updated version of it from the firestore database
+    */
+    this.storage.getApartment().then(cachedApart =>{
+      this.accom_svc.getApartmentById(cachedApart.apart_id)
+      .pipe(take(1))
       .subscribe(apartment =>{
-        this.storage.getUser().then(data => {
-          this.user = data;
-          this.appointment.booker_name = data.displayName ? data.displayName : data.firstname;
-          this.appointment.booker_id = data.uid;
-          this.appointment.bookerDp = data.photoURL ? data.photoURL : 'assets/imgs/placeholder.png'
+        this.storage.getUser().then(user => {
+          this.user = this.object_init.initializeUser2(user); //Populating the user
+          //Populating some fields in the appointment object
+          this.appointment.booker_name = user.displayName ? user.displayName : user.firstname;
+          this.appointment.booker_id = user.uid;
+          this.appointment.bookerDp = user.photoURL ? user.photoURL : 'assets/imgs/placeholder.png'
         }).then(() =>{
-          this.apartment = apartment;
+          //Populating more fields in the appointment object
+          this.imageLoaded = true;
+          this.apartment = this.object_init.initializeApartment2(apartment); //Populating the apartment
           this.appointment.apart_id = apartment.apart_id;
           this.appointment.apart_type = apartment.room_type;
           this.appointment.room_type = apartment.room_type;
-          this.loading = false;
+          this.loader.dismiss();
+        })
+        .catch(err =>{
+          this.loader.dismiss()
+          this.errHandler.handleError(err)
         })
       },
       err =>{
+        this.loader.dismiss()
         this.errHandler.handleError(err);
-        this.loading = false;
       })
     }).catch(err => {
       this.errHandler.handleError(err);
-      this.loading = false;
+      this.loader.dismiss()
     });
   }
 
-  book(){ 
-    this.loading = true;
-  	this.promptConfirmation();
-  }
-
-  promptConfirmation(){
+  /* This function prompts the user to confirm the appointment and creates the appointment on the database if granted */
+  book(){
+    let ldr = this.loadingCtrl.create()
+    ldr.present()
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
-      title: "Confirm intention",
+      title: "Make Appointment",
       message: "Are you sure you want to make this appointment and all the details are correct ?",
       buttons: [
         {
-          text: 'Confirm',
+          text: 'Yes Make Appointment',
           handler: data =>{
             confirm = true;
           }
@@ -107,6 +113,8 @@ export class AppointmentPage {
         this.appointment_svc.createBooking(this.appointment).then(data =>{
           this.appointment.appointment_id = data.id;
           this.appointment_svc.updateBooking(this.appointment)
+          .then(() =>{
+            ldr.dismiss()
             this.toast.create({
                 message: "Appointment successfully created",
                 showCloseButton: true,
@@ -114,12 +122,17 @@ export class AppointmentPage {
                   position: 'middle',
                   cssClass: 'toast_margins full_width'
             }).present()
-            this.loading = false;
+          })
+          .catch(err =>{
+            ldr.dismiss()
+            this.errHandler.handleError(err);
+          }) 
         }).catch(err => {
+          ldr.dismiss()
           this.errHandler.handleError(err);
-          this.loading = false;
         })
       }else{
+        ldr.dismiss()
         this.toast.create({
                 message: "Appointment cancelled",
                 showCloseButton: true,
@@ -127,7 +140,6 @@ export class AppointmentPage {
                   position: 'middle',
                   cssClass: 'toast_margins full_width'
         }).present()
-        this.loading = false;
       }
     })
   }
@@ -143,8 +155,10 @@ export class AppointmentPage {
     this.appointment.address = this.apartment.property.address.description;
     this.appointment.apart_dp = this.apartment.dP.url;
     this.appointment.timeStamp = Date.now();
+    this.appointment.timeStampModified = Date.now();
   }
-
+ 
+  /*This method handles the presenting of the native android date-time app and saves the date in myDate */
   showDatePicker(): Promise<void>{
   	return this.datePicker.show({
 	  date: new Date(),
@@ -152,20 +166,20 @@ export class AppointmentPage {
 	  androidTheme: this.datePicker.ANDROID_THEMES.THEME_HOLO_DARK
 	  })
     .then(date => {
-	  	  this.myDate = date;
+	  	this.myDate = date;
 	  })
     .catch(err => {
-          this.errHandler.handleError(err);
-          this.loading = false;
+      this.errHandler.handleError(err);
     })
   }
 
+  /* This method takes the value of myDate and writes a custom calender event to an android fone */
   createCalenderEvent(){
   	this.calender.hasReadWritePermission().then(permission =>{
   		this.calender.createEvent(
         'Clickinn Viewing Appointment', 
-  		  this.apartment.property.address.sublocality_lng,
-  		  `You requested to view the ${this.apartment.room_type} at ${this.apartment.property.address.description}.`,
+  		  this.returnFirstTwo(this.apartment.property.address.description),
+  		  `You requested to view the ${this.apartment.room_type} at ${this.returnFirstTwo(this.apartment.property.address.description)}.`,
   		  new Date(), 
         this.myDate
   		)
@@ -174,31 +188,35 @@ export class AppointmentPage {
   		this.calender.requestReadWritePermission().then(approved =>{
   			this.calender.createEvent(
           'Clickinn Viewing Appointment', 
-	  		  this.apartment.property.address.sublocality_lng,
-	  		  `You requested to view the ${this.apartment.room_type} at ${this.apartment.property.address.description}.`,
+	  		  this.returnFirstTwo(this.apartment.property.address.description),
+	  		  `You requested to view the ${this.apartment.room_type} at ${this.returnFirstTwo(this.apartment.property.address.description)}.`,
 	  		  new Date(), 
           this.myDate
 	  		)
   		},
   		err =>{
   			this.errHandler.handleError(err);
-        this.loading = false;
   		})
   	})
     .catch(err => {
-          this.errHandler.handleError(err);
-          this.loading = false;
+      this.errHandler.handleError(err);
     })
   }
 
+  /* This function delegates the tasks of showing the date-time picker and creating the calender event once the datePicker closes */
   makeAppointment(){
   	this.showDatePicker().then(() => {
-      if(this.myDate) this.createCalenderEvent();
+      if(this.myDate) this.book();
     })
     .catch(err => {
       this.errHandler.handleError(err);
-      this.loading = false;
     })
+  }
+
+  //This helper function returns the first two strings in a comma delimited string array
+  returnFirstTwo(input: string): string{
+    if(input == undefined) return '';
+    return input.split(',')[0] + ', ' + input.split(',')[1];
   }
 
 }

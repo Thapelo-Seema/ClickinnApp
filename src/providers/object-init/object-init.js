@@ -22,9 +22,9 @@ var ObjectInitProvider = /** @class */ (function () {
         var deposit = {
             agent_goAhead: false,
             time_initiated: null,
-            time_agent_confirm: null,
-            time_clickinn_confirm: null,
-            time_tenant_confirmed: null,
+            time_agent_confirm: 0,
+            time_clickinn_confirm: 0,
+            time_tenant_confirmed: 0,
             tenant_confirmed: false,
             agent_confirmed: false,
             clickinn_confirmed: false,
@@ -37,7 +37,44 @@ var ObjectInitProvider = /** @class */ (function () {
             transaction_closed: false,
             tenant_refund_request: false,
             landlord_credit: 0,
-            ref: ''
+            ref: '',
+            bank: '',
+            account_holder: '',
+            account_number: '',
+            branch_code: '',
+            tenantMovedIn: false,
+            timeStampModified: 0,
+            seen: false
+        };
+        return deposit;
+    };
+    ObjectInitProvider.prototype.initializeDeposit2 = function (dep) {
+        var deposit = {
+            agent_goAhead: dep.agent_goAhead,
+            time_initiated: dep.time_initiated ? dep.time_initiated : null,
+            time_agent_confirm: dep.time_agent_confirm ? dep.time_agent_confirm : 0,
+            time_clickinn_confirm: dep.time_clickinn_confirm ? dep.time_clickinn_confirm : 0,
+            time_tenant_confirmed: dep.time_tenant_confirmed ? dep.time_tenant_confirmed : 0,
+            tenant_confirmed: dep.tenant_confirmed,
+            agent_confirmed: dep.agent_confirmed,
+            clickinn_confirmed: dep.clickinn_confirmed,
+            clickinn_cancel: dep.clickinn_cancel,
+            to: dep.to,
+            by: dep.by,
+            apartment: dep.apartment,
+            id: dep.id ? dep.id : '',
+            currency: dep.currency ? dep.currency : 'ZAR',
+            transaction_closed: dep.transaction_closed,
+            tenant_refund_request: dep.tenant_refund_request,
+            landlord_credit: dep.landlord_credit ? dep.landlord_credit : 0,
+            ref: dep.ref ? dep.ref : '',
+            bank: dep.bank ? dep.bank : '',
+            account_holder: dep.account_holder ? dep.account_holder : '',
+            account_number: dep.account_number ? dep.account_number : '',
+            branch_code: dep.branch_code ? dep.branch_code : '',
+            tenantMovedIn: dep.tenantMovedIn != undefined ? dep.tenantMovedIn : false,
+            timeStampModified: dep.timeStampModified ? dep.timeStampModified : 0,
+            seen: dep.seen != undefined ? dep.seen : false
         };
         return deposit;
     };
@@ -50,7 +87,40 @@ var ObjectInitProvider = /** @class */ (function () {
             read: false,
             recieved: false,
             text: '',
-            topic: ''
+            topic: '',
+            id: '',
+            seen: false,
+            attachment: null
+        };
+        return message;
+    };
+    ObjectInitProvider.prototype.initializeChatMessag2 = function (msg) {
+        var message = {
+            by: msg.by ? msg.by : { displayName: '', dp: '', uid: '' },
+            to: msg.to ? msg.to : { displayName: '', dp: '', uid: '' },
+            timeStamp: msg.timeStamp ? msg.timeStamp : 0,
+            sent: msg.sent != undefined ? msg.sent : false,
+            read: msg.read ? msg.read : false,
+            recieved: msg.recieved != undefined ? msg.recieved : false,
+            text: msg.text ? msg.text : '',
+            topic: msg.topic ? msg.topic : '',
+            id: msg.id ? msg.id : '',
+            seen: msg.seen != undefined ? msg.seen : false,
+            attachment: msg.attachment ? msg.attachment : null
+        };
+        return message;
+    };
+    ObjectInitProvider.prototype.initializeSupportMessage = function () {
+        var message = {
+            user: { displayName: '', dp: '', uid: '' },
+            assigned_to: { displayName: '', dp: '', uid: '' },
+            timeStamp: 0,
+            sent: false,
+            solved: false,
+            recieved: false,
+            text: '',
+            issue_type: '',
+            id: ''
         };
         return message;
     };
@@ -135,7 +205,7 @@ var ObjectInitProvider = /** @class */ (function () {
             deposit: 0,
             description: '',
             apart_id: '',
-            images: [this.initializeImage()],
+            images: [],
             occupiedBy: this.initializeTenant(),
             price: 0,
             prop_id: '',
@@ -143,7 +213,38 @@ var ObjectInitProvider = /** @class */ (function () {
             room_type: '',
             search_rating: 0,
             type: '',
-            timeStamp: 0
+            timeStamp: 0,
+            user_id: '',
+            complete: false,
+            timeStampModified: 0,
+            quantity_available: 1,
+            by: '',
+            owner: ''
+        };
+        return apartment;
+    };
+    ObjectInitProvider.prototype.initializeApartment2 = function (apart) {
+        var apartment = {
+            available: apart.available != undefined ? apart.available : true,
+            dP: apart.dP ? apart.dP : this.initializeImage(),
+            deposit: apart.deposit ? apart.deposit : 0,
+            description: apart.description,
+            apart_id: apart.apart_id ? apart.apart_id : '',
+            images: apart.images ? apart.images : [this.initializeImage()],
+            occupiedBy: apart.occupiedBy ? apart.occupiedBy : this.initializeTenant(),
+            price: apart.price ? apart.price : 0,
+            prop_id: apart.prop_id ? apart.prop_id : '',
+            property: apart.property ? apart.property : this.initializeProperty(),
+            room_type: apart.room_type ? apart.room_type : '',
+            search_rating: apart.search_rating ? apart.search_rating : 0,
+            type: apart.type ? apart.type : '',
+            timeStamp: apart.timeStamp ? apart.timeStamp : 0,
+            user_id: apart.user_id ? apart.user_id : '',
+            complete: apart.complete != undefined ? apart.complete : false,
+            timeStampModified: apart.timeStampModified ? apart.timeStampModified : 0,
+            quantity_available: apart.quantity_available ? apart.quantity_available : 1,
+            by: apart.by ? apart.by : '',
+            owner: apart.owner ? apart.owner : ''
         };
         return apartment;
     };
@@ -152,9 +253,19 @@ var ObjectInitProvider = /** @class */ (function () {
             name: '',
             path: '',
             progress: 0,
-            url: ''
+            url: '',
+            loaded: false
         };
         return image;
+    };
+    ObjectInitProvider.prototype.initializeImage2 = function (image) {
+        var img = {
+            name: image.name ? image.name : '',
+            path: image.path ? image.path : '',
+            progress: image.progress ? image.progress : 0,
+            url: image.url ? image.url : '',
+            loaded: image.loaded ? image.loaded : false
+        };
     };
     ObjectInitProvider.prototype.initializeProperty = function () {
         var property = {
@@ -162,7 +273,7 @@ var ObjectInitProvider = /** @class */ (function () {
             prop_id: '',
             common: '',
             dP: this.initializeImage(),
-            images: [this.initializeImage()],
+            images: [],
             laundry: false,
             nsfas: false,
             wifi: false,
@@ -170,7 +281,9 @@ var ObjectInitProvider = /** @class */ (function () {
             prepaid_elec: false,
             timeStamp: 0,
             user_id: '',
-            nearbys: ['Clickinn Offices']
+            nearbys: ['Clickinn Offices'],
+            complete: false,
+            timeStampModified: 0
         };
         return property;
     };
@@ -188,16 +301,22 @@ var ObjectInitProvider = /** @class */ (function () {
             prepaid_elec: prop.prepaid_elec,
             timeStamp: prop.timeStamp ? prop.timeStamp : 0,
             user_id: prop.user_id ? prop.user_id : '',
-            nearbys: prop.nearbys ? prop.nearbys : ['Clickinn Offices']
+            nearbys: prop.nearbys ? prop.nearbys : ['Clickinn Offices'],
+            complete: prop.complete,
+            timeStampModified: prop.timeStampModified
         };
         return property;
     };
     ObjectInitProvider.prototype.initializeUser = function () {
         var user = {
+            agents: [],
+            landlords: [],
             displayName: '',
             firstname: '',
+            firstime: true,
             lastname: '',
             liked_apartments: [],
+            locations: [],
             user_type: '',
             email: '',
             fcm_token: '',
@@ -212,31 +331,47 @@ var ObjectInitProvider = /** @class */ (function () {
             age: 0,
             dob: new Date(),
             id_no: '',
-            gender: ''
+            gender: '',
+            balance: 0,
+            bank: '',
+            account_number: '',
+            bank_code: '',
+            account_holder: '',
+            agreed_to_terms: false
         };
         return user;
     };
     ObjectInitProvider.prototype.initializeUser2 = function (userIn) {
         var user = {
+            agents: userIn.agents ? userIn.agents : [],
+            landlords: userIn.landlords ? userIn.landlords : [],
             displayName: userIn.displayName ? userIn.displayName : '',
             firstname: userIn.firstname ? userIn.firstname : '',
+            firstime: userIn.firstime != undefined ? userIn.firstime : true,
             lastname: userIn.lastname ? userIn.lastname : '',
             liked_apartments: userIn.liked_apartments ? userIn.liked_apartments : [],
             user_type: userIn.user_type ? userIn.user_type : '',
             email: userIn.email ? userIn.email : '',
             fcm_token: userIn.fcm_token ? userIn.fcm_token : '',
-            is_host: userIn.is_host ? userIn.is_host : false,
+            is_host: userIn.is_host != undefined ? userIn.is_host : false,
             phoneNumber: userIn.phoneNumber ? userIn.phoneNumber : '',
             photoURL: userIn.photoURL ? userIn.photoURL : 'assets/imgs/placeholder.png',
             rating: userIn.rating ? userIn.rating : '',
-            status: userIn.status ? userIn.status : false,
+            status: userIn.status != undefined ? userIn.status : false,
             threads: userIn.threads ? userIn.threads : [],
             uid: userIn.uid,
             occupation: userIn.occupation ? userIn.occupation : '',
             age: userIn.age ? userIn.age : 0,
             dob: userIn.dob ? userIn.dob : new Date(),
             id_no: userIn.id_no ? userIn.id_no : '',
-            gender: userIn.gender ? userIn.gender : ''
+            gender: userIn.gender ? userIn.gender : '',
+            balance: userIn.balance ? userIn.balance : 0,
+            bank: userIn.bank ? userIn.bank : '',
+            account_number: userIn.account_number ? userIn.account_number : '',
+            bank_code: userIn.bank_code ? userIn.bank_code : '',
+            account_holder: userIn.account_holder ? userIn.account_holder : '',
+            agreed_to_terms: userIn.agreed_to_terms != undefined ? userIn.agreed_to_terms : false,
+            locations: userIn.locations ? userIn.locations : []
         };
         return user;
     };
@@ -275,7 +410,9 @@ var ObjectInitProvider = /** @class */ (function () {
             seeker_cancels: false,
             timeStamp: 0,
             address: '',
-            room_type: ''
+            room_type: '',
+            timeStampModified: 0,
+            seen: false
         };
         return appointment;
     };
@@ -293,7 +430,9 @@ var ObjectInitProvider = /** @class */ (function () {
             timeStamp: ap.timeStamp ? ap.timeStamp : 0,
             address: ap.address ? ap.address : '',
             room_type: ap.room_type ? ap.room_type : '',
-            apart_dp: ap.apart_dp ? ap.apart_dp : ''
+            apart_dp: ap.apart_dp ? ap.apart_dp : '',
+            timeStampModified: ap.timeStampModified ? ap.timeStampModified : 0,
+            seen: ap.seen ? ap.seen : false
         };
         return appointment;
     };
@@ -303,7 +442,8 @@ var ObjectInitProvider = /** @class */ (function () {
             url: '',
             name: '',
             progress: 0,
-            path: ''
+            path: '',
+            loaded: false
         };
         return fileUpload;
     };

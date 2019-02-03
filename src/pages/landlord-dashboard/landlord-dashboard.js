@@ -8,12 +8,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, App } from 'ionic-angular';
+import { IonicPage, NavController } from 'ionic-angular';
+import { AppointmentsProvider } from '../../providers/appointments/appointments';
 var LandlordDashboardPage = /** @class */ (function () {
-    function LandlordDashboardPage(navCtrl, navParams, app) {
+    function LandlordDashboardPage(navCtrl, 
+    //public navParams: NavParams, 
+    //private app: App,
+    appt_svc) {
         this.navCtrl = navCtrl;
-        this.navParams = navParams;
-        this.app = app;
+        this.appt_svc = appt_svc;
         this.tab1Root = 'SearchfeedPage';
         this.tab2Root = 'ManageBuildingsPage';
         this.tab3Root = 'BookingsPage';
@@ -23,7 +26,8 @@ var LandlordDashboardPage = /** @class */ (function () {
         console.log('ionViewDidLoad LandlordDashboardPage');
     };
     LandlordDashboardPage.prototype.gotoHome = function () {
-        this.app.getRootNav().setRoot('WelcomePage');
+        this.appt_svc.reset();
+        this.navCtrl.setRoot('WelcomePage');
     };
     LandlordDashboardPage = __decorate([
         IonicPage(),
@@ -31,7 +35,8 @@ var LandlordDashboardPage = /** @class */ (function () {
             selector: 'page-landlord-dashboard',
             templateUrl: 'landlord-dashboard.html',
         }),
-        __metadata("design:paramtypes", [NavController, NavParams, App])
+        __metadata("design:paramtypes", [NavController,
+            AppointmentsProvider])
     ], LandlordDashboardPage);
     return LandlordDashboardPage;
 }());

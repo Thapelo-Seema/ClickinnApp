@@ -16,14 +16,14 @@ export class ErrorHandlerProvider {
   }
 
   handleError(err){
-    console.log(err.message);
+    console.log(err);
       //this.loading = false;
       this.toast.create({
         message: err.message,
         showCloseButton: true,
-          closeButtonText: 'Ok',
-          position: 'middle',
-          cssClass: 'toast_margins full_width'
+        closeButtonText: 'Ok',
+        position: 'middle',
+        cssClass: 'toast_margins full_width'
     }).present()
   }
 

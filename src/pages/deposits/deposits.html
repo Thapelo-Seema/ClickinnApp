@@ -6,7 +6,7 @@
 -->
 <ion-header>
   <ion-navbar color="clickinn">
-    <ion-title text-wrap style="font-family: 'Ubuntu', sans-serif;">Deposits &nbsp;&nbsp;&nbsp;&nbsp;
+    <ion-title text-wrap style="font-family: 'Ubuntu', sans-serif;">Payments &nbsp;&nbsp;&nbsp;&nbsp;
     	|<font style="color:#32db64">&nbsp;&nbsp;R{{balance}}</font></ion-title>
   </ion-navbar>
 </ion-header>
@@ -18,8 +18,57 @@
 	        <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 	        </ion-col>
 	        <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+	        	<div *ngIf="noPayments == true" style="color: lightgray; text-align: center;"> 
+					<h1>No Payments</h1>
+					<p>You have no payments yet</p>
+				</div>
+				<div style=" margin-bottom: 15px; padding: 4px; border-radius: 4px" >
+					<h1 text-center>Payment Details</h1>
+					<p text-center>All deposit payments will be paid into this account and then later transferred to the relevant landlord</p>
+					<ion-row>
+						<ion-col col-5>
+							<strong>Bank</strong> 
+						</ion-col>
+						<ion-col col-7>
+							FNB
+						</ion-col>
+					</ion-row>
+					<ion-row>
+						<ion-col col-5>
+							<strong>Accountholder</strong> 
+						</ion-col>
+						<ion-col text-wrap col-7>
+							Metalojiq Solutions (Pty)Ltd 
+						</ion-col>
+					</ion-row>
+					<ion-row>
+						<ion-col col-5>
+							<strong>Account number</strong> 
+						</ion-col>
+						<ion-col text-wrap col-7>
+							62794553993 
+						</ion-col>
+					</ion-row>
+					<ion-row>
+						<ion-col col-5>
+							<strong>Branch Code</strong> 
+						</ion-col>
+						<ion-col col-7 text-wrap>
+							250641 
+						</ion-col>
+					</ion-row>
+					<ion-row>
+						<ion-col col-5>
+							<strong>Deposit Refference</strong> 
+						</ion-col>
+						<ion-col col-7 text-wrap>
+							House number + Street Name + Apartment number + Your name and Surname 
+						</ion-col>
+					</ion-row>
+				</div>
 				<ion-item *ngFor="let deposit of deposits | async" text-wrap (click)="gotoDeposit(deposit)" >
-					<strong> R{{deposit?.apartment?.deposit}} </strong>
+					<strong *ngIf="deposit?.to?.uid == user?.uid" style="color: #32db64"> R{{deposit?.apartment?.deposit}} </strong>
+					<strong *ngIf="deposit?.to?.uid != user?.uid" style="color: #f53d3d"> R{{deposit?.apartment?.deposit}} </strong>
 					<p> {{deposit?.apartment?.room_type}} </p>
 					<p> {{deposit?.apartment?.property?.address?.description}} </p>
 				</ion-item>

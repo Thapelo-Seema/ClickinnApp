@@ -24,6 +24,7 @@ import { File } from '@ionic-native/file';
 import { FileTransfer } from '@ionic-native/file-transfer';
 import { Push } from '@ionic-native/push';
 import { ProgressBarModule } from "angular-progress-bar";
+import { CallNumber } from '@ionic-native/call-number';
 
 
 
@@ -93,7 +94,8 @@ export const firebaseConfig = {
     FileUploadSvcProvider,
     Push,
     DepositProvider,
-    PaginationProvider 
+    PaginationProvider,
+    CallNumber 
   ]
 })
 export class AppModule {}

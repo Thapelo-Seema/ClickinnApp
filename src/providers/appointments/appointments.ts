@@ -46,6 +46,24 @@ export class AppointmentsProvider {
       ).valueChanges();
   }
 
+  getUserUnseen(uid: string){
+    return this.afstorage.collection<Appointment>('Viewings', ref => 
+      ref.where('booker_id', '==', uid)
+      .where('host_confirms', '==', false)
+      .where('host_declines', '==', false)
+      .where('seeker_cancels', '==', false)
+      ).valueChanges(); 
+  }
+
+  getHostUnseen(uid: string){
+    return this.afstorage.collection<Appointment>('Viewings', ref => 
+      ref.where('host_id', '==', uid)
+      .where('host_confirms', '==', false)
+      .where('host_declines', '==', false)
+      .where('seeker_cancels', '==', false)
+      ).valueChanges();
+  }
+
   initUserBookings(uid: string){
     console.log('Init user bookings...')
     const first =  this.afstorage.collection<Appointment>('Viewings', ref => 
@@ -82,6 +100,13 @@ export class AppointmentsProvider {
       ).valueChanges()
   }
 
+  getUnseenHostBookings(uid: string){
+    return this.afstorage.collection<Appointment>('Viewings', ref => 
+      ref.where('host_id', '==', uid)
+      .where('seen', '==', false)
+      ).valueChanges()
+  }
+
   initHostBookings(uid: string){
     console.log('Init host bookings...')
     const first = this.afstorage.collection<Appointment>('Viewings', ref => 
@@ -106,7 +131,6 @@ export class AppointmentsProvider {
       .limit(10)
       .startAfter(cursor)
     )
-
     this.mapAndUpdate(more)
   }
 
@@ -158,9 +182,7 @@ export class AppointmentsProvider {
 
   // Maps the snapshot to usable format the updates source
   private mapAndUpdate(col: AngularFirestoreCollection<any>) {
-    
     if (this._done.value || this._loading.value) { return };
-
     // loading
     this._loading.next(true)
 

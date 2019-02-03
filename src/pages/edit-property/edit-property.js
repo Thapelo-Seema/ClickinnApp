@@ -7,8 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ToastController, AlertController } from 'ionic-angular';
+import { Component, ViewChild } from '@angular/core';
+import { IonicPage, NavController, NavParams, ToastController, AlertController, Content, LoadingController } from 'ionic-angular';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
@@ -24,7 +24,7 @@ import { MapsProvider } from '../../providers/maps/maps';
  * Ionic pages and navigation.
  */
 var EditPropertyPage = /** @class */ (function () {
-    function EditPropertyPage(navCtrl, navParams, accom_svc, local_db, object_init, toastCtrl, camera, errHandler, file_upload_svc, map_svc, alertCtrl) {
+    function EditPropertyPage(navCtrl, navParams, accom_svc, local_db, object_init, toastCtrl, camera, errHandler, file_upload_svc, map_svc, alertCtrl, loadingCtrl) {
         var _this = this;
         this.navCtrl = navCtrl;
         this.navParams = navParams;
@@ -37,13 +37,16 @@ var EditPropertyPage = /** @class */ (function () {
         this.file_upload_svc = file_upload_svc;
         this.map_svc = map_svc;
         this.alertCtrl = alertCtrl;
-        this.loading = true;
+        this.loadingCtrl = loadingCtrl;
+        this.loader = this.loadingCtrl.create();
         this.images = [];
         this.fileUploads = [];
         this.propImgCount = 0;
         this.propertyImagesAdded = false;
         this.showAddedImages = false;
         this.nearby = '';
+        this.predictionLoading = false;
+        this.connectionError = false;
         this.predictionsNby = [];
         this.imagesLoaded = [false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false,
@@ -51,6 +54,21 @@ var EditPropertyPage = /** @class */ (function () {
             false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false
         ];
+        this.imagesLoaded2 = [false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false, false
+        ];
+        this.loader.present();
+        /*this.accom_svc.loading.subscribe(data =>{
+          this.loadingMore = data;
+        })
+    
+        this.accom_svc.done.subscribe(data =>{
+          this.done = data;
+          if(this.done == true) this.loadingMore = false;
+        })*/
         this.property = this.object_init.initializeProperty();
         this.local_db.getProperty().then(function (prop) {
             if (prop) {
@@ -61,39 +79,44 @@ var EditPropertyPage = /** @class */ (function () {
                         _this.imagesLoaded.push(false);
                         return prop.images[imageId];
                     });
+                    _this.loader.dismiss();
                 }
                 else {
                     console.log('apart images: ', prop.images);
                     _this.images = prop.images;
                     _this.propImgCount = prop.images.length;
+                    _this.loader.dismiss();
                 }
-                console.log(_this.images);
                 _this.apartments = _this.accom_svc.getPropertyApartments(prop.prop_id);
                 _this.accom_svc.getPropertyApartments(prop.prop_id)
                     .pipe(take(1))
                     .subscribe(function (aparts) {
-                    _this.loading = false;
-                }, function (err) {
-                    _this.loading = false;
-                    console.log(err);
+                    aparts.forEach(function (apart) {
+                        _this.imagesLoaded2.push(false);
+                    });
                 });
                 _this.accom_svc.getPropertyById(prop.prop_id)
                     .pipe(take(1))
                     .subscribe(function (ppty) {
                     _this.property = _this.object_init.initializeProperty2(ppty);
+                }, function (err) {
+                    _this.toastCtrl.create({
+                        message: err.message,
+                        duration: 3000
+                    })
+                        .present();
                 });
             }
         });
     }
     EditPropertyPage.prototype.ionViewDidLoad = function () {
-        //console.log('ionViewDidLoad EditPropertyPage');
+        // this.monitorEnd();
     };
     EditPropertyPage.prototype.gotoApartment = function (apartment) {
         var _this = this;
         this.local_db.setApartment(apartment).then(function (data) { return _this.navCtrl.push('EditApartmentPage'); })
             .catch(function (err) {
             console.log(err);
-            _this.loading = false;
         });
     };
     EditPropertyPage.prototype.remove = function (index) {
@@ -150,11 +173,12 @@ var EditPropertyPage = /** @class */ (function () {
         alert.present();
         alert.onDidDismiss(function (data) {
             if (confirm) {
-                _this.loading = true;
+                var ldr_1 = _this.loadingCtrl.create();
+                ldr_1.present();
                 _this.property.images = _this.images;
                 _this.accom_svc.updateProperty(_this.property)
                     .then(function () {
-                    _this.loading = false;
+                    ldr_1.dismiss();
                     _this.toastCtrl.create({
                         message: 'The property was successfully updated !',
                         duration: 5000
@@ -163,7 +187,11 @@ var EditPropertyPage = /** @class */ (function () {
                     _this.showAddedImages = false;
                 })
                     .catch(function (err) {
-                    console.log(err);
+                    _this.toastCtrl.create({
+                        message: 'Property not updated...please check your connection and try again',
+                        duration: 4000
+                    })
+                        .present();
                 });
             }
         });
@@ -193,13 +221,14 @@ var EditPropertyPage = /** @class */ (function () {
         alert.present();
         alert.onDidDismiss(function (data) {
             if (confirm) {
-                _this.loading = true;
+                var ldr_2 = _this.loadingCtrl.create();
+                ldr_2.present();
                 _this.file_upload_svc.uploadPics(_this.fileUploads)
                     .then(function (imag) {
                     imag.forEach(function (im) {
                         _this.images.push(im);
                     });
-                    _this.loading = false;
+                    ldr_2.dismiss();
                     _this.toastCtrl.create({
                         message: 'Pictures updated !',
                         duration: 3000
@@ -207,8 +236,12 @@ var EditPropertyPage = /** @class */ (function () {
                         .present();
                 })
                     .catch(function (err) {
-                    console.log(err);
-                    _this.loading = false;
+                    _this.toastCtrl.create({
+                        message: 'Please check your internet connection and try again...images not ulploaded',
+                        duration: 4000
+                    })
+                        .present();
+                    ldr_2.dismiss();
                 });
             }
         });
@@ -260,23 +293,25 @@ var EditPropertyPage = /** @class */ (function () {
         })
             .catch(function (err) {
             _this.errHandler.handleError({ errCode: 'IMAGE_NOT_SELECTED', message: 'No image selected' });
-            _this.loading = false;
         });
     };
     EditPropertyPage.prototype.getPredictionsNby = function (event) {
         var _this = this;
-        this.loading = true;
+        this.predictionLoading = true;
         if (event.key === "Backspace" || event.code === "Backspace") {
             setTimeout(function () {
                 _this.map_svc.getPlacePredictionsSA(event.target.value).then(function (data) {
                     console.log(data);
                     _this.predictionsNby = [];
                     _this.predictionsNby = data;
-                    _this.loading = false;
+                    _this.predictionLoading = false;
                 })
                     .catch(function (err) {
-                    _this.errHandler.handleError(err);
-                    _this.loading = false;
+                    console.log('Error 1');
+                    if (_this.connectionError == false)
+                        _this.errHandler.handleError({ message: 'Your internet connection is faulty please try again once a proper connection is established' });
+                    _this.predictionLoading = false;
+                    _this.connectionError = true;
                 });
             }, 3000);
         }
@@ -285,14 +320,21 @@ var EditPropertyPage = /** @class */ (function () {
                 console.log(data);
                 _this.predictionsNby = [];
                 _this.predictionsNby = data;
-                _this.loading = false;
+                _this.predictionLoading = false;
             })
                 .catch(function (err) {
-                _this.errHandler.handleError(err);
-                _this.loading = false;
+                console.log('Error 1');
+                if (_this.connectionError == false)
+                    _this.errHandler.handleError({ message: 'Your internet connection is faulty please try again once a proper connection is established' });
+                _this.predictionLoading = false;
+                _this.connectionError = true;
             });
         }
     };
+    __decorate([
+        ViewChild(Content),
+        __metadata("design:type", Content)
+    ], EditPropertyPage.prototype, "content", void 0);
     EditPropertyPage = __decorate([
         IonicPage(),
         Component({
@@ -309,7 +351,8 @@ var EditPropertyPage = /** @class */ (function () {
             ErrorHandlerProvider,
             FileUploadSvcProvider,
             MapsProvider,
-            AlertController])
+            AlertController,
+            LoadingController])
     ], EditPropertyPage);
     return EditPropertyPage;
 }());

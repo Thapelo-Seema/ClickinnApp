@@ -1,7 +1,4 @@
 <ion-nav #content [root]="rootPage"></ion-nav>
-<div *ngIf="loading" class="centered_on_screen">
-	<ion-spinner name="ios"></ion-spinner>
-</div>
 
 <ion-menu [content]="content" swipeEnabled="false">
 	<ion-content>
@@ -16,49 +13,49 @@
 		    <p text-center style="color: white">{{user?.email}}</p>
 		    <p text-center style="color: white">{{user?.phoneNumber}}</p>
 		</ion-item>
-		<ion-list padding>
-		      <button ion-item menuClose (click)="gotoProfile()">
+		<ion-list padding-horizontal>
+		      <button ion-item menuClose padding-horizontal (click)="gotoProfile()">
 		        <ion-icon name="ios-contact-outline" item-end></ion-icon>
-		       Profile
+		       <strong>Profile</strong>
 		      </button>
-		      <button ion-item menuClose (click)="gotoBookings()">
+		      <button ion-item padding-horizontal menuClose (click)="gotoBookings()">
 		        <ion-icon name="ios-stopwatch-outline" item-end></ion-icon>
-		        Appointments
+		        <strong>Appointments</strong>
 		      </button>
-		      <button ion-item  menuClose (click)="gotoChats()" >
+		      <button ion-item padding-horizontal  menuClose (click)="gotoChats()" >
 		        <ion-icon name="ios-chatboxes-outline" item-end></ion-icon>
-		        Chats
+		        <strong>Chats</strong>
 		      </button>
-		      <button ion-item menuClose (click)="gotoLiked()" >
+		      <button ion-item padding-horizontal  menuClose (click)="gotoLiked()" >
 		        <ion-icon name="ios-heart-outline" item-end></ion-icon>
-		        Liked Apartments
+		        <strong>Liked Apartments</strong>
 		      </button>
-		      <button ion-item  no-lines menuClose (click)="gotoDeposits()" >
+		      <button ion-item padding-horizontal style="color: #d4af37"  menuClose (click)="gotoDeposits()" >
 		        <ion-icon name="ios-cash-outline" item-end></ion-icon>
-		        Transactions
+		        <strong>Payments</strong>
 		      </button>
-		      <button ion-item no-lines menuClose color="secondary" (click)="gotoLandlordDash()" >
-		        <!-- <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon> -->
-		        Agents Dashboard
+		      <button ion-item padding-horizontal  menuClose style="color: #32db64" (click)="gotoLandlordDash()" >
+		        <ion-icon name="stats" item-end></ion-icon>
+		        <strong>Agents Dashboard</strong>
 		      </button>
-		      <button ion-item no-lines menuClose color="primary" (click)="gotoOwners()" >
-		        <!-- <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon> -->
-		        Landlord Dashboard 
+		      <button ion-item padding-horizontal  menuClose style="color: #488aff" (click)="gotoOwners()" >
+		        <ion-icon name="stats" item-end></ion-icon>
+		        <strong>Landlord Dashboard</strong> 
 		      </button>
-		      <button *ngIf="user?.user_type == 'admin' " ion-item menuClose  (click)="gotoSupportAdmin()" >
+		      <button *ngIf="user?.user_type == 'admin' " ion-item padding-horizontal menuClose  (click)="gotoSupportAdmin()" >
 		        <!-- <ion-icon name="help" item-end></ion-icon> -->
-		        Support 
+		        <strong>Support</strong> 
 		      </button>
-		      <button ion-item menuClose  (click)="gotoBursaryDash()" >
+		      <button ion-item menuClose padding-horizontal  (click)="gotoBursaryDash()" >
 		        <!-- <ion-icon name="ios-cloud-upload-outline" item-end></ion-icon> -->
-		        Bursary placements
+		        <strong>Bursary placements</strong>
 		      </button>
-		      <button ion-item menuClose  (click)="gotoSupport()" >
+		      <button ion-item menuClose padding-horizontal  (click)="gotoSupport()" >
 		        <ion-icon name="help" item-end></ion-icon>
-		        Help
+		        <strong>Help/Feedback</strong>
 		      </button>
-		      <button ion-item menuClose (click)="logout()">
-		        Logout
+		      <button ion-item menuClose padding-horizontal (click)="logout()">
+		        <strong>Logout</strong>
 		        <ion-icon name="ios-power-outline" item-end></ion-icon>
 		      </button>
 		</ion-list>

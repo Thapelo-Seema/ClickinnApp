@@ -30,7 +30,13 @@
 					</button>
 				</ion-buttons>
 			</ion-item>
-	    <button ion-item margin-vertical text-wrap *ngFor="let building of buildings | async; let i = index" (click)="gotoProperty(building)" >
+			<div *ngIf="noBuildings == true" style="color: lightgray; text-align: center;"> 
+				<h1>No Properties</h1>
+				<p>You have not uploaded any properties yet</p>
+				<button ion-button (click)="gotoUploadApart()">Go to upload</button>
+			</div>
+        <button ion-item margin-vertical text-wrap *ngFor="let building of buildings | async; let i = index" 
+        (click)="gotoProperty(building)" >
 	      <ion-avatar item-start>
 	        <img src="{{building?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
 	        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />

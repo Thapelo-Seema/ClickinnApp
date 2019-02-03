@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, ToastController, Content, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, ToastController, Content, AlertController, Platform } from 'ionic-angular';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { SearchfeedProvider } from '../../providers/searchfeed/searchfeed';
 import { Observable } from 'rxjs-compat';
@@ -12,6 +12,9 @@ import { PaginationProvider } from '../../providers/pagination/pagination';
 import { Subscription } from 'rxjs-compat/Subscription';
 import { Address } from '../../models/location/address.interface';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
+import { CallNumber } from '@ionic-native/call-number';
+import { UserSvcProvider } from '../../providers/user-svc/user-svc';
+import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 
 @IonicPage()
 @Component({
@@ -27,22 +30,24 @@ export class SearchfeedPage {
   loadingSubs: Subscription;
   doneSubs: Subscription;
   dataSubs: Subscription;
+  contentSubs: Subscription;
   loading: boolean = true;
   loadingMore: boolean = false;
   done: boolean = false;
   predictions: any[] = [];
   pointOfInterest: Address;
-  userSubs: Subscription;
+ // userSubs: Subscription;
   predictionLoading: boolean = false;
   connectionError: boolean = false;
   online: boolean = false;
+  byArea: boolean = false;
   imagesLoaded: boolean[] = 
-      [false, false, false, false, false, false, false, false, false, false,
-       false, false, false, false, false, false, false, false, false, false, 
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false,
-       false,false, false, false, false, false, false, false, false, false
-       ];
+  [ false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, 
+    false,false, false, false, false, false, false, false, false, false,
+    false,false, false, false, false, false, false, false, false, false,
+    false,false, false, false, false, false, false, false, false, false
+  ];
   constructor(
     public navCtrl: NavController, 
     public navParams: NavParams, 
@@ -54,14 +59,17 @@ export class SearchfeedPage {
     private errHandler: ErrorHandlerProvider,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
-    private page: PaginationProvider){
-  	
+    private page: PaginationProvider,
+    private callNumber: CallNumber,
+    private toast_svc: ToastSvcProvider,
+    private user_svc: UserSvcProvider,
+    private platform: Platform){
     this.searchfeed_svc.getAllSearches();
     this.pointOfInterest = this.object_init.initializeAddress(); //Initialize the point of interest with default values
     this.pointOfInterest.description = '';
     this.user = this.object_init.initializeUser();
     this.local_db.getUser().then(user =>{
-      if(user) this.user = user;
+      if(user) this.user = this.object_init.initializeUser2(user);
     })
   	this.search = this.object_init.initializeSearch();
     this.loadingSubs = this.searchfeed_svc.loading.subscribe(dat =>{
@@ -76,9 +84,8 @@ export class SearchfeedPage {
     this.dataSubs = this.searchfeed_svc.data
     .subscribe(searches =>{
       if(searches){
-        console.log(searches.length)
+        console.log(searches)
         this.loading = false;
-        
         searches.forEach(ser =>{
           this.imagesLoaded.push(false)
         })
@@ -92,15 +99,50 @@ export class SearchfeedPage {
   }
 
   showInput(search: Search){
-    let to = {
-      name: search.searcher_name,
-      uid: search.searcher_id,
-      dp: search.searcher_dp,
-      topic: `Regarding your search for a ${search.apartment_type} around ${search.Address.description}`
+    let to: any;
+    if(search.apartment_type == 'Any'){
+      to = {
+        name: search.searcher_name,
+        uid: search.searcher_id,
+        dp: search.searcher_dp,
+        topic: `Regarding your search for any room type around ${this.returnFirst(search.Address.description)}`
+      }
+    }else{
+      to = {
+        name: search.searcher_name,
+        uid: search.searcher_id,
+        dp: search.searcher_dp,
+        topic: `Regarding your search for a ${search.apartment_type} around ${this.returnFirst(search.Address.description)}`
+      }
     }
+    
     this.local_db.setMessageDetails(to).then(val =>{
       this.modal.create('MessageInputPopupPage', to).present();
     })
+  }
+
+  callSearcher(uid: string){
+    if(this.onBrowser(this.platform.platforms()) == true){
+      this.toast_svc.showToast('This service is only available on the mobile app')
+      return
+    }
+    this.toast_svc.showToast('Please note that network charges may apply for making this call...')
+    this.user_svc.getUser(uid)
+    .pipe(take(1))
+    .subscribe(user =>{
+      this.callNumber.callNumber(user.phoneNumber, false)
+      .catch(err =>{
+        this.errHandler.handleError({message: 'No numbers available for this user'})
+      })
+    })
+  }
+
+  onBrowser(devices: string[]):boolean{
+    let browser = false;
+    devices.forEach(dev =>{
+      if(dev == 'mobileweb') browser = true;
+    })
+    return browser;
   }
 
   showToast(text: string){
@@ -124,25 +166,37 @@ export class SearchfeedPage {
   }
 
   ionViewDidLoad(){
+    console.log('Searchfeed page did load')
+    this.refresh();
     this.monitorEnd();
   }
 
   ionViewWillLeave(){
     console.log('Searchfeed unsubscribing...')
-    this.dataSubs.unsubscribe();
-    this.doneSubs.unsubscribe();
-    this.loadingSubs.unsubscribe();
+    if(this.dataSubs)this.dataSubs.unsubscribe();
+    if(this.doneSubs)this.doneSubs.unsubscribe();
+    if(this.loadingSubs)this.loadingSubs.unsubscribe();
+    if(this.contentSubs)this.contentSubs.unsubscribe();
+    this.refresh();
+  }
+
+  refresh(){
+    this.searchfeed_svc.refresh();
   }
 
   monitorEnd(){
     //console.log('Content scrollHeight = ', this.content.scrollHeight)
-    this.content.ionScrollEnd.subscribe(ev =>{
+    this.contentSubs = this.content.ionScrollEnd.subscribe(ev =>{
     let height = ev.scrollElement.scrollHeight;
     let top = ev.scrollElement.scrollTop;
     let offset = ev.scrollElement.offsetHeight;
       if(top > height - offset - 1){
         console.log('bottom')
-        this.searchfeed_svc.moreAllSearches()
+        if(this.byArea){
+          this.searchfeed_svc.moreAreaSearches(this.pointOfInterest.locality_lng)
+        }else{
+          this.searchfeed_svc.moreAllSearches()
+        }
       }
     })
   }
@@ -192,8 +246,12 @@ export class SearchfeedPage {
 
   selectPlace(place){
     this.predictionLoading = true;
+    this.byArea = true;
     this.map_svc.getSelectedPlace(place).then(data => {
+      console.log(data.locality_lng)
+      this.searchfeed_svc.reset();
       this.pointOfInterest = data;
+      this.searchfeed_svc.getSearchesOfArea(data.locality_lng)
       this.predictions = [];
       this.predictionLoading = false;
     })
@@ -228,8 +286,10 @@ export class SearchfeedPage {
 
   returnFirst(input: string): string{
     if(input == undefined) return '';
-    return input.split(" ")[0];
+    return input.split(",")[0] + ', ' + input.split(",")[1] + ', ' + input.split(",")[2];
   }
+
+
 
   
 }

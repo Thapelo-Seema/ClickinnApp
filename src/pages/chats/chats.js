@@ -8,28 +8,39 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ToastController } from 'ionic-angular';
+import { IonicPage, NavController, ToastController, LoadingController } from 'ionic-angular';
+import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { take } from 'rxjs-compat/operators/take';
+import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 var ChatsPage = /** @class */ (function () {
-    function ChatsPage(navCtrl, navParams, chat_svc, storage, toastCtrl) {
+    function ChatsPage(navCtrl, 
+    //public navParams: NavParams, 
+    chat_svc, storage, toastCtrl, object_init, errorHandler, loadingCtrl) {
         var _this = this;
         this.navCtrl = navCtrl;
-        this.navParams = navParams;
         this.chat_svc = chat_svc;
         this.storage = storage;
         this.toastCtrl = toastCtrl;
-        this.loading = true;
+        this.object_init = object_init;
+        this.errorHandler = errorHandler;
+        this.loadingCtrl = loadingCtrl;
+        this.loader = this.loadingCtrl.create();
+        this.noChats = false;
+        //loadingMore: boolean = false;
+        //done: boolean = false;
         this.imagesLoaded = [false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false, false
         ];
+        this.loader.present();
+        /* Get user from cache and get the users threads */
         this.storage.getUser().then(function (user) {
             if (user) {
-                _this.user = user;
+                _this.user = _this.object_init.initializeUser2(user);
                 _this.threads = _this.chat_svc.getThreads(user);
                 _this.chat_svc.getThreads(user)
                     .pipe(take(1))
@@ -38,30 +49,48 @@ var ChatsPage = /** @class */ (function () {
                         threads.forEach(function (prop) {
                             _this.imagesLoaded.push(false);
                         });
-                        _this.loading = false;
+                        _this.loader.dismiss();
                     }
                     else {
-                        _this.loading = false;
-                        _this.showToast('You currently have no chats, if you had some previous chats, they may have been deleted');
+                        _this.loader.dismiss();
+                        _this.noChats = true;
+                        //this.showToast('You currently have no chats')
                     }
                 }, function (err) {
-                    _this.loading = false;
-                    _this.showToast('There was an error fecthing your chats, if error persists please contact clickinn support');
+                    _this.loader.dismiss();
+                    _this.showToast(err.message);
                 });
             }
+        })
+            .catch(function (err) {
+            _this.errorHandler.handleError(err);
         });
     }
+    ChatsPage.prototype.ionViewDidLoad = function () {
+    };
+    /* This method extracts thread info, caches it and navigates to the thread messages page */
     ChatsPage.prototype.gotoThread = function (thread) {
         var _this = this;
-        this.storage.setThread(thread).then(function (val) {
-            _this.navCtrl.push('ChatThreadPage', thread);
+        var shapedThread = {
+            thread_id: thread.thread_id,
+            uid: thread.uid,
+            dp: thread.dp,
+            displayName: thread.displayName
+        };
+        this.storage.setThread(shapedThread).then(function (val) {
+            _this.navCtrl.push('ChatThreadPage', shapedThread);
         })
-            .catch(function (err) { return console.log(err); });
+            .catch(function (err) {
+            _this.errorHandler.handleError(err);
+        });
+    };
+    ChatsPage.prototype.ionViewDidLeave = function () {
+        //this.chat_svc.reset();
     };
     ChatsPage.prototype.showToast = function (text) {
         var toast = this.toastCtrl.create({
             message: text,
-            duration: 60000
+            duration: 3000
         });
         toast.present();
     };
@@ -72,10 +101,12 @@ var ChatsPage = /** @class */ (function () {
             templateUrl: 'chats.html',
         }),
         __metadata("design:paramtypes", [NavController,
-            NavParams,
             ChatServiceProvider,
             LocalDataProvider,
-            ToastController])
+            ToastController,
+            ObjectInitProvider,
+            ErrorHandlerProvider,
+            LoadingController])
     ], ChatsPage);
     return ChatsPage;
 }());

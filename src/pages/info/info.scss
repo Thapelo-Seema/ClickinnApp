@@ -3,9 +3,24 @@ page-info {
  		left: 25%;
  	}
 
+ 	ion-icon{
+ 		font-size: 30px;
+ 	}
+
+ 	ion-slide{
+      height: 30vh !important;
+    }
+
+	.swiper-pagination-bullet {
+    	background: white;
+   	}  
+
+	.swiper-pagination-bullet-active {
+    	background: #ffdf00;
+	}
+
 	.thumb-img{
 		padding: 5px;
-
 	}
 
 	.image_container{
@@ -15,7 +30,9 @@ page-info {
 		padding: 10px;
 	}
 
-	
+	.alertNoty{
+	   border-radius: 10px;
+	}
 
 	@media only screen and (min-width: 769px){
 		.image_container{

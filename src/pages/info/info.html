@@ -10,46 +10,68 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content style="background: #f4f4f4;">
+<ion-content>
 	<ion-grid no-padding>
     <ion-row>
       <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
       </ion-col>
       <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-      	<ion-fab bottom right>
-			<button ion-fab (click)="addToLiked()" >
-				<ion-icon name="{{heart}}">
-				</ion-icon>
-			</button>
-			<button ion-fab color="secondary" (click)="sendMessage()" >
-				<ion-icon name="ios-chatboxes-outline">
-				</ion-icon>
-			</button>
-		</ion-fab>
-      	<ion-buttons *ngIf="canEdit">
-			<button ion-button small clear (click)="gotoApartment(apartment)">edit</button>
-		</ion-buttons>
-		<ion-item text-wrap text-center no-lines>
-			<!-- <ion-avatar item-start>
-				<img src="{{apartment?.dP?.url}}" imageViewer/>
-			</ion-avatar> -->
-			<h1>{{apartment?.room_type}}</h1>
-			<p>{{apartment?.description}}</p><br/>
-			<p>{{apartment?.property?.common}}</p>
-		</ion-item>
-		<div style="background: #000020; border-radius: 10px">
-			<h4 text-center padding style="color: white">Apartment pictures</h4>
-			<ion-slides  loop="true" slidesPerView="2" class="image_container" [pager]="true">
+      	
+		<div style="background: #000020;">
+			<ion-buttons *ngIf="canEdit">
+				<button ion-button small clear (click)="gotoApartment(apartment)">edit</button>
+			</ion-buttons>
+			<ion-item text-wrap text-center no-lines style="background: transparent;">
+				<p style="color: white"><strong>{{apartment?.room_type}},</strong> {{apartment?.description}}</p>
+				<p style="color: white">{{apartment?.property?.common}}</p>
+			</ion-item>
+			<ion-slides  *ngIf="images && images.length" slidesPerView="2" 
+				class="image_container" [pager]="true" loop="true" [autoplay]="3000">
 				<ion-slide *ngFor="let image of images; let idx = index">
 					<img src="{{image?.url}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" imageViewer class="thumb-img" />
 					<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[idx]" />
 				</ion-slide>
 			</ion-slides>
 		</div>
-		<h2 text-center>More info</h2>
+		<ion-row margin-vertical>
+			<ion-col>
+    			<button ion-button small clear (click)="callLandlord(apartment?.property?.user_id)" >
+    				<ion-icon name="call"></ion-icon>
+    			</button>
+    		</ion-col>
+			<ion-col>
+				<button ion-button small clear  (click)="gotoAppointment()">
+					<ion-icon name="alarm"></ion-icon>
+				</button>
+			</ion-col>
+			<ion-col>
+				<button ion-button small clear color="metallic-gold" (click)="gotoSecure()">
+					<ion-icon name="cart"></ion-icon>
+				</button>
+			</ion-col>
+			<ion-col>
+				<button ion-button small clear color="danger" (click)="addToLiked()">
+					<ion-icon name="{{heart}}">
+					</ion-icon>
+				</button>
+			</ion-col>
+			<ion-col>
+				<button ion-button clear small color="secondary" (click)="sendMessage()">
+					<ion-icon name="ios-chatboxes-outline">
+					</ion-icon>
+				</button>
+			</ion-col>
+			<ion-col>
+				<button ion-button clear small (click)="gotoMap()">
+					<ion-icon name="map">
+					</ion-icon>
+				</button>
+			</ion-col>
+		</ion-row>
+		<h2 text-center><strong>More info</strong></h2>
 		<ion-item text-wrap>
 			<ion-icon name='walk' color="light-gray" item-start></ion-icon>
-			<h1>Places within a 10 min walk</h1> 
+			<h2><strong>Places within a 10 min walk</strong></h2> 
 			<ion-list>
 				<button ion-item text-wrap *ngFor="let place of property?.nearbys" text-wrap>
 				  {{place}}
@@ -81,10 +103,6 @@
 			<ion-icon name='checkmark' color="light-gray" item-start></ion-icon>
 			NSFAS status<ion-note item-end>{{apartment?.property?.nsfas ? "Accreditted" : "N/A"}}</ion-note>
 		</ion-item>
-		<ion-buttons margin-vertical>
-			<button ion-button round outline (click)="gotoAppointment()" >Set appointment</button>
-			<button ion-button round outline color="secondary" (click)="gotoSecure()" >Make deposit now</button>
-		</ion-buttons>
       </ion-col>
       <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
       </ion-col>

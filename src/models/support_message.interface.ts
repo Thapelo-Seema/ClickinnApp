@@ -8,4 +8,5 @@ export interface SupportMessage{
 	text: string;
 	issue_type?: string;
 	sender?: string;
+	id?: string;
 }

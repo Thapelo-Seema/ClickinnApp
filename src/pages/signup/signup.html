@@ -19,42 +19,38 @@
       <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
       </ion-col>
       <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-        <div *ngIf="loading" class="centered_on_screen" style="background: rgba(0, 0, 0, 0.8); color: white; font-size: 35; border-radius: 10px;padding: 20px; text-align: center; z-index: 1">
-          <ion-spinner name="ios"></ion-spinner>
-          <h1 text-center>Signing up</h1>
-        </div>
+       
   <ion-item text-wrap no-lines style="background: transparent; color: white">
     <div text-center>
-      <img src="assets/imgs/logo.png"/>
+      <img src="assets/imgs/logo.png" width="100px" />
     </div>
   
     <h1 text-center style="font-family: 'Ubuntu', sans-serif;">
-        Hi there, sign up below
+        Renters, Landlords and Agents
       </h1>
-      <p text-center>And we will take care of your accommodation needs...</p>
+      <p text-center style="color: white">Join our innovative Clickinn community !</p>
     </ion-item>
     <form margin-top margin-bottom>
-      <ion-item padding style="background: transparent; color: white">
+      <ion-item padding-horizontal style="background: transparent; color: white">
         <ion-label stacked>First Name</ion-label>
         <ion-input type="text" [(ngModel)]="seeker.firstname" name="fname" autocomplete="given-name" autocorrect="off"></ion-input>
       </ion-item>
-      <ion-item padding style="background: transparent; color: white">
+      <ion-item padding-horizontal style="background: transparent; color: white">
         <ion-label stacked>Last Name</ion-label>
         <ion-input type="text" [(ngModel)]="seeker.lastname" name="lname" autocomplete="family-name" autocorrect="off"></ion-input>
       </ion-item>
-      <ion-item padding style="background: transparent; color: white">
+      <ion-item padding-horizontal style="background: transparent; color: white">
         <ion-label stacked>Email</ion-label>
         <ion-input type="email" [(ngModel)]="seeker.email" name="email" autocomplete="email" autocorrect="off"></ion-input>
       </ion-item>
-      <ion-item padding style="background: transparent; color: white">
+      <ion-item padding-horizontal style="background: transparent; color: white">
         <ion-label stacked>Password</ion-label>
         <ion-input type="password" [(ngModel)]="password" name="pword"></ion-input>
       </ion-item>
     </form>
     <ion-buttons>
       <ion-item text-wrap no-lines style="background: transparent; color: white">
-         <ion-label>I agree to the <button ion-button clear small (click)="gotoTerms()" >terms of service</button> for using the Clickinn platform</ion-label>
-         <ion-checkbox [(ngModel)]="seeker.agreed_to_terms"></ion-checkbox>
+         By clicking the signup button, you agree to the Clickinn <button ion-button clear small (click)="gotoTerms()" >terms of service</button>
       </ion-item>
       <button ion-button color="secondary" (click)="signup()">Sign Up</button>
       <button ion-button clear (click)="signin()">Have an account ?</button>

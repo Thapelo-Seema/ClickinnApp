@@ -1,5 +1,5 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { IonicPage, NavController, NavParams, Content, List } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, Content, List, LoadingController } from 'ionic-angular';
 import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
 import { SupportMessage } from '../../models/support_message.interface';
 import { Observable } from 'rxjs-compat';
@@ -30,11 +30,9 @@ export class SupportPage {
   message: SupportMessage;
   text: string = '';
   user: User;
-  loadingMore: boolean = false;
-  done: boolean = false;
+  loader = this.loadingCtrl.create();
   threadInfo: Thread; 
   threads: Thread[] = [];
-  loading: boolean = false;
   mutationObserver: MutationObserver;
   constructor(
   	public navCtrl: NavController, 
@@ -43,11 +41,12 @@ export class SupportPage {
   	private object_init: ObjectInitProvider, 
     private storage: LocalDataProvider, 
     private user_svc: UserSvcProvider,
-    private toast_svc: ToastSvcProvider) {
-
+    private toast_svc: ToastSvcProvider,
+    private loadingCtrl: LoadingController){
+    this.loader.present()
   	this.user = this.object_init.initializeUser();
     this.storage.getUser().then(user =>{
-      this.user = user;
+      this.user = this.object_init.initializeUser2(user);
       //this.chat_svc.initGetThreadChats(thread.thread_id)
       /*this.chat_svc.loading.subscribe(data =>{
       this.loadingMore = data;
@@ -63,15 +62,15 @@ export class SupportPage {
         take(1))
       .subscribe(threadd =>{
         if(threadd.length > 0 ){
-          this.loading = false;
+          this.loader.dismiss()
         }else{
           this.toast_svc.showToast('You have no messages from this chat, they may have been deleted...');
-          this.loading = false;
+          this.loader.dismiss()
         }
       },
       err =>{
         this.toast_svc.showToast(err.message);
-        this.loading = false;
+        this.loader.dismiss()
       })
     })
   	.catch(err => console.log(err))

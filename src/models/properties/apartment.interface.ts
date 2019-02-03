@@ -2,6 +2,7 @@ import { Image } from '../image.interface';
 import { Tenant } from '../users/tenant.interface';
 import { Property } from '../properties/property.interface';
 
+
 export interface Apartment{
 	available: boolean;
 	dP: Image;
@@ -22,5 +23,7 @@ export interface Apartment{
 	user_id?: string;
 	quantity_available?: number;
 	by?: string;
+	owner?: string;
+	agent?: string;
 
 }

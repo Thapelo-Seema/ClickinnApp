@@ -1,13 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, App } from 'ionic-angular';
-import { LocalDataProvider } from '../../providers/local-data/local-data';
-import { Apartment } from '../../models/properties/apartment.interface';
-import { ObjectInitProvider } from '../../providers/object-init/object-init';
-import { User } from '../../models/users/user.interface';
-import { UserSvcProvider } from '../../providers/user-svc/user-svc';
-//import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
-import { take } from 'rxjs-compat/operators/take';
-import { AppointmentsProvider } from '../../providers/appointments/appointments'
+import { IonicPage, NavController} from 'ionic-angular';
 
 @IonicPage()
 @Component({
@@ -18,41 +10,17 @@ export class ApartmentDetailsPage{
   tab1Root: any = 'InfoPage';
   tab2Root: any = 'AppointmentPage';
   tab3Root: any = 'SecurePage';
-  currentApartment: Apartment;
-  user: User;
  
   constructor(
-    public navCtrl: NavController, 
-    private app: App, 
-    private local_data: LocalDataProvider, 
-    private obj_init: ObjectInitProvider, 
-    private user_svc: UserSvcProvider,
-    private appt_svc: AppointmentsProvider){
-    this.currentApartment = this.obj_init.initializeApartment();
-    this.user = this.obj_init.initializeUser();
-    this.local_data.getApartment().then(data =>{
-      this.currentApartment = data;
-    })
-    this.local_data.getUser().then(data =>{
-      this.user_svc.getUser(data.uid)
-      .pipe(
-        take(1)
-      )
-      .subscribe(user =>{
-        if(user){
-          this.user = this.obj_init.initializeUser2(user);
-          console.log('User: ', this.user);
-        }
-      })
-    })
+    public navCtrl: NavController){
   }
 
+  /** This is a navigation page to navigate between the Three pages of a users interest in securing a place **/
+
+
+  /* This function navigates the user to the welcome page */
   gotoHome(){
     this.navCtrl.setRoot('WelcomePage');
-  }
-
-  
-
-  
+  } 
   
 }

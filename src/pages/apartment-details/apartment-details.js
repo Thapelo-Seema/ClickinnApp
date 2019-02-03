@@ -8,41 +8,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
-import { IonicPage, NavController, App } from 'ionic-angular';
-import { LocalDataProvider } from '../../providers/local-data/local-data';
-import { ObjectInitProvider } from '../../providers/object-init/object-init';
-import { UserSvcProvider } from '../../providers/user-svc/user-svc';
-//import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
-import { take } from 'rxjs-compat/operators/take';
+import { IonicPage, NavController } from 'ionic-angular';
 var ApartmentDetailsPage = /** @class */ (function () {
-    function ApartmentDetailsPage(navCtrl, app, local_data, obj_init, user_svc) {
-        var _this = this;
+    function ApartmentDetailsPage(navCtrl) {
         this.navCtrl = navCtrl;
-        this.app = app;
-        this.local_data = local_data;
-        this.obj_init = obj_init;
-        this.user_svc = user_svc;
         this.tab1Root = 'InfoPage';
         this.tab2Root = 'AppointmentPage';
         this.tab3Root = 'SecurePage';
-        this.currentApartment = this.obj_init.initializeApartment();
-        this.user = this.obj_init.initializeUser();
-        this.local_data.getApartment().then(function (data) {
-            _this.currentApartment = data;
-        });
-        this.local_data.getUser().then(function (data) {
-            _this.user_svc.getUser(data.uid)
-                .pipe(take(1))
-                .subscribe(function (user) {
-                if (user) {
-                    _this.user = _this.obj_init.initializeUser2(user);
-                    console.log('User: ', _this.user);
-                }
-            });
-        });
     }
+    /** This is a navigation page to navigate between the Three pages of a users interest in securing a place **/
+    /* This function navigates the user to the welcome page */
     ApartmentDetailsPage.prototype.gotoHome = function () {
-        this.app.getRootNav().setRoot('WelcomePage');
+        this.navCtrl.setRoot('WelcomePage');
     };
     ApartmentDetailsPage = __decorate([
         IonicPage(),
@@ -50,8 +27,7 @@ var ApartmentDetailsPage = /** @class */ (function () {
             selector: 'page-apartment-details',
             templateUrl: 'apartment-details.html',
         }),
-        __metadata("design:paramtypes", [NavController, App, LocalDataProvider,
-            ObjectInitProvider, UserSvcProvider])
+        __metadata("design:paramtypes", [NavController])
     ], ApartmentDetailsPage);
     return ApartmentDetailsPage;
 }());

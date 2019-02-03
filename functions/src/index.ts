@@ -29,7 +29,7 @@ exports.bookingNotification = functions.firestore.document(`Viewings/{viewing_id
 	
 	const payload = {
 		data: {
-			title: `CLICKINN VIEWING APPOINTMENT`,
+			title: `Clickinn Viewing Appointment`,
           	body: `${booker.displayName} wants to view the ${room_type} at ${address}`,
           	icon: booker.dp ? booker.dp : clickinn_icon,
           	sound: 'default',
@@ -68,7 +68,7 @@ exports.depositNotification = functions.firestore.document(`Deposits/{deposit_id
 	
 	const payload = {
 		data: {
-			title: `CLICKINN DEPOSIT ALERT`,
+			title: `Clickinn Deposit`,
           	body: `${tenant.firstname} wants to deposit the ${room_type} at ${address}, should they go ahead ?`,
           	icon: tenant.dp ? tenant.dp : clickinn_icon,
           	sound: 'default',
@@ -94,6 +94,114 @@ exports.depositNotification = functions.firestore.document(`Deposits/{deposit_id
 	console.log('Tokens: ', tokens)
 	return admin.messaging().sendToDevice(tokens, payload)
 })
+
+exports.svcRequestNotification = functions.firestore.document(`AgentProposals/{deal_id}`)
+.onCreate(async (event, context) =>{
+	const data = event.data();
+	console.log('event data: ', event.data())
+	const agent = {
+		dp: data.agent_dp,
+		firstname: data.agent_firstname,
+		lastname: data.agent_lastname,
+		uid: data.agent_uid,
+		phoneNumber: data.agent_phoneNumber
+	}
+	const landlord = {
+		dp: data.landlord_dp,
+		firstname: data.landlord_firstname,
+		lastname: data.landlord_lastname,
+		uid: data.landlord_uid,
+		phoneNumber: data.landlord_phoneNumber
+	}
+	
+	const clickinn_icon = `https://firebasestorage.googleapis.com/v0/b/clickinn-996f0.appspot.com/o/clickinn_logo.jpg?
+	alt=media&token=6c24891a-8e7d-43f6-ab84-5f196fdf4ed5`;
+	
+	const payload = {
+		data: {
+			title: `Clickinn Agent Proposal`,
+          	body: `${agent.firstname} is requesting to provide you with agent services`,
+          	icon: agent.dp ? agent.dp : clickinn_icon,
+          	sound: 'default',
+			vibrate: 'true',
+			badge: '1',
+			key_code: 'agent_proposal',
+			id: context.params.deal_id,
+			priority: 'high',
+			'content-available': '1'
+		}
+		
+	}
+	const db = admin.firestore();
+	console.log('Host: ', landlord.uid);
+	const deviceRef = db.collection('Tokens').where('uid', '==', landlord.uid);
+	const devices = await deviceRef.get();
+	const tokens = [];
+	console.log('Devices: ', devices.docs);
+	devices.forEach(device =>{
+		console.log('Device: ', device)
+		tokens.push(device.data().token)
+	})
+	console.log('Tokens: ', tokens)
+	return admin.messaging().sendToDevice(tokens, payload)
+})
+
+exports.serviceConfirmation = functions.firestore.document(`AgentProposals/{deal_id}`)
+.onUpdate(async (event, context) =>{
+	const dealBefore = event.before.data();
+	const dealAfter = event.after.data();
+	let notifyObject: any;
+	let code: string = '';
+	if(dealAfter.landlord_agreed !== dealBefore.landlord_agreed){
+		code = 'landlord_proposal_agreed';
+		notifyObject = {
+			message: `${dealAfter.landlord_firstname} has agreed to your agent services`,
+			to: dealAfter.agent_uid
+		}
+	}else if(dealAfter.landlord_disagree !== dealBefore.landlord_disagree){
+		code = 'landlord_proposal_declined';
+		notifyObject = {
+			message: `${dealAfter.landlord_firstname} has declined your agent services`,
+			to: dealAfter.agent_uid
+		}
+	}else if(dealAfter.agent_cancelled !== dealBefore.agent_cancelled){
+		code = 'agent_proposal_cancelled';
+		notifyObject = {
+			message: `${dealAfter.agent_firstname} has cancelled their agent services to you`,
+			to: dealAfter.landlord_uid
+		}
+	}
+	
+	const clickinn_icon = `https://firebasestorage.googleapis.com/v0/b/clickinn-996f0.appspot.com/o/clickinn_logo.jpg?
+		alt=media&token=6c24891a-8e7d-43f6-ab84-5f196fdf4ed5`;
+
+	const payload = {
+		data: {
+			title: `Clickinn Agent Services`,
+          	body: notifyObject.message,
+          	icon: clickinn_icon,
+          	sound: 'default',
+			vibrate: 'true',
+			badge: '1',
+			key_code: code,
+			priority: 'high',
+			'content-available': '1'
+		}
+	}
+	const db = admin.firestore();
+	const deviceRef = db.collection('Tokens').where('uid', '==', notifyObject.to);
+	const devices = await deviceRef.get();
+	const tokens = [];
+	console.log('Devices: ', devices.docs);
+	devices.forEach(device =>{
+		console.log('Device: ', device)
+		tokens.push(device.data().token)
+	})
+	console.log('Tokens: ', tokens)
+
+	return admin.messaging().sendToDevice(tokens, payload)
+})
+
 
 exports.bookingConfirmation = functions.firestore.document(`Viewings/{viewing_id}`)
 .onUpdate(async (event, context) =>{
@@ -125,7 +233,7 @@ exports.bookingConfirmation = functions.firestore.document(`Viewings/{viewing_id
 
 	const payload = {
 		data: {
-			title: `ClICKINN APPOINTMENT`,
+			title: `Clickinn Viewing Appointment`,
           	body: notifyObject.message,
           	icon: clickinn_icon,
           	sound: 'default',
@@ -159,7 +267,7 @@ exports.depositConfirmation = functions.firestore.document(`Deposits/{deposit_id
 	if(depositAfter.clickinn_confirmed !== depositBefore.clickinn_confirmed){
 		code = 'clickinn_confirmed_deposit';
 		notifyObject = {
-			message: `Clickinn confirms that payment has been made for the ${depositAfter.apartment.room_type} at ${depositAfter.apartment.property.address.description}`,
+			message: `Clickinn confirms that payment has been made for the ${depositAfter.apartment.room_type} at ${depositAfter.apartment.property.address.description.split(',')[0] + depositAfter.apartment.property.address.description.split(',')[1]}`,
 			to: depositAfter.to.uid
 		}
 	}else if(depositAfter.tenant_confirmed !== depositBefore.tenant_confirmed){
@@ -167,13 +275,13 @@ exports.depositConfirmation = functions.firestore.document(`Deposits/{deposit_id
 		if(depositAfter.tenant_confirmed){
 			code = 'tenant_confirmed_deposit';
 			notifyObject = {
-				message: `${depositAfter.by.firstname} confirmed the deposit of the ${depositAfter.apartment.room_type} at ${depositAfter.apartment.property.address.description}`,
+				message: `${depositAfter.by.firstname} confirmed the deposit of the ${depositAfter.apartment.room_type} at ${depositAfter.apartment.property.address.description.split(',')[0] + depositAfter.apartment.property.address.description.split(',')[1]}`,
 				to: depositAfter.to.uid
 			}
 		}else{
 			code = 'tenant_cancelled_deposit';
 			notifyObject = {
-				message: `${depositAfter.by.firstname} cancelled the deposit of the ${depositAfter.apartment.room_type} at ${depositAfter.apartment.property.address.description}`,
+				message: `${depositAfter.by.firstname} cancelled the deposit of the ${depositAfter.apartment.room_type} at ${depositAfter.apartment.property.address.description.split(',')[0] + depositAfter.apartment.property.address.description.split(',')[1]}`,
 				to: depositAfter.to.uid
 			}
 		}
@@ -204,7 +312,7 @@ exports.depositConfirmation = functions.firestore.document(`Deposits/{deposit_id
 
 	const payload = {
 		data: {
-			title: `CLICKINN DEPOSIT`,
+			title: `Clickinn Secure Payment`,
           	body: notifyObject.message,
           	icon: clickinn_icon,
           	sound: 'default',
@@ -242,7 +350,7 @@ exports.newThreadNotification = functions.firestore.document(`Threads/{thread_id
     alt=media&token=6c24891a-8e7d-43f6-ab84-5f196fdf4ed5`;
 	const payload = {
 		data : {
-		 	title: `NEW MESSAGE FROM ${by.displayName}`,
+		 	title: `New Message From ${by.displayName}`,
           	body: text,
           	icon: by.dp ? by.dp : clickinn_icon,
           	sound: 'default',
@@ -275,7 +383,7 @@ exports.chatMessageNotification = functions.firestore.document(`Threads/{thread_
     alt=media&token=6c24891a-8e7d-43f6-ab84-5f196fdf4ed5`;
 	const payload = {
 		data : {
-		 	title: `NEW MESSAGE FROM ${by.displayName}`,
+		 	title: `New Message From ${by.displayName}`,
           	body: text,
           	icon: by.dp ? by.dp : clickinn_icon,
           	sound: 'default',
@@ -297,4 +405,5 @@ exports.chatMessageNotification = functions.firestore.document(`Threads/{thread_
 	})
 	return admin.messaging().sendToDevice(tokens, payload)
 })
+
 

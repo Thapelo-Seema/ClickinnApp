@@ -3,6 +3,18 @@ page-deposit-confirmation {
  		left: 25%;
  	}
 
+ 	ion-slide{
+      height: 30vh !important;
+    }
+
+	.swiper-pagination-bullet {
+    	background: white;
+   	}  
+
+	.swiper-pagination-bullet-active {
+    	background: #ffdf00;
+	}
+
 	.thumb-img{
 		padding: 5px;
 

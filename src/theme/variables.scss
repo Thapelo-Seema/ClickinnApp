@@ -22,7 +22,10 @@ $app-direction: ltr;
 // To view all the possible Ionic variables, see:
 // http://ionicframework.com/docs/theming/overriding-ionic-variables/
 
-
+$loading-ios-background: transparent;
+$loading-md-background: $loading-ios-background;
+$loading-wp-background: $loading-ios-background;
+$loading-md-box-shadow: none;
 
 
 // Named Color Variables
@@ -41,9 +44,12 @@ $colors: (
   light-gray: #dcdcdc,
   dark:       #222,
   clickinn:	  #000020,
-  clickinn-pitch: #000010,
+  clickinn-pitch: #000020,
   silver: #C0C0C0,
-  white: #FFFFFF
+  white: #FFFFFF,
+  golden-yellow: #ffdf00,
+  metallic-gold: #d4af37,
+
 );
 
 

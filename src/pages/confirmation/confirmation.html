@@ -1,13 +1,16 @@
 
-<div class="cnfm" style="background: white;padding: 15px; border-radius: 6px">
-	<h1 style="text-align: center;">
-		{{confirmation?.title}}
-	</h1>
-	
-		<p style="text-align: center;">{{confirmation?.message}}</p>
-		<ion-buttons text-center>
-			<button ion-button small (click)="confirm()">confirm</button>
-			<button ion-button small color="danger" (click)="close()">close</button>
-		</ion-buttons>
-
-</div>
+<ion-row>
+	<ion-col col-1>
+	</ion-col>
+	<ion-col col-10 >
+		<ion-item text-wrap padding  style="border-radius: 8px;" (click)="gotoThread()" >
+			<strong style="text-align: center;">
+				{{confirmation?.title}}
+			</strong>
+			<hr>
+			<p style="text-align: center;">{{confirmation?.message}}</p>
+		</ion-item>
+	</ion-col>
+	<ion-col col-1>
+	</ion-col>
+</ion-row>

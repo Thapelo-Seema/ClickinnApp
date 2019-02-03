@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angular';
+import { LocalDataProvider }  from '../../providers/local-data/local-data';
+import { Thread } from '../../models/thread.interface';
 //import { ObjectInitProvider } from '../../providers/object-init/object-init';
 
 @IonicPage()
@@ -13,12 +15,16 @@ export class ConfirmationPage {
  		message: 'string'
   }
 	
-  constructor(public navCtrl: NavController, public navParams: NavParams, private viewCtrl: ViewController,
+  constructor(
+    public navCtrl: NavController, 
+    public navParams: NavParams, 
+    private viewCtrl: ViewController,
+    private storage: LocalDataProvider
     ) {
   }
 
   ionViewWillLoad() {
-    this.confirmation = this.navParams.get('data');  
+    this.confirmation = this.navParams.data;  
   }
 
   close(){
@@ -27,6 +33,23 @@ export class ConfirmationPage {
 
   confirm(){
   	this.viewCtrl.dismiss(true);
+  }
+
+  gotoProfile(){
+    this.navCtrl.push('ProfilePage')
+  }
+
+  gotoThread(){
+    let thread: Thread = {
+      uid: '',
+      thread_id: this.navParams.data.thread_id,
+      dp: '',
+      displayName: ''
+    }
+    this.storage.setThread(thread).then(val =>{
+      this.navCtrl.push('ChatThreadPage', thread)
+    })
+    .catch(err => console.log(err))
   }
 
 }

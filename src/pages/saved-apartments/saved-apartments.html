@@ -19,6 +19,11 @@
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+				<ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0, 200,0, 0.8); color: white" margin-vertical>
+					<p text-center style="color: white">
+						This is the list of all your apartments
+					</p>
+				</ion-item>
 				<button ion-item margin-vertical text-wrap *ngFor="let apartment of apartments | async; let i = index" (click)="gotoEditApartment(apartment)" >
 			      <ion-avatar item-start>
 			        <img src="{{apartment?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
