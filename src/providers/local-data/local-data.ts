@@ -99,6 +99,14 @@ export class LocalDataProvider {
     return this.storage.set('user', user);
   }
 
+  setViewedProfile(user: User):Promise<User>{
+    return this.storage.set('viewedProfile', user);
+  }
+
+  getViewedProfile():Promise<User>{
+    return this.storage.get('viewedProfile');
+  }
+
   getUser():Promise<User>{
     return this.storage.get('user');
   }

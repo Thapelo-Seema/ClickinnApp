@@ -15,6 +15,7 @@ import { Thread } from '../models/thread.interface';
 import { DepositProvider } from '../providers/deposit/deposit';
 import { Subscription } from 'rxjs-compat/Subscription';
 import { SearchfeedProvider } from '../providers/searchfeed/searchfeed';
+import { ChatServiceProvider } from '../providers/chat-service/chat-service';
 //import { AccommodationsProvider } from '../providers/accommodations/accommodations';
 
 @Component({
@@ -29,10 +30,13 @@ export class MyApp {
   authSubs: Subscription;
   online: boolean = false;
   dpLoaded: boolean = false;
+  chats: number = 0;
+  unseenNotifications: number = 0 ;
   loader = this.loadingCtrl.create({
     dismissOnPageChange: true
   });
   notificationObject: any = null;
+
   @ViewChild('content') navCtrl;
 
   //Check network status
@@ -63,8 +67,8 @@ export class MyApp {
     private deposit_svc: DepositProvider,
     private loadingCtrl: LoadingController,
     private modalCtrl: ModalController,
-    private searchfeed_svc: SearchfeedProvider
-    //private accom_svc: AccommodationsProvider
+    private searchfeed_svc: SearchfeedProvider,
+    private chat_svc: ChatServiceProvider
     //private events: Events
     ){
     this.loader.present();
@@ -554,8 +558,23 @@ export class MyApp {
    this.authSubs = this.afAuth.authState
     .subscribe(user =>{
       console.log('MonitorAuthState running....')
+
       if(user || this.afAuth.auth.currentUser){
         console.log('Firebase user found...')
+        if(user.uid){
+          console.log('user ready for notifications')
+          this.chat_svc.getUnseenChats(user.uid)
+          .subscribe(chats =>{
+            if(chats.length > 0){
+              console.log('Unseen chats: ', chats.length)
+              this.unseenNotifications = this.unseenNotifications - this.chats + chats.length
+              this.chats = chats.length
+            }else{
+              this.unseenNotifications -= this.chats;
+              this.chats = chats.length
+            }
+          })
+        }
         if(window.navigator.onLine){//If there is a network connection
           console.log('Connected!');
           this.online = true;

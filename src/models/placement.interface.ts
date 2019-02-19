@@ -4,6 +4,11 @@ export interface Placement{
 	tenant_email: string;
 	tenant_phoneNumber: string;
 	tenant_occupation: string;
+	tenant_id?: string;
+	tenant_dp?: string;
+	tenant_studentno?: string;
+	tenant_institution?: string;
+	qualification?: string;
 	property_address: string;
 	apartment_type: string;
 	apartment_id: string;
@@ -15,4 +20,5 @@ export interface Placement{
 	agent_lastname: string;
 	agent_dp: string;
 	placement_id: string;
+	complete?: boolean;
 }

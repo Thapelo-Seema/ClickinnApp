@@ -8,7 +8,7 @@
   <ion-navbar color="clickinn-pitch">
     <ion-title style="font-family: 'Ubuntu', sans-serif;">Clickinn</ion-title>
     <button ion-button menuToggle icon-only>
-      <ion-icon name='menu'></ion-icon>
+      <ion-icon name='menu'></ion-icon> <span *ngIf="unseenNotifications > 0">&nbsp;&nbsp;({{unseenNotifications}}) </span>
     </button>
   </ion-navbar>
 </ion-header>
@@ -46,7 +46,7 @@
                   </button>
                 </ion-buttons>
               </ion-slide>
-              <ion-slide >
+              <ion-slide>
                 <h1 style="color: white">You a landlord looking for tenants ?</h1>
                 <!-- <img src="assets/imgs/apartment.jpeg"/> -->
                 <ion-buttons margin-bottom>
@@ -55,12 +55,23 @@
                   </button>
                 </ion-buttons>
               </ion-slide>
+              <ion-slide>
+                <h1 style="color: white">Looking for NSFAS accredited accommodation ?</h1>
+                <!-- <img src="assets/imgs/apartment.jpeg"/> -->
+                <ion-buttons margin-bottom>
+                  <button ion-button round color="danger" (click)="gotoNsfas()">
+                    Yes, please hook me up 
+                  </button>
+                </ion-buttons>
+              </ion-slide>
             </ion-slides>
-            
             <ion-buttons margin-top>
-              <button ion-button outline round (click)="showSearch()">Search for Accommodation</button>
-              <button ion-button outline round margin-vertical (click)="gotoLandlordDash()">Help others find a place</button>
-              <button ion-button outline round (click)="gotoOwners()" >I am a landlord</button>
+              <button ion-button outline round (click)="showSearch()">
+                <strong>Search for Accommodation</strong></button>
+              <button ion-button outline round margin-vertical (click)="gotoLandlordDash()">
+                <strong>Help others find a place</strong></button>
+              <button ion-button outline round (click)="gotoOwners()" >
+                <strong>I am a landlord</strong></button>
             </ion-buttons>
           </div>
           <div *ngIf="search" >

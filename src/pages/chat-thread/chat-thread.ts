@@ -35,6 +35,7 @@ export class ChatThreadPage {
   threadInfo: Thread; 
   threads: Thread[] = [];
   loader = this.loadingCtrl.create();
+  contact: any;
   //chats: ChatMessage[] = [];
   mutationObserver: MutationObserver;
   noMessages: boolean = false;
@@ -59,17 +60,25 @@ export class ChatThreadPage {
     this.loader.present()
   	this.user = this.object_init.initializeUser(); //Initializing an empty user
     this.message = this.object_init.initializeChatMessage(); //Initialize empty chat message
+
     /*Retrieve cached thread in order to get some thread info and thread chats*/
     this.storage.getThread().then(thread =>{
+
       this.threadInfo = thread;
       this.thread = this.chat_svc.getThreadChats(thread.thread_id);
       this.chat_svc.getThreadChats(thread.thread_id)
       .pipe(take(1))
       .subscribe(threadd =>{
         console.log(threadd)
-        if(threadd.length > 0 ){
+        this.contact = threadd[0]
+        this.storage.getUser().then(user =>{
+          this.user = this.object_init.initializeUser2(user);
+
+          if(threadd.length > 0 ){
           threadd.forEach(item =>{
             this.imagesLoaded.push(false);
+            this.chat_svc.removeUnseenMessage(item.id, user.uid)
+            .catch(err => console.log(err))
             //let ch = this.object_init.initializeChatMessag2(item)
             //this.chats.push(ch);
           })
@@ -77,7 +86,6 @@ export class ChatThreadPage {
         }else{
           this.noMessages = true;
         }
-        this.storage.getUser().then(user =>{
           this.chat_svc.getThreads(user).pipe(take(1)).subscribe(threads =>{
             this.threads = threads;
             threads.forEach(th =>{
@@ -91,6 +99,7 @@ export class ChatThreadPage {
           })
           this.user_svc.getUser(user.uid).pipe(take(1)).subscribe(synced_user =>{
             this.user = this.object_init.initializeUser2(synced_user);
+            this.populateMsg();
           })
         })
         .catch(err =>{
@@ -179,7 +188,7 @@ export class ChatThreadPage {
   }*/
 
   populateMsg(){
-    this.message.by.displayName = this.user.firstname;
+    this.message.by.displayName = this.user.firstname  + this.user.lastname;
     this.message.by.uid = this.user.uid;
     this.message.by.dp = this.user.photoURL;
     this.message.to.displayName = this.threadInfo.displayName;
@@ -189,16 +198,15 @@ export class ChatThreadPage {
 
   //Populate the required chatMessage fields and send the message 
   send(){
+    this.populateMsg();
     this.message.text = this.text;
   	this.message.timeStamp = Date.now();
-    this.populateMsg();
+    console.log('Sending... ', this.message)
   	this.chat_svc.sendMessage(this.message, this.threads)
-    /*.then(() =>{
-      this.message.sent = true;
-      this.chat_svc.updateMessage(this.threadInfo.thread_id, this.message)
-    })*/
-    this.text = '';
-  	//this.scrollToBottom();
+    .then(() =>{
+      this.text = '';
+    })
+      	//this.scrollToBottom();
   }
 
   returnFirst(input: string): string{

@@ -39,10 +39,16 @@ export class ObjectInitProvider {
       agent_firstname: '',
       agent_id: '',
       agent_lastname: '',
+      complete: false,
       tenant_email: '',
       tenant_firstname: '',
       tenant_lastname: '',
       tenant_occupation: '',
+      tenant_dp: '',
+      tenant_id: '',
+      tenant_institution: '',
+      qualification: '',
+      tenant_studentno: '',
       tenant_phoneNumber: '',
       apartment_type: '',
       placement_date: 0,
@@ -51,6 +57,34 @@ export class ObjectInitProvider {
       deposit: 0,
       apartment_id: '',
       placement_id: ''
+    }
+    return placement;
+  }
+
+  initializePlacement2(plmt: Placement){
+    let placement: Placement ={
+      agent_dp: plmt.agent_dp ? plmt.agent_dp : '',
+      agent_firstname: plmt.agent_firstname ? plmt.agent_firstname : '',
+      agent_id: plmt.agent_id ? plmt.agent_id : '',
+      agent_lastname: plmt.agent_lastname ? plmt.agent_lastname : '',
+      complete: plmt.complete ? plmt.complete : false,
+      tenant_email: plmt.tenant_email ? plmt.tenant_email : '',
+      tenant_firstname: plmt.tenant_firstname ? plmt.tenant_firstname : '',
+      tenant_lastname: plmt.tenant_lastname ? plmt.tenant_lastname : '',
+      tenant_occupation: plmt.tenant_occupation ? plmt.tenant_occupation : '',
+      tenant_dp: plmt.tenant_dp ? plmt.tenant_dp : '',
+      tenant_id: plmt.tenant_id ? plmt.tenant_id : '',
+      tenant_institution: plmt.tenant_institution ? plmt.tenant_institution : '',
+      qualification: plmt.qualification ? plmt.qualification : '',
+      tenant_studentno: plmt.tenant_studentno ? plmt.tenant_studentno : '',
+      tenant_phoneNumber: plmt.tenant_phoneNumber ? plmt.tenant_phoneNumber : '',
+      apartment_type: plmt.apartment_type ? plmt.apartment_type : '',
+      placement_date: plmt.placement_date ? plmt.placement_date : 0,
+      property_address: plmt.property_address ? plmt.property_address : '',
+      rent: plmt.rent ? plmt.rent : 0,
+      deposit: plmt.deposit ? plmt.deposit : 0,
+      apartment_id: plmt.apartment_id ? plmt.apartment_id : '',
+      placement_id: plmt.placement_id ? plmt.placement_id : ''
     }
     return placement;
   }
@@ -269,7 +303,8 @@ export class ObjectInitProvider {
       timeStampModified: 0,
       quantity_available: 1,
       by: '',
-      owner: ''
+      owner: '',
+      callNumber: ''
   	}
   	return apartment;
   }
@@ -295,7 +330,8 @@ export class ObjectInitProvider {
       timeStampModified: apart.timeStampModified ? apart.timeStampModified : 0,
       quantity_available: apart.quantity_available ? apart.quantity_available : 1,
       by: apart.by ? apart.by : '',
-      owner: apart.owner ? apart.owner : ''
+      owner: apart.owner ? apart.owner : '',
+      callNumber: apart.callNumber ? apart.callNumber : ''
     }
     return apartment;
   }

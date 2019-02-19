@@ -10,7 +10,7 @@ import { ObjectInitProvider } from '../../providers/object-init/object-init';
 //import { Subscription } from 'rxjs-compat/Subscription';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 import { take } from 'rxjs-compat/operators/take';
-
+import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
 
 
 @IonicPage()
@@ -24,6 +24,8 @@ export class WelcomePage {
   pointOfInterest: Address;
   user: User;
   search: boolean = false;
+  unseenNotifications: number = 0;
+  chats: number = 0;
   //userSubs: Subscription;
   
   predictionLoading: boolean = false;
@@ -41,7 +43,8 @@ export class WelcomePage {
     private platform: Platform,
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
-    private user_svc: UserSvcProvider){
+    private user_svc: UserSvcProvider,
+    private chat_svc: ChatServiceProvider){
     this.platform.ready().then(value =>{
       let ldng = this.loadingCtrl.create();
       ldng.present();
@@ -52,8 +55,20 @@ export class WelcomePage {
           //Subscribing to the most recent user object in the database
           this.user = this.object_init.initializeUser2(data);
           ldng.dismiss();
-          console.log('User in Welcome: ', this.user)
-          console.log('User in storage: ', data)
+          if(data.uid){
+          console.log('user ready for notifications')
+          this.chat_svc.getUnseenChats(data.uid)
+          .subscribe(chats =>{
+            if(chats.length > 0){
+              console.log('Unseen chats: ', chats.length)
+              this.unseenNotifications = this.unseenNotifications - this.chats + chats.length
+              this.chats = chats.length
+            }else{
+              this.unseenNotifications -= this.chats;
+              this.chats = chats.length
+            }
+          })
+        }
         })
         .catch(() => {
           //If there's an error getting the user from the local storage display the message below and stop the spinner
@@ -72,6 +87,10 @@ export class WelcomePage {
   //Navigating to the chats page
   gotoChats(){
     this.navCtrl.push('ChatsPage');
+  }
+
+  gotoNsfas(){
+    this.navCtrl.push('NsfasPage')
   }
   
 /*Navigating to the next page, which is the PrefferencesPage and passing the pointOfInterest object along*/

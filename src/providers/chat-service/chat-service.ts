@@ -10,6 +10,7 @@ import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
 import { SupportMessage } from '../../models/support_message.interface';
 import { ObjectInitProvider } from '../object-init/object-init';
+import { take } from 'rxjs-compat/operators/take';
 
 @Injectable()
 export class ChatServiceProvider {
@@ -60,6 +61,14 @@ export class ChatServiceProvider {
     let msg2 = this.object_init.initializeChatMessag2(msg);
     let chat = await this.afs.collection(`Threads/${thread_id}/chats`).add(msg);
     msg2.id = chat.id;
+    let unseen = {
+      message_id: msg2.id,
+      timeStamp: msg2.timeStamp,
+      thread_id: thread_id
+    }
+    this.afs.collection('ThreadTimeStamps').doc(msg.by.uid).collection('timeStamps').doc(thread_id).set({timeStamp: msg2.timeStamp})
+    this.afs.collection('ThreadTimeStamps').doc(msg.to.uid).collection('timeStamps').doc(thread_id).set({timeStamp: msg2.timeStamp})
+    this.afs.collection('UnseenMessages').doc(msg.to.uid).collection('Messages').doc(msg2.id).set(unseen)
     this.afs.collection(`Threads`).doc(thread_id).collection('chats').doc(msg2.id).set(msg2)
     /*console.log('Thread id', thread_id);
   	this.db.list(`Threads/${thread_id}`).push(msg);*/
@@ -94,10 +103,22 @@ export class ChatServiceProvider {
       let chat = await this.afs.collection(`Threads`).doc(results.thread_id).collection('chats').add(msg);
       msg2.id = chat.id;
       console.log('Second message', msg2)
+      let unseen = {
+        message_id: msg2.id,
+        timeStamp: msg2.timeStamp,
+        thread_id: results.thread_id
+      }
+      this.afs.collection('ThreadTimeStamps').doc(msg.by.uid).collection('timeStamps').doc(results.thread_id).set({timeStamp: msg2.timeStamp})
+      this.afs.collection('ThreadTimeStamps').doc(msg.to.uid).collection('timeStamps').doc(results.thread_id).set({timeStamp: msg2.timeStamp})
+      this.afs.collection('UnseenMessages').doc(msg.to.uid).collection('Messages').doc(msg2.id).set(unseen)
       return this.afs.collection(`Threads`).doc(results.thread_id).collection('chats').doc(msg2.id).set(msg2);
   	}else{
   		this.createNewThread(msg);
   	}
+  }
+
+  removeUnseenMessage(msgId: string, uid: string){
+    return this.afs.collection('UnseenMessages').doc(uid).collection('Messages').doc(msgId).delete()
   }
 
   markAsSeen(thread_id, msg: ChatMessage){
@@ -105,7 +126,6 @@ export class ChatServiceProvider {
   }
 
   sendSupportMessage(msg: SupportMessage){
-    
     this.afs.collection('Support').doc(msg.user.uid).set({user: msg.user, text: msg.text, timeStamp: msg.timeStamp, assigned: msg.assigned_to})
     this.afs.collection(`Support`).doc(msg.user.uid).collection('chats').add(msg);
   }
@@ -134,10 +154,23 @@ export class ChatServiceProvider {
     .valueChanges();
   }
 
-  getUnseenThreadChats(thread_id){
-    return this.afs.collection(`Threads`).doc(thread_id)
-    .collection<ChatMessage>('chats', ref => ref.where('seen', '==', false))
+  getUnseenThreadChats(thread_id: string, uid: string){
+    return this.afs.collection(`UnseenMessages`)
+    .doc(uid)
+    .collection('Messages', ref =>
+        ref.where('thread_id', '==', thread_id)
+      )
     .valueChanges();
+  }
+
+  getUnseenChats(uid: string){
+    return this.afs.collection('UnseenMessages').doc(uid).collection('Messages', ref =>
+      ref.orderBy('timeStamp', 'desc')).valueChanges();
+  }
+
+  getThreadTimeStamps(uid: string){
+    return this.afs.collection('ThreadTimeStamps').doc(uid).collection('timeStamps', ref =>
+      ref.orderBy('timeStamp', 'desc')).snapshotChanges()
   }
 
   /*initGetThreadChats(thread_id){

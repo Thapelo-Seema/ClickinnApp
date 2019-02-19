@@ -45,7 +45,7 @@
 		        </div>
 	            
 				<ion-card *ngFor="let srch of searchfeed_svc?.data | async; let idx = index">
-				  <ion-item>
+				  <ion-item (click)="seeProfile(srch.searcher_id)">
 				    <ion-avatar item-start>
 				      <img src="{{srch?.searcher_dp}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" />
 				      <img src="assets/imgs/genPlaceholder.png" [hidden]="imagesLoaded[idx]" />

@@ -42,6 +42,7 @@ import { ToastSvcProvider } from '../providers/toast-svc/toast-svc';
 import { FileUploadSvcProvider } from '../providers/file-upload-svc/file-upload-svc';
 import { DepositProvider } from '../providers/deposit/deposit';
 import { PaginationProvider } from '../providers/pagination/pagination';
+import { UsagePatternProvider } from '../providers/usage-pattern/usage-pattern';
 
 
 export const firebaseConfig = {
@@ -95,7 +96,8 @@ export const firebaseConfig = {
     Push,
     DepositProvider,
     PaginationProvider,
-    CallNumber 
+    CallNumber,
+    UsagePatternProvider 
   ]
 })
 export class AppModule {}

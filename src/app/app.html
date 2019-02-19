@@ -24,7 +24,7 @@
 		      </button>
 		      <button ion-item padding-horizontal  menuClose (click)="gotoChats()" >
 		        <ion-icon name="ios-chatboxes-outline" item-end></ion-icon>
-		        <strong>Chats</strong>
+		        <strong>Chats</strong><span style="color: #32db64" *ngIf="chats > 0"> &nbsp;&nbsp;({{chats}}) </span>
 		      </button>
 		      <button ion-item padding-horizontal  menuClose (click)="gotoLiked()" >
 		        <ion-icon name="ios-heart-outline" item-end></ion-icon>

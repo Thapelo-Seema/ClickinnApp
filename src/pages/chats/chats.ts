@@ -17,7 +17,7 @@ import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 })
 export class ChatsPage {
   //@ViewChild(Content) content: Content;
-  threads: Observable<Thread[]>;
+  threads: Thread[];
   user: User;
   users: User[] = [];
   searchText: string = '';
@@ -45,12 +45,50 @@ export class ChatsPage {
     this.loader.present()
     /* Get user from cache and get the users threads */
   	this.storage.getUser().then(user =>{
-      if(user){
+      if(user != undefined){
         this.user = this.object_init.initializeUser2(user);
-        this.threads = this.chat_svc.getThreads(user)
+        let ids: string[] = []
+        let modifiedThreads: Thread[] = [];
+        console.log(user)
         this.chat_svc.getThreads(user)
-        .pipe(take(1))
         .subscribe( threads =>{
+          this.chat_svc.getThreadTimeStamps(user.uid)
+          .pipe(take(1))
+          .subscribe(timestamps =>{
+            modifiedThreads = [];
+            this.threads = [];
+            //getting the order of the threads by timestamp in array ids
+            timestamps.forEach(stamp =>{
+              console.log(stamp)
+              ids.push(stamp.payload.doc.id)
+            })
+            //Checking for thread whos timestamps are captured and putting them in modifiedThreads
+            threads.forEach(thread =>{
+              if(ids.indexOf(thread.thread_id) != -1){
+                modifiedThreads.push(thread)
+              }
+            })
+            //Ordering the threads in mofiedThreads according to the order in ids
+            threads.forEach(thread =>{
+              if(ids.indexOf(thread.thread_id) != -1){
+                console.log('Recent thread: ', thread.displayName)
+                modifiedThreads[ids.indexOf(thread.thread_id)] = thread;
+              }
+            })
+
+            threads.forEach(thread =>{
+              if(ids.indexOf(thread.thread_id) == -1){
+                modifiedThreads.push(thread);
+              }
+            })
+            let inserted = [];
+            modifiedThreads.forEach(th =>{
+              if(inserted.indexOf(th.thread_id) == -1){
+                this.threads.push(th)
+                inserted.push(th.thread_id)
+              }
+            })
+          })
           if(threads.length > 0){
             threads.forEach(prop =>{
             this.imagesLoaded.push(false);
@@ -71,6 +109,15 @@ export class ChatsPage {
   	})
     .catch(err =>{
       this.errorHandler.handleError(err);
+    })
+  }
+
+  getUnseen(thread_id: string){
+    return new Promise<number>((resolve, reject) =>{
+      this.chat_svc.getUnseenThreadChats(thread_id, this.user.uid)
+      .subscribe(val =>{
+        resolve(val.length)
+      })
     })
   }
 

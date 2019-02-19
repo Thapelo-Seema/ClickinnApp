@@ -161,6 +161,17 @@ export class SearchfeedPage {
     this.navCtrl.push('MyLandlordsPage')
   }
 
+  seeProfile(uid: string){
+    this.user_svc.getUser(uid)
+    .pipe(take(1))
+    .subscribe(user =>{
+      this.local_db.setViewedProfile(user)
+      .then(() =>{
+        this.navCtrl.push('ViewProfilePage')
+      })
+    })
+  }
+
   gotoMyAgents(){
     this.navCtrl.push('MyAgentsPage')
   }

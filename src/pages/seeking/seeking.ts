@@ -89,7 +89,7 @@ export class SeekingPage {
         });
         var tempRatedApart = ratedArray[0];
         for(var i = 1; i < ratedArray.length; ++i){
-          if(ratedArray[i].search_rating > ratedArray[i].search_rating[i-1]){
+          if(ratedArray[i].search_rating > ratedArray[i - 1].search_rating){
             tempRatedApart = ratedArray[i-1];
             ratedArray[i-1] = ratedArray[i];
             ratedArray[i] = tempRatedApart;

@@ -1,0 +1,55 @@
+<!--
+  Generated template for the NsfasPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-navbar>
+    <ion-title>Nsfas Placements</ion-title>
+  </ion-navbar>
+</ion-header>
+
+
+<ion-content padding>
+	<ion-grid>
+    	<ion-row>
+      		<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      		</ion-col>
+      		<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
+		      <ion-item no-lines text-center text-wrap style="border-radius: 7px; letter-spacing: 2px; color: white; 
+		      background: rgba(0,0,0, 0.5); letter-spacing: 2px">
+					<strong>
+						Fill in your details so that our agents can place you in an nsfas accredited residence
+					</strong>
+				</ion-item>
+		      <ion-item padding-horizontal margin-top>
+		        <ion-label stacked>Student number</ion-label>
+		        <ion-input type="text" [(ngModel)]="placement.tenant_studentno" autocorrect="off"></ion-input>
+		      </ion-item>
+		      <ion-item padding-horizontal margin-top>
+		        <ion-label stacked>Qualification pursued</ion-label>
+		        <ion-input type="text" [(ngModel)]="placement.qualification" autocorrect="off"></ion-input>
+		      </ion-item>
+		      <ion-item padding-horizontal text-wrap style=" border-top-right-radius: 9px; border-top-left-radius: 9px">
+		        <ion-label>Campus</ion-label>
+		        <ion-select [(ngModel)]="placement.tenant_institution" required>
+		          <ion-option value="UJ APK">UJ APK</ion-option>
+		          <ion-option value="UJ APB">UJ APB</ion-option>
+		          <ion-option value="UJ DFC">UJ DFC</ion-option>
+		          <ion-option value="UJ SWC">UJ SWC</ion-option>
+		        </ion-select>
+		      </ion-item>
+		      <ion-item>
+				<ion-label stacked>Phone number</ion-label>
+		  		<ion-input type="number" [(ngModel)]="placement.tenant_phoneNumber"></ion-input>
+			  </ion-item>
+		      <ion-buttons margin-top>
+		        <button ion-button color="secondary" (click)="place()" >Save details</button>
+		      </ion-buttons>
+      </ion-col>
+      <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

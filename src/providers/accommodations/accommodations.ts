@@ -105,6 +105,22 @@ export class AccommodationsProvider {
     return this.afs.collection('Placements').doc(ref.id).update(pl)
   }
 
+  async makeNsfasPlacement(placement: Placement){
+    let pl = placement;
+    let ref = await this.afs.collection('NsfasPlacements')
+    .add(placement)
+    pl.placement_id = ref.id
+    return this.afs.collection('NsfasPlacements').doc(ref.id).update(pl)
+  }
+
+  updateNsfas(placement: Placement){
+    return this.afs.collection('NsfasPlacements').doc(placement.placement_id).update(placement)
+  }
+
+  getNSFASPlacements(){
+    return this.afs.collection<Placement>('NsfasPlacements').valueChanges();
+  }
+
   getAllApartments(){
     return this.afs.collection<Apartment>('Apartments', ref =>{
       return ref.where('available', '==', true)

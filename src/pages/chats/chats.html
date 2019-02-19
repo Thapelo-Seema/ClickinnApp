@@ -36,12 +36,15 @@
 					<p>You have no chats yet</p>
 				</div>
 				<ion-list>
-					<button ion-item *ngFor="let thread of threads | async; let i = index" (click)="gotoThread(thread)">
+					<button ion-item *ngFor="let thread of threads; let i = index" (click)="gotoThread(thread)">
 					    <ion-avatar item-start>
 					      <img src="{{thread?.dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
 					      <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 					    </ion-avatar>
-					    <p>{{thread?.displayName ? thread?.displayName : 'Anonymous'}}</p>
+					    <p>
+					    	{{thread?.displayName ? thread?.displayName : 'Anonymous'}} &nbsp;&nbsp; 
+					    	<strong *ngIf="getUnseen(thread?.thread_id) > 0" >({{getUnseen(thread?.thread_id)}})</strong> 
+					    </p>
 					</button>
 				</ion-list>
 			</ion-col>

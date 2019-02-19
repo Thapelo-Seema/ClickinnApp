@@ -21,7 +21,7 @@
 			</ion-col>
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6 style="padding: 15px 15px;">
 				<ion-buttons>
-					<button ion-button clear (click)="gotoBuilding()" >Edit details of this apartments property</button>
+					<button ion-button small clear (click)="gotoBuilding()" >Edit details of this apartments property</button>
 				</ion-buttons>
 				<div text-center>
 					<h1 text-center>Apartment Details</h1>
@@ -62,6 +62,10 @@
 				    <ion-item padding-horizontal>
 					   <ion-label>Apartments Available</ion-label>
 					   <ion-input type="number" [(ngModel)]="apartment.quantity_available" name="avail"></ion-input>
+					</ion-item>
+					<ion-item padding-horizontal>
+					   <ion-label>Call number</ion-label>
+					   <ion-input type="number" [(ngModel)]="apartment.callNumber" name="callN"></ion-input>
 					</ion-item>
 					<ion-item text-wrap margin-bottom padding-horizontal style=" border-bottom-right-radius: 9px; border-bottom-left-radius: 9px">
 						<ion-label floating style="letter-spacing: 2px">Description</ion-label>

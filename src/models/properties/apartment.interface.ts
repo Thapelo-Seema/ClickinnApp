@@ -25,5 +25,6 @@ export interface Apartment{
 	by?: string;
 	owner?: string;
 	agent?: string;
+	callNumber?: string;
 
 }

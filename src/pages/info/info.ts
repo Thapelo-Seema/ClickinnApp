@@ -305,15 +305,22 @@ export class InfoPage {
 
   callLandlord(uid: string){
     this.toast_svc.showToast('Please note that network charges may apply for making this call...')
-    this.user_svc.getUser(uid)
-    .pipe(take(1))
-    .subscribe(user =>{
-      
-        this.callNumber.callNumber(user.phoneNumber, false)
-        .catch(err =>{
-          this.errHandler.handleError(err)
-        })
-    })
+    if(this.apartment.callNumber && this.apartment.callNumber != ""){
+      this.callNumber.callNumber(this.apartment.callNumber, false)
+      .catch(err =>{
+        this.errHandler.handleError(err);
+      })
+    }else{
+      this.user_svc.getUser(uid)
+      .pipe(take(1))
+      .subscribe(user =>{
+          this.callNumber.callNumber(user.phoneNumber, false)
+          .catch(err =>{
+            this.errHandler.handleError(err)
+          })
+      })
+    }
+    
   }
 
 
