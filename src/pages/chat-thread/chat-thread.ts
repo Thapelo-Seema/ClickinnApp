@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { IonicPage, NavController, Content , List, LoadingController, ModalController} from 'ionic-angular';
+import { IonicPage, NavController, Content , List, LoadingController, ModalController, NavParams} from 'ionic-angular';
 import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
 import { ChatMessage } from '../../models/chatmessage.interface';
 import { Observable } from 'rxjs-compat';
@@ -48,7 +48,7 @@ export class ChatThreadPage {
   ];
   constructor(
     public navCtrl: NavController, 
-   // public navParams: NavParams, 
+    public navParams: NavParams, 
     private chat_svc: ChatServiceProvider,
   	private object_init: ObjectInitProvider, 
     private storage: LocalDataProvider, 
@@ -62,11 +62,26 @@ export class ChatThreadPage {
     this.message = this.object_init.initializeChatMessage(); //Initialize empty chat message
 
     /*Retrieve cached thread in order to get some thread info and thread chats*/
-    this.storage.getThread().then(thread =>{
+    
 
-      this.threadInfo = thread;
-      this.thread = this.chat_svc.getThreadChats(thread.thread_id);
-      this.chat_svc.getThreadChats(thread.thread_id)
+      this.threadInfo = this.navParams.data;
+      this.storage.setThread(this.threadInfo).catch(err => this.errHandler.handleError(err));
+
+      if(this.threadInfo == null || this.threadInfo == undefined){
+        this.storage.getThread().then(thread =>{
+          this.threadInfo = thread;
+          this.setupData();
+        })
+      }else{
+        this.setupData();
+      }
+    /* Get a synched user and get a more complete threadInfo object */
+  	
+  }
+
+  setupData(){
+    this.thread = this.chat_svc.getThreadChats(this.threadInfo.thread_id);
+      this.chat_svc.getThreadChats(this.threadInfo.thread_id)
       .pipe(take(1))
       .subscribe(threadd =>{
         console.log(threadd)
@@ -111,14 +126,6 @@ export class ChatThreadPage {
         this.loader.dismiss()
         this.errHandler.handleError(err)
       })
-    })
-  	.catch(err => {
-      this.loader.dismiss()
-      this.errHandler.handleError(err)
-    })
-  	
-    /* Get a synched user and get a more complete threadInfo object */
-  	
   }
 
   ionViewDidLoad() {

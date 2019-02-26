@@ -3,12 +3,13 @@ import { IonicPage, NavController, ToastController, LoadingController } from 'io
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { Thread } from '../../models/thread.interface';
 import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
-import { Observable } from 'rxjs';
+//import { Observable } from 'rxjs';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { User } from '../../models/users/user.interface';
 import { take } from 'rxjs-compat/operators/take';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
+import { Subscription } from 'rxjs-compat/Subscription';
 
 @IonicPage()
 @Component({
@@ -18,6 +19,9 @@ import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 export class ChatsPage {
   //@ViewChild(Content) content: Content;
   threads: Thread[];
+  threadSubs: Subscription = null;
+  threadStampsSubs: Subscription = null;
+  unseenSubs: Subscription = null;
   user: User;
   users: User[] = [];
   searchText: string = '';
@@ -46,41 +50,45 @@ export class ChatsPage {
     /* Get user from cache and get the users threads */
   	this.storage.getUser().then(user =>{
       if(user != undefined){
-        this.user = this.object_init.initializeUser2(user);
-        let ids: string[] = []
-        let modifiedThreads: Thread[] = [];
-        console.log(user)
-        this.chat_svc.getThreads(user)
+        this.user = this.object_init.initializeUser2(user); //initializing user from cache
+        let ids: string[] = []; //Array to contain all thread_ids for this user
+        let modifiedThreads: Thread[] = []; //Array to contain threads which are rearranged by timeStamp value
+        //console.log(user)
+        /**
+        * Subscribe to users threads and assign subscription to threadSubs
+        */
+        this.threadSubs = this.chat_svc.getThreads(user)
         .subscribe( threads =>{
-          this.chat_svc.getThreadTimeStamps(user.uid)
-          .pipe(take(1))
+          this.threadStampsSubs = this.chat_svc.getThreadTimeStamps(user.uid)
+          //.pipe(take(1))
           .subscribe(timestamps =>{
             modifiedThreads = [];
             this.threads = [];
-            //getting the order of the threads by timestamp in array ids
+            //Putting the thread ids of the timeStamps in ids (the timestamps are already in descending order and so are the ids)
             timestamps.forEach(stamp =>{
-              console.log(stamp)
+              //console.log(stamp)
               ids.push(stamp.payload.doc.id)
             })
             //Checking for thread whos timestamps are captured and putting them in modifiedThreads
             threads.forEach(thread =>{
-              if(ids.indexOf(thread.thread_id) != -1){
+              if(ids.indexOf(thread.thread_id) != -1){ //if thread_id exists in ids, push into modified threads
                 modifiedThreads.push(thread)
               }
             })
             //Ordering the threads in mofiedThreads according to the order in ids
             threads.forEach(thread =>{
-              if(ids.indexOf(thread.thread_id) != -1){
-                console.log('Recent thread: ', thread.displayName)
-                modifiedThreads[ids.indexOf(thread.thread_id)] = thread;
+              if(ids.indexOf(thread.thread_id) != -1){ //if thread_id exists in ids (of threads which have timeStamps)
+                //console.log('Recent thread: ', thread.displayName)
+                modifiedThreads[ids.indexOf(thread.thread_id)] = thread; //order threads according to the order in the ids array 
               }
             })
-
+            //Add the other threads which dont have timeStamps yet
             threads.forEach(thread =>{
               if(ids.indexOf(thread.thread_id) == -1){
                 modifiedThreads.push(thread);
               }
             })
+            //Make sure to add thread only once
             let inserted = [];
             modifiedThreads.forEach(th =>{
               if(inserted.indexOf(th.thread_id) == -1){
@@ -108,13 +116,25 @@ export class ChatsPage {
       }
   	})
     .catch(err =>{
+      this.loader.dismiss();
       this.errorHandler.handleError(err);
     })
   }
 
-  getUnseen(thread_id: string){
+  getLastChat(thread_id: string){
+    this.chat_svc.getLastChat(thread_id)
+    .pipe(take(1))
+    .subscribe(chats =>{
+      chats.forEach(chat =>{
+        console.log(chat.text);
+      })
+    })
+  }
+
+  getUnseen(thread_id: string): Promise<number>{
+    console.log('Unseen triggered...')
     return new Promise<number>((resolve, reject) =>{
-      this.chat_svc.getUnseenThreadChats(thread_id, this.user.uid)
+      this.unseenSubs = this.chat_svc.getUnseenThreadChats(thread_id, this.user.uid)
       .subscribe(val =>{
         resolve(val.length)
       })
@@ -133,16 +153,14 @@ export class ChatsPage {
       dp: thread.dp,
       displayName: thread.displayName
     }
-    this.storage.setThread(shapedThread).then(val =>{
+    
       this.navCtrl.push('ChatThreadPage', shapedThread);
-    })
-  	.catch(err => {
-      this.errorHandler.handleError(err)
-    })
   }
 
   ionViewDidLeave(){
-    //this.chat_svc.reset();
+    if(this.threadSubs != null) this.threadSubs.unsubscribe();
+    if(this.threadStampsSubs != null) this.threadStampsSubs.unsubscribe();
+    if(this.unseenSubs != null) this.unseenSubs.unsubscribe();
   }
 
   showToast(text: string){
@@ -154,7 +172,6 @@ export class ChatsPage {
   }
 
   userAutocomplete(event){
-    
       this.user_svc.getAllUsers()
       .pipe(take(1))
       .subscribe(users =>{

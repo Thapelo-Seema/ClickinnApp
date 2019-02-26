@@ -41,10 +41,8 @@
 					      <img src="{{thread?.dp}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" imageViewer/>
 					      <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 					    </ion-avatar>
-					    <p>
-					    	{{thread?.displayName ? thread?.displayName : 'Anonymous'}} &nbsp;&nbsp; 
-					    	<strong *ngIf="getUnseen(thread?.thread_id) > 0" >({{getUnseen(thread?.thread_id)}})</strong> 
-					    </p>
+					    <h3>{{thread?.displayName ? thread?.displayName : 'Anonymous'}}</h3>
+					    	<!--<strong *ngIf="getUnseen(thread?.thread_id) > 0" >({{getUnseen(thread?.thread_id)}})</strong> --> 
 					</button>
 				</ion-list>
 			</ion-col>

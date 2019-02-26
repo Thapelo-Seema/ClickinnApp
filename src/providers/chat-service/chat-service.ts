@@ -24,9 +24,11 @@ export class ChatServiceProvider {
   loading: Observable<boolean> = this._loading.asObservable();
   constructor(private afs: AngularFirestore, private object_init: ObjectInitProvider){
   }
+
   /**This function checks if the sender has the reciever already as part of their contact list and if so it will return 
     an object that contains the thread_id on which the two users chat else the object returned will contain an empty string
     fo the thread_id
+    @param uid the unique user id of the contact to be checked
   */
   isContact(uid: string, threads: Thread[]): any{
     console.log('contact uid: ', uid);
@@ -56,22 +58,24 @@ export class ChatServiceProvider {
   */
   async createNewThread(msg: ChatMessage){
     //let thread_id = await this.db.list('Threads').push({}).key;
-    let docRef = await this.afs.collection('Threads').add({});
+    let docRef = await this.afs.collection('Threads').add({}); //Create a new thread
     let thread_id = docRef.id;
     let msg2 = this.object_init.initializeChatMessag2(msg);
-    let chat = await this.afs.collection(`Threads/${thread_id}/chats`).add(msg);
-    msg2.id = chat.id;
-    let unseen = {
+    let chat = await this.afs.collection(`Threads/${thread_id}/chats`).add(msg); //Add message to the thread chats and store the document ref in chat variable
+    msg2.id = chat.id; // update msg2's id 
+    let unseen = { //Create an unseen object for this message 
       message_id: msg2.id,
       timeStamp: msg2.timeStamp,
       thread_id: thread_id
     }
+    //Update thread timeStamps for both users in thread
     this.afs.collection('ThreadTimeStamps').doc(msg.by.uid).collection('timeStamps').doc(thread_id).set({timeStamp: msg2.timeStamp})
     this.afs.collection('ThreadTimeStamps').doc(msg.to.uid).collection('timeStamps').doc(thread_id).set({timeStamp: msg2.timeStamp})
+    //post an unseen object for reciever of message
     this.afs.collection('UnseenMessages').doc(msg.to.uid).collection('Messages').doc(msg2.id).set(unseen)
+    //Post message to thread
     this.afs.collection(`Threads`).doc(thread_id).collection('chats').doc(msg2.id).set(msg2)
-    /*console.log('Thread id', thread_id);
-  	this.db.list(`Threads/${thread_id}`).push(msg);*/
+    //Include this thread in both users thread collections
   	this.afs.collection(`Users`)
     .doc(msg.to.uid)
     .collection('threads')
@@ -154,6 +158,19 @@ export class ChatServiceProvider {
     .valueChanges();
   }
 
+  getLastChat(thread_id: string): Observable<ChatMessage[]>{
+    return this.afs.collection(`Threads`).doc(thread_id).collection<ChatMessage>('chats', ref => 
+      ref.orderBy('timeStamp', 'desc')
+      .limit(1)
+      )
+    .valueChanges();
+  }
+
+  //Unseen datastructure
+    //UnseenMessages - col
+       //Uid - doc
+         //Messages - col
+           //-unseenObject - doc
   getUnseenThreadChats(thread_id: string, uid: string){
     return this.afs.collection(`UnseenMessages`)
     .doc(uid)

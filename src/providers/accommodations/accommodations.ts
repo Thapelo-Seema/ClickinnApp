@@ -34,9 +34,10 @@ export class AccommodationsProvider {
   data: Observable<any>;
   done: Observable<boolean> = this._done.asObservable();
   loading: Observable<boolean> = this._loading.asObservable();
-  constructor( private afs: AngularFirestore, private object_init: ObjectInitProvider){}
+  constructor( private afs: AngularFirestore, private object_init: ObjectInitProvider){
+  }
 
-   // Determines the doc snapshot to paginate query 
+  // Determines the doc snapshot to paginate query 
   private getCursor() {
     const current = this._data.value
     if (current.length) {
