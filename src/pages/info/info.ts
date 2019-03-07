@@ -14,6 +14,7 @@ import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 //import { ChatMessage } from '../../models/chatmessage.interface';
 import { CallNumber } from '@ionic-native/call-number';
+import { UsagePatternProvider } from '../../providers/usage-pattern/usage-pattern';
 
 @IonicPage()
 @Component({
@@ -51,7 +52,8 @@ export class InfoPage {
     private toast_svc: ToastSvcProvider,
     private alertCtrl: AlertController, 
     private loadingCtrl: LoadingController,
-    private callNumber: CallNumber){
+    private callNumber: CallNumber,
+    private usage_pttn: UsagePatternProvider){
       //this.chatMessage = this.object_init.initializeChatMessage();
       //his.loader.present();
       this.apartment = this.object_init.initializeApartment();
@@ -192,7 +194,7 @@ export class InfoPage {
  }
 
  gotoApartment(apartment: Apartment){
-    this.storage.setApartment(apartment).then(data => this.navCtrl.push('EditApartmentPage'))
+    this.storage.setApartment(apartment).then(data => this.navCtrl.push('EditApartmentPage', {user: this.user, apartment: this.apartment}))
     .catch(err => {
       console.log(err);
     });
@@ -204,12 +206,12 @@ export class InfoPage {
 
   gotoAppointment(){
     this.navCtrl.parent.select(1)
-    this.navCtrl.push('AppointmentPage')
+    this.navCtrl.push('AppointmentPage', {user: this.user, apartment: this.apartment})
   }
 
   gotoSecure(){
     this.navCtrl.parent.select(2)
-    this.navCtrl.push('SecurePage')
+    this.navCtrl.push('SecurePage', {user: this.user, apartment: this.apartment})
   }
 
   addToLiked(){
@@ -314,6 +316,7 @@ export class InfoPage {
       this.user_svc.getUser(uid)
       .pipe(take(1))
       .subscribe(user =>{
+        this.usage_pttn.madeCall(this.user, user);
           this.callNumber.callNumber(user.phoneNumber, false)
           .catch(err =>{
             this.errHandler.handleError(err)

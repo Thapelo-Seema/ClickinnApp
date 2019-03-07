@@ -11,6 +11,9 @@ import { Image } from '../../models/image.interface';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { take } from 'rxjs-compat/operators/take';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
+import { AgentsProvider } from '../../providers/agents/agents';
+import { Agent } from '../../models/agent.interface';
+import { MapsProvider } from '../../providers/maps/maps';
 
 @IonicPage()
 @Component({
@@ -25,7 +28,19 @@ export class EditProfilePage {
   dpChanged: boolean = false;
   recentDp: FileUpload;
   imageLoaded: boolean = false;
+  predictionLoading: boolean = false;
   progress: number = 0;
+  agent: Agent = {
+    uid: '',
+    name: '', 
+    phoneNumber: '',
+    areas: [],
+    online : true
+  }
+  predictions: any[] = [];
+  connectionError: boolean = false;
+  online: boolean = false;
+  areas: any[] = [];
 
   constructor(
     public navCtrl: NavController, 
@@ -39,16 +54,15 @@ export class EditProfilePage {
     private object_init: ObjectInitProvider,
     private user_svc: UserSvcProvider,
     private alertCtrl: AlertController,
-    private loadingCtrl: LoadingController){
+    private loadingCtrl: LoadingController,
+    private agent_svc: AgentsProvider,
+    private map_svc: MapsProvider){
     this.loader.present()
     this.user = this.object_init.initializeUser();
     this.recentDp = this.object_init.initializeFileUpload();
-    
   	this.storage.getUser().then(data =>{
       this.user_svc.getUser(data.uid)
-      .pipe(
-        take(1)
-      )
+      .pipe(take(1))
       .subscribe(user =>{
         this.user = this.object_init.initializeUser2(user);
         if(user.photoURL !== '' || user.photoURL == undefined) this.image = user.photoURL;
@@ -61,11 +75,13 @@ export class EditProfilePage {
   }
 
   ionViewWillLoad(){
-
   }
 
   save(){
     let confirm: boolean = false;
+    this.agent.phoneNumber = this.user.phoneNumber ;
+    this.agent.uid = this.user.uid;
+    this.agent.name = this.user.firstname + " " + this.user.lastname;
     let alert = this.alertCtrl.create({
       title: "Confirm changes",
       message: "Are you sure you want to save the changes to your profile ?",
@@ -99,6 +115,9 @@ export class EditProfilePage {
           .catch(err => {
               this.errHandler.handleError({message: 'Please check your internet connection...picture not uploaded'});
           })
+        }
+        if(this.user.user_type == "agent"){
+          this.agent_svc.createNewAgent(this.agent);
         }
       }
     })
@@ -172,6 +191,35 @@ export class EditProfilePage {
     })
   }
 
+  deleteNearby(index: number){
+    let confirm: boolean = false;
+    let alert = this.alertCtrl.create({
+      title: "CONFIRM DELETE",
+      message: 'Are you sure you want to delete this area ?',
+      buttons: [
+        {
+          text: 'Delete',
+          handler: data =>{
+            confirm = true;
+          }
+        },
+        {
+          role: 'cancel',
+          text: 'Cancel',
+          handler: data =>{
+            confirm = false;
+          }
+        }
+      ]
+    })
+    alert.present();
+    alert.onDidDismiss(data =>{
+      if(index >= 0 && confirm == true){
+        this.user.locations.splice(index, 1);
+      }
+    })
+  }
+
   persistChanges(){
     let ldr = this.loadingCtrl.create()
     ldr.present();
@@ -185,11 +233,103 @@ export class EditProfilePage {
       }).present().then(() =>{
           ldr.dismiss()
       })
-        
+      this.storage.setUser(this.user);
       }).catch(err => {
         this.errHandler.handleError(err);
         ldr.dismiss()
       })
+  }
+
+  /*Getting autocomplete predictions from the google maps place predictions service*/
+  getPredictions(event){
+    this.predictionLoading = true;
+    //If there is an internet connection try to make requests
+    if(window.navigator.onLine){
+      this.online = true;
+      if(event.key === "Backspace" || event.code === "Backspace"){
+        setTimeout(()=>{//Set timeout to limit the number of requests made during a deletion
+          this.map_svc.getPlacePredictionsSA(event.target.value).then(data =>{
+            this.handleSuccess(data);
+          })
+          .catch(err =>{
+            console.log('Error 1')
+            this.handleNetworkError();
+          })
+        }, 3000)
+      }else{// When location is being typed
+        this.map_svc.getPlacePredictionsSA(event.target.value).then(data =>{
+          if(data == null || data == undefined ){
+            console.log('Error 2')
+            this.handleNetworkError();
+          }else{
+            this.handleSuccess(data);
+          }
+        })
+        .catch(err => {
+          console.log('Error 3')
+          this.handleNetworkError();
+        })
+      }
+    }else{ //If there's no connection set online status to false, show message and stop spinner
+      this.online = false;
+      this.predictionLoading = false;
+      this.showToast('You are not connected to the internet...')
+    }
+  }
+
+  showToast(message){
+    let toast = this.toast.create({
+      message: message,
+      duration: 9000
+    })
+    toast.present();
+  }
+
+  cancelSearch(){
+    this.predictions = [];
+    this.predictionLoading = false;
+  }
+
+  selectPlace(place){
+    this.predictionLoading = true;
+    this.map_svc.getSelectedPlace(place).then(data => {
+      this.user.locations.push(data)
+      this.agent.areas.push(data)
+      this.predictions = [];
+      this.predictionLoading = false;
+    })
+    .catch(err => {
+      this.errHandler.handleError(err);
+      this.predictionLoading = false;
+    })
+  }
+
+  handleSuccess(data: any[]){
+    this.connectionError = false;
+    this.predictions = [];
+    this.predictions = data;
+    this.predictionLoading = false;
+  }
+
+  handleNetworkError(){
+    if(this.connectionError == false)
+      this.errHandler.handleError({message: 'You are offline...check your internet connection'});
+      this.predictionLoading = false;
+      this.connectionError = true;
+  }
+
+  showWarnig(title: string, message: string){
+    let alert = this.alertCtrl.create({
+      title: title,
+      message: message,
+      buttons: ['OK']
+    })
+    alert.present();
+  }
+
+  returnFirst(input: string): string{
+    if(input == undefined) return '';
+    return input.split(',')[0] + ', ' + input.split(',')[1];
   }
 
 }

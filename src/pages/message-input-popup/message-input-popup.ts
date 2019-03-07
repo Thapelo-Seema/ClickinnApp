@@ -8,6 +8,8 @@ import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 import { Thread } from '../../models/thread.interface';
 import { take } from 'rxjs-compat/operators/take';
+import { UsagePatternProvider } from '../../providers/usage-pattern/usage-pattern';
+import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 /**
  * Generated class for the MessageInputPopupPage page.
  *
@@ -32,7 +34,9 @@ export class MessageInputPopupPage {
   	private objectInit: ObjectInitProvider, 
     private storage: LocalDataProvider, 
     private chat_svc: ChatServiceProvider,
-    private toast_svc: ToastSvcProvider){
+    private toast_svc: ToastSvcProvider,
+    private usage_pattn: UsagePatternProvider,
+    private user_svc: UserSvcProvider){
   	this.message = this.objectInit.initializeChatMessage();
   	this.user = this.objectInit.initializeUser();
   	
@@ -65,6 +69,11 @@ export class MessageInputPopupPage {
   send(){
   	this.message.timeStamp = Date.now();
   	this.chat_svc.sendMessage(this.message, this.threads);
+    this.user_svc.getUser(this.message.to.uid)
+    .pipe(take(1))
+    .subscribe(user =>{
+      this.usage_pattn.sentMessage(this.user, user);
+    })
   	this.close();
   	this.toast_svc.showToast('Your message has been sent and it can be found in your chats...');
   }

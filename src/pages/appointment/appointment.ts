@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController,  ToastController, AlertController, LoadingController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams,  ToastController, AlertController, LoadingController } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { DatePicker } from '@ionic-native/date-picker';
 import { Calendar } from '@ionic-native/calendar';
@@ -28,7 +28,8 @@ export class AppointmentPage {
   imageLoaded: boolean = false;
 
   constructor(
-    public navCtrl: NavController,  
+    public navCtrl: NavController, 
+    public navParams: NavParams, 
     private datePicker: DatePicker, 
   	private calender: Calendar,
     private storage: LocalDataProvider,
@@ -47,6 +48,14 @@ export class AppointmentPage {
     /* 
       Retrieving the cached apartment and pulling an updated version of it from the firestore database
     */
+    if(this.navParams.data != null && this.navParams.data != undefined){
+      //Extract apartment and user
+      this.apartment = this.navParams.data.apartment;
+      //setup the rest of the data
+    }else{
+      //get apartment and user from storage and setup the rest of the data
+    }
+    
     this.storage.getApartment().then(cachedApart =>{
       this.accom_svc.getApartmentById(cachedApart.apart_id)
       .pipe(take(1))

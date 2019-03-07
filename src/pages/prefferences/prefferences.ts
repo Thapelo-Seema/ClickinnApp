@@ -80,14 +80,15 @@ export class PrefferencesPage {
     this.search_object.maxPrice = Number(this.search_object.maxPrice);
     this.search_object.minPrice = Number(this.search_object.minPrice);
     this.search_object.timeStamp = Date.now();
-    this.afs.collection('Searches2').add(this.search_object).then(data =>{
-    })
-    .catch(err => {
-      this.errHandler.handleError(err);
-    })
-    this.storage.setSearch(this.search_object).then(data =>{
-    	this.navCtrl.push('SeekingPage', {search: this.search_object, poi: this.pointOfInterest});
-    })
+    if(this.user.user_type != 'agent'){
+      this.afs.collection('Searches2').add(this.search_object).then(data =>{
+      })
+      .catch(err => {
+        this.errHandler.handleError(err);
+      })
+    }
+    this.navCtrl.push('SeekingPage', {search: this.search_object, poi: this.pointOfInterest, user: this.user});
+    this.storage.setSearch(this.search_object)
     .catch(err => {
       this.errHandler.handleError(err);
     })

@@ -161,10 +161,11 @@
         </ion-buttons>
       </ion-step>
       <ion-step>
-        <h1 text-center>Building Details</h1>
+        <h1 text-center>More Details</h1>
         <ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0,0,0, 0.5); color: white; letter-spacing: 2px">
         <p text-center style="color: white">
-          Select building from the list of building profile you have already created or fill details of the new building which the apartment belongs to  
+          These are details about the property or building in which the apartment is situated. If you have an apartment
+          already uploaded in the same property (building), just select the property from the property list below. 
         </p>
         <ion-buttons end>
           <button ion-button small clear>
@@ -179,7 +180,7 @@
             Close list &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropup" end></ion-icon>
           </button>
           <button ion-button clear color="clickinn" icon-right *ngIf="!openList" (click)="showList()">
-            Select building from list &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropdown" end></ion-icon>
+            Select property from list &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropdown" end></ion-icon>
           </button>
         </ion-buttons>
         <ion-grid *ngIf="openList">
@@ -243,65 +244,18 @@
         </ion-buttons>
       </ion-step>
       <ion-step>
-        <h1 text-center *ngIf="!buildingSelected">Building Pictures</h1>
-        <h1 text-center *ngIf="buildingSelected">Finish Upload</h1>
-        <ion-item *ngIf="!buildingSelected" no-lines text-wrap style="border-radius: 7px; background: rgba(0,0,0, 0.5); color: white; letter-spacing: 2px">
-          <p text-center style="color: white">
-            Add pictures of the communal areas of the building, like bathrooms, kitchen, laundry, pool etc
-            (Add pictures one at a time and crop to the specified dimensions)  
-          </p>
-          <ion-buttons end>
-            <button ion-button small clear>
-              <div style="color: #32db64">
-                <!-- personnel ~ {{channel?.creator?.firstname}} {{channel?.creator?.lastname}} -->
-              </div>
-            </button>
-          </ion-buttons>
-        </ion-item>
+        <h1 text-center>Confirm and Upload</h1>
           <ion-item text-wrap no-lines *ngIf="buildingSelected">
             <ion-avatar item-start>
               <img src="{{building?.dP?.url ? building?.dP?.url : 'assets/imgs/placeholder.jpg'}}"/>
             </ion-avatar>
             <p>{{building.address.description}}</p>
           </ion-item>
-          <ion-grid>
-            <ion-row style="border-bottom: 1px solid lightgray">
-              <ion-col col-md-6 *ngFor="let image of propertyImages">
-                <img src="{{image?.file ? image?.file : 'assets/imgs/placeholder.jpg'}}"/>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-
-          <ion-row>
-            <ion-col col-6 *ngIf="!propertyImagesAdded && !buildingSelected">
-              <button ion-button color="clickinn" padding outline margin-vertical (click)="addPictures(1, 2)" >
-                <strong>CAMERA</strong>&nbsp;&nbsp;&nbsp;&nbsp;<ion-icon name="ios-camera-outline"></ion-icon> 
-              </button>
-            </ion-col>
-            <ion-col col-6 *ngIf="!propertyImagesAdded && !buildingSelected">
-              <button ion-button color="clickinn" padding  outline margin-vertical  (click)="addPictures(2, 2)" >
-               <strong>GALLERY</strong>&nbsp;&nbsp;&nbsp;&nbsp;<ion-icon name="ios-images-outline"></ion-icon>  
-              </button>
-            </ion-col>
-            <ion-col col-6 *ngIf="propertyImagesAdded && !buildingSelected">
-                <button ion-button color="clickinn" padding  outline margin-vertical (click)="addPictures(1, 2)">
-                  <strong>MORE</strong>&nbsp;&nbsp;&nbsp;&nbsp;<ion-icon name="ios-camera-outline"></ion-icon>   
-                </button>
-            </ion-col>
-            <ion-col col-6 *ngIf="propertyImagesAdded && !buildingSelected">
-              <button ion-button color="clickinn" padding  outline margin-vertical (click)="addPictures(2, 2)" >
-                <strong>MORE</strong>&nbsp;&nbsp;&nbsp;&nbsp;<ion-icon name="ios-images-outline"></ion-icon>  
-              </button>
-            </ion-col>
-          </ion-row>
-          
         <ion-buttons>
           <button ion-button padding color="clickinn" round outline small ionicStepperPrevious (click)="scrollToTop()" >
             <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;Back
           </button>
-        </ion-buttons>
-        <progress-bar *ngIf="uploading" [progress]="progss" [color]="'#488aff'">
-        </progress-bar> 
+        </ion-buttons> 
         <ion-buttons padding>
           <button ion-button  padding color="secondary" full padding (click)="uploadApartment()">Upload&nbsp;&nbsp;
           <ion-icon name="ios-cloud-upload-outline"></ion-icon>

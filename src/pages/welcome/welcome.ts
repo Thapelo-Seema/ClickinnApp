@@ -1,5 +1,5 @@
 import { Component} from '@angular/core';
-import { IonicPage, NavController, ModalController, ToastController, Platform, AlertController, LoadingController} from 'ionic-angular';
+import { IonicPage, NavController, ModalController, ToastController, Platform, AlertController, NavParams, LoadingController} from 'ionic-angular';
 import { MapsProvider } from '../../providers/maps/maps';
 import { Address } from '../../models/location/address.interface';
 import { AngularFirestore } from 'angularfire2/firestore';
@@ -44,39 +44,57 @@ export class WelcomePage {
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
     private user_svc: UserSvcProvider,
-    private chat_svc: ChatServiceProvider){
-    this.platform.ready().then(value =>{
-      let ldng = this.loadingCtrl.create();
-      ldng.present();
-      this.user = this.object_init.initializeUser(); //Initialize user object with default values
-      this.pointOfInterest = this.object_init.initializeAddress(); //Initialize the point of interest with default values
-      this.pointOfInterest.description = ''; //Initialize the description of the the POI with an empty string (for some strange reason)
-      this.storage.getUser().then(data =>{ //Get a cached copy of user
-          //Subscribing to the most recent user object in the database
-          this.user = this.object_init.initializeUser2(data);
+    private chat_svc: ChatServiceProvider,
+    private navParams: NavParams){
+    console.log('welcome constructor...');
+    let ldng = this.loadingCtrl.create();
+    ldng.present();
+    this.user = this.object_init.initializeUser2(this.navParams.data); //Initialize user object with default values
+    this.pointOfInterest = this.object_init.initializeAddress(); //Initialize the point of interest with default values
+    this.pointOfInterest.description = ''; //Initialize the description of the the POI with an empty string (for some strange reason)
+    console.log('navParams.data in welcome: ', this.navParams.data);
+    /*if(this.user != null && this.user != undefined){
+      ldng.dismiss();
+      if(this.user.uid){
+        console.log('user ready for notifications')
+        this.chat_svc.getUnseenChats(this.user.uid)
+        .subscribe(chats =>{
+          if(chats.length > 0){
+            console.log('Unseen chats: ', chats.length)
+            this.unseenNotifications = this.unseenNotifications - this.chats + chats.length
+            this.chats = chats.length
+          }else{
+            this.unseenNotifications -= this.chats;
+            this.chats = chats.length
+          }
+        })
+      }
+    }else{
+*/    console.log('fetching user from cache...')
+      this.storage.getUser()
+      .then(user =>{
+        console.log('Got user: ', user);
+        if(user){
+          this.user = this.object_init.initializeUser2(user);
           ldng.dismiss();
-          if(data.uid){
-          console.log('user ready for notifications')
-          this.chat_svc.getUnseenChats(data.uid)
-          .subscribe(chats =>{
-            if(chats.length > 0){
-              console.log('Unseen chats: ', chats.length)
-              this.unseenNotifications = this.unseenNotifications - this.chats + chats.length
-              this.chats = chats.length
-            }else{
-              this.unseenNotifications -= this.chats;
-              this.chats = chats.length
-            }
-          })
+          if(user.uid){
+            console.log('user ready for notifications')
+            this.chat_svc.getUnseenChats(user.uid)
+            .subscribe(chats =>{
+              if(chats.length > 0){
+                console.log('Unseen chats: ', chats.length)
+                this.unseenNotifications = this.unseenNotifications - this.chats + chats.length
+                this.chats = chats.length
+              }else{
+                this.unseenNotifications -= this.chats;
+                this.chats = chats.length
+              }
+            })
+          }
+        }else{
+          this.navCtrl.setRoot('LoginPage');
         }
-        })
-        .catch(() => {
-          //If there's an error getting the user from the local storage display the message below and stop the spinner
-          this.errHandler.handleError({message: "Could not find local user", code: 101});
-          ldng.dismiss()
-        })
-    })
-    
+      })
   }
 
   //Unsubscribe from all subscriptions before leaving the page

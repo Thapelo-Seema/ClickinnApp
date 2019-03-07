@@ -1,16 +1,14 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, AlertController, LoadingController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController, LoadingController, NavParams } from 'ionic-angular';
 import { Address } from '../../models/location/address.interface';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { AccommodationsProvider } from '../../providers/accommodations/accommodations';
 import { Search } from '../../models/search.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-//import { ClickinnMapsComponent } from '../../components/clickinn-maps/clickinn-maps';
-//import { AccommodationsComponent } from '../../components/accommodations/accommodations';
-//import { ApartmentDetailsPage } from '../apartment-details/apartment-details';
 import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { take } from 'rxjs-compat/operators/take';
+import { User } from '../../models/users/user.interface';
 
 @IonicPage()
 @Component({
@@ -18,7 +16,7 @@ import { take } from 'rxjs-compat/operators/take';
   templateUrl: 'seeking.html',
 })
 export class SeekingPage {
-
+  user: User;
   pointOfInterest: Address;
   apartments: Apartment[] = [];
   numberOfApartments: number = 0;
@@ -37,37 +35,45 @@ export class SeekingPage {
     ];
 
   constructor(
-    public navCtrl: NavController,  
+    public navCtrl: NavController,
+    public navParams: NavParams,  
     private accom_svc: AccommodationsProvider,
     private alertCtrl: AlertController, 
     private storage: LocalDataProvider,
     private errHandler: ErrorHandlerProvider, 
     private object_init: ObjectInitProvider, 
     private loadingCtrl: LoadingController){
-    this.loader.present() 
+    this.loader.present();
+    this.user = this.navParams.data.user;
     this.pointOfInterest = this.object_init.initializeAddress();
     this.bestMatch = this.object_init.initializeApartment();
     this.search_object = this.object_init.initializeSearch();
-    this.storage.getPOI().then(data =>{
-      this.pointOfInterest = data;
-    })
-    .then(() =>{
-      this.storage.getSearch()
-      .then(data => {
-        console.log(data)
-        this.search_object = data;
-      }).then(() =>{
-        this.getApartments(this.search_object);
+    if(this.navParams.data){
+      this.pointOfInterest = this.navParams.data.poi;
+      this.search_object = this.navParams.data.search;
+      this.getApartments(this.search_object);
+    }else{
+      this.storage.getPOI().then(data =>{
+        this.pointOfInterest = data;
+      })
+      .then(() =>{
+        this.storage.getSearch()
+        .then(data => {
+          console.log(data)
+          this.search_object = data;
+        }).then(() =>{
+          this.getApartments(this.search_object);
+        })
+        .catch(err => {
+          this.errHandler.handleError(err);
+          this.loader.dismiss();
+        })
       })
       .catch(err => {
         this.errHandler.handleError(err);
-        this.loader.dismiss()
+        this.loader.dismiss();
       })
-    })
-    .catch(err => {
-      this.errHandler.handleError(err);
-      this.loader.dismiss()
-    })	
+    }	
   }
 
 
@@ -116,7 +122,7 @@ export class SeekingPage {
 	}
 
 	gotoApartment(apartment: Apartment){
-    this.storage.setApartment(apartment).then(data => this.navCtrl.push('ApartmentDetailsPage'))
+    this.storage.setApartment(apartment).then(data => this.navCtrl.push('ApartmentDetailsPage',  {user: this.user, apartment: apartment}))
     .catch(err => {
       this.errHandler.handleError(err);
     });

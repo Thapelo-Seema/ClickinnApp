@@ -43,6 +43,7 @@ import { FileUploadSvcProvider } from '../providers/file-upload-svc/file-upload-
 import { DepositProvider } from '../providers/deposit/deposit';
 import { PaginationProvider } from '../providers/pagination/pagination';
 import { UsagePatternProvider } from '../providers/usage-pattern/usage-pattern';
+import { AgentsProvider } from '../providers/agents/agents';
 
 
 export const firebaseConfig = {
@@ -97,7 +98,8 @@ export const firebaseConfig = {
     DepositProvider,
     PaginationProvider,
     CallNumber,
-    UsagePatternProvider 
+    UsagePatternProvider,
+    AgentsProvider 
   ]
 })
 export class AppModule {}

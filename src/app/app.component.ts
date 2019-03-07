@@ -411,6 +411,7 @@ export class MyApp {
     if there's no token route to the user guide page else route to the page suitable for the user role
   */
   navigateUser(user: User){
+    
     console.log('getting first time...', user)
     if(user.firstime == true){
       console.log('Users first time')
@@ -426,8 +427,9 @@ export class MyApp {
         })
       })
     }else{
-      this.storage.setUser(user)
-      .then(cached =>{
+      console.log('navigating...')
+      this.storage.setUser(user).
+      then(() =>{
         if(user.user_type){ //check i user_type property exists in user
         switch(user.user_type){
           case 'seeker':{
@@ -465,6 +467,11 @@ export class MyApp {
             this.rootPage = 'WelcomePage';
             break;
           }
+          case 'agent':{
+            //Navigate to master
+            this.rootPage = 'LandlordDashboardPage';
+            break;
+          }
         }
       }
       else{
@@ -473,6 +480,7 @@ export class MyApp {
         this.rootPage = 'WelcomePage';
       }
       this.appViewReady();
+
       })
     }
   }
@@ -484,19 +492,10 @@ export class MyApp {
       .subscribe(user =>{
         if(user){
           this.user = this.object_init.initializeUser2(user);
-          this.storage.setUser(this.user)
-          .then(() =>{
-            this.loader.dismiss()
-            this.navigateUser(user);
-            this.initNotifications();
-            return;
-          })
-          .catch(err =>{
-            this.loader.dismiss()
-            this.errHandler.handleError({errCode: 'SET_OFFLINE_USER', message: `Error caching user`});
-            this.rootPage = 'LoginPage';
-            return;
-          })
+          this.loader.dismiss()
+          this.navigateUser(user);
+          this.initNotifications();
+          return;
         }
       })
     }
@@ -557,8 +556,7 @@ export class MyApp {
   monitorAuthState(){
    this.authSubs = this.afAuth.authState
     .subscribe(user =>{
-      console.log('MonitorAuthState running....')
-
+      console.log('MonitorAuthState running...')
       if(user || this.afAuth.auth.currentUser){
         console.log('Firebase user found...')
         if(user.uid){
@@ -566,7 +564,7 @@ export class MyApp {
           this.chat_svc.getUnseenChats(user.uid)
           .subscribe(chats =>{
             if(chats.length > 0){
-              console.log('Unseen chats: ', chats.length)
+              //console.log('Unseen chats: ', chats.length)
               this.unseenNotifications = this.unseenNotifications - this.chats + chats.length
               this.chats = chats.length
             }else{

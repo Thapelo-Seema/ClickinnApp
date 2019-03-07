@@ -29,7 +29,7 @@
 				  	</h1>
 				</ion-item>
 				 	
-				<div  padding>
+				<div *ngIf="predictions.length <= 0" padding>
 			    	<h2 text-center>Edit details</h2>
 				    <ion-item >
 				      	<ion-label stacked>Display Name</ion-label>
@@ -51,9 +51,17 @@
 						<ion-label stacked>Phone number</ion-label>
 			  			<ion-input type="number" [(ngModel)]="user.phoneNumber"></ion-input>
 					</ion-item>
-					<ion-item margin-bottom>
+					<ion-item >
 						<ion-label stacked>Occupation</ion-label>
 			  			<ion-input type="text" [(ngModel)]="user.occupation"></ion-input>
+					</ion-item>
+					<ion-item padding margin-bottom>
+					  <ion-label>User Role</ion-label>
+					  <ion-select [(ngModel)]="user.user_type" required>
+					    <ion-option value="agent">Operator</ion-option>
+					    <ion-option value="seeker">Seeker</ion-option>
+					    <ion-option value="Any">Any</ion-option>
+					  </ion-select>
 					</ion-item>
 					<!-- <ion-item >
 						<input type="file" accept="application/pdf" #proof hidden="hidden" (change)="updateproof($event)">
@@ -61,6 +69,19 @@
 						<span><button ion-button>ID copy</button></span>
 					</ion-item> -->
 				</div>
+				<h1 *ngIf="user?.user_type == 'agent'" text-center>Add areas you can serve</h1>
+				<ion-searchbar *ngIf="user?.user_type == 'agent'" type="search" margin-top placeholder="Add area e.g. Braamfontein" (ionInput)="getPredictions($event)" mode="ios">
+		        </ion-searchbar>
+		        <div *ngIf="predictionLoading" style="background: rgba(0, 0, 0, 0.8); color: white; padding-top: 5px; padding-bottom: 5px;  text-align: center; z-index: 1">
+		            <ion-spinner name="ios"></ion-spinner> &nbsp;&nbsp;
+		            Loading predictions...
+		        </div>
+		        <ion-list *ngIf="predictions">
+		            <button ion-item *ngFor="let pred of predictions" (click)="selectPlace(pred)">{{pred?.description}}</button>
+		        </ion-list>
+		        <ion-item *ngFor="let area of user?.locations; let idx = index" text-wrap margin-vertical (click)="deleteNearby(idx)" style="border-radius: 6px">
+		        	<ion-icon name="close" start></ion-icon> &nbsp;&nbsp;&nbsp; {{area ? returnFirst(area?.description): ''}}
+		        </ion-item>
 				<ion-buttons end padding>
 					<button ion-button (click)="save()"><ion-icon name="cloud-upload" start></ion-icon> &nbsp;&nbsp; Save</button>
 				</ion-buttons>

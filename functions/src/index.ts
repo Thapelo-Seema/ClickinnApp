@@ -1,5 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { Address } from '../../src/models/location/address.interface';
+import { Agent } from '../../src/models/agent.interface';
 admin.initializeApp();
 admin.firestore().settings({timestampsInSnapshots: true})
 
@@ -394,7 +396,6 @@ exports.chatMessageNotification = functions.firestore.document(`Threads/{thread_
 			'content-available': '1',
 			thread_id: thread_id
 		}
-		
 	}
 	const db = admin.firestore();
 	const deviceRef = db.collection('Tokens').where('uid', '==', to.uid);
@@ -403,6 +404,61 @@ exports.chatMessageNotification = functions.firestore.document(`Threads/{thread_
 	devices.forEach(device =>{
 		tokens.push(device.data().token)
 	})
+	return admin.messaging().sendToDevice(tokens, payload)
+})
+
+
+//This function is responsible for notifying agents of relevant searches
+exports.searchNotification = functions.firestore.document(`Searches2/{search_id}`)
+.onCreate(async (event, context) =>{
+	const data = event.data();
+	console.log('event data: ', event.data())
+	const searchAddress: Address = data.address;
+	const clickinn_icon = `https://firebasestorage.googleapis.com/v0/b/clickinn-996f0.appspot.com/o/clickinn_logo.jpg?
+	alt=media&token=6c24891a-8e7d-43f6-ab84-5f196fdf4ed5`;
+	
+	const payload = {
+		notification: {
+			title: `Clickinn Search`,
+          	body: `Someone searched for a place in your area`,
+          	icon: clickinn_icon,
+          	sound: 'default',
+			vibrate: 'true',
+			priority: 'high'
+		}
+	}
+	const db = admin.firestore();
+	const agent_ids = [];
+	const tokens = [];
+	//Go through each users locations array and check if the it matches the current location
+	//We need to iterate through the users locations as we test
+	//If it does, put that users uid in a temp array
+	
+	const agentRef = db.collection('Agents').where('online', '==', true)
+	const agents = await agentRef.get();
+
+
+	agents.forEach(agent =>{
+		const agentDetails: Agent = <Agent>agent.data();
+		for(const area of agentDetails.areas){
+			if(area.locality_short === searchAddress.locality_short){
+				agent_ids.push(agentDetails.uid);
+				break;
+			}
+		}
+	})
+	agent_ids.forEach(async agent_id =>{
+		const deviceRef = db.collection('Tokens').where('uid', '==', agent_id);
+		const devices = await deviceRef.get();
+
+		console.log('Devices: ', devices.docs);
+		devices.forEach(device =>{
+			console.log('Device: ', device)
+			if(tokens.indexOf(device.data().token) === -1) tokens.push(device.data().token)
+		})
+	})
+	
+	console.log('Tokens: ', tokens)
 	return admin.messaging().sendToDevice(tokens, payload)
 })
 
