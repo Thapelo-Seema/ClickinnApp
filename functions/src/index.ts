@@ -457,7 +457,6 @@ exports.searchNotification = functions.firestore.document(`Searches2/{search_id}
 			if(tokens.indexOf(device.data().token) === -1) tokens.push(device.data().token)
 		})
 	})
-	
 	console.log('Tokens: ', tokens)
 	return admin.messaging().sendToDevice(tokens, payload)
 })
