@@ -260,7 +260,7 @@ exports.bookingConfirmation = functions.firestore.document(`Viewings/{viewing_id
 	return admin.messaging().sendToDevice(tokens, payload)
 })
 
-/*exports.depositConfirmation = functions.firestore.document(`Deposits/{deposit_id}`)
+exports.depositConfirmation = functions.firestore.document(`Deposits/{deposit_id}`)
 .onUpdate(async (event, context) =>{
 	const depositBefore = event.before.data();
 	const depositAfter = event.after.data();
@@ -338,7 +338,7 @@ exports.bookingConfirmation = functions.firestore.document(`Viewings/{viewing_id
 	console.log('Tokens: ', tokens)
 
 	return admin.messaging().sendToDevice(tokens, payload)
-})*/
+})
 
 exports.newThreadNotification = functions.firestore.document(`Threads/{thread_id}`)
 .onCreate(async (event, context) =>{
