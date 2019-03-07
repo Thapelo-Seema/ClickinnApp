@@ -252,59 +252,58 @@ exports.bookingConfirmation = functions.firestore.document(`Viewings/{viewing_id
     console.log('Tokens: ', tokens);
     return admin.messaging().sendToDevice(tokens, payload);
 }));
-exports.depositConfirmation = functions.firestore.document(`Deposits/{deposit_id}`)
-    .onUpdate((event, context) => __awaiter(this, void 0, void 0, function* () {
+/*exports.depositConfirmation = functions.firestore.document(`Deposits/{deposit_id}`)
+.onUpdate(async (event, context) =>{
     const depositBefore = event.before.data();
     const depositAfter = event.after.data();
-    let notifyObject = null;
-    let code = '';
-    if (depositAfter.clickinn_confirmed !== depositBefore.clickinn_confirmed) {
+    let notifyObject: any = null;
+    let code: string = '';
+    if(depositAfter.clickinn_confirmed !== depositBefore.clickinn_confirmed){
         code = 'clickinn_confirmed_deposit';
         notifyObject = {
             message: `Clickinn confirms that payment has been made for the ${depositAfter.apartment.room_type} at ${depositAfter.apartment.property.address.description.split(',')[0] + depositAfter.apartment.property.address.description.split(',')[1]}`,
             to: depositAfter.to.uid
-        };
-    }
-    else if (depositAfter.tenant_confirmed !== depositBefore.tenant_confirmed) {
-        if (depositAfter.tenant_confirmed) {
+        }
+    }else if(depositAfter.tenant_confirmed !== depositBefore.tenant_confirmed){
+        
+        if(depositAfter.tenant_confirmed){
             code = 'tenant_confirmed_deposit';
             notifyObject = {
                 message: `${depositAfter.by.firstname} confirmed the deposit of the ${depositAfter.apartment.room_type} at ${depositAfter.apartment.property.address.description.split(',')[0] + depositAfter.apartment.property.address.description.split(',')[1]}`,
                 to: depositAfter.to.uid
-            };
-        }
-        else {
+            }
+        }else{
             code = 'tenant_cancelled_deposit';
             notifyObject = {
                 message: `${depositAfter.by.firstname} cancelled the deposit of the ${depositAfter.apartment.room_type} at ${depositAfter.apartment.property.address.description.split(',')[0] + depositAfter.apartment.property.address.description.split(',')[1]}`,
                 to: depositAfter.to.uid
-            };
+            }
         }
-    }
-    else if (depositAfter.agent_confirmed !== depositBefore.agent_confirmed) {
+        
+    }else if(depositAfter.agent_confirmed !== depositBefore.agent_confirmed){
         code = 'agent_confirmed_deposit';
         notifyObject = {
             message: `Your accommodation deposit has been confirmed, you can make arrangements with the property manager for moving in `,
             to: depositAfter.by.uid
-        };
+        }
     }
-    else if (depositAfter.agent_goAhead !== depositBefore.agent_goAhead) {
+    else if(depositAfter.agent_goAhead !== depositBefore.agent_goAhead){
         code = 'agent_deposit_goAhead';
-        if (depositAfter.agent_goAhead) {
+        if(depositAfter.agent_goAhead){
             notifyObject = {
                 message: `Click here to go ahead with the deposit of the R${depositAfter.apartment.price} ${depositAfter.apartment.room_type}`,
                 to: depositAfter.by.uid
-            };
-        }
-        else {
+            }
+        }else{
             notifyObject = {
                 message: `Unfortunately your request to deposit the R${depositAfter.apartment.price} ${depositAfter.apartment.room_type} has been declined, please do not go ahead with the deposit`,
                 to: depositAfter.by.uid
-            };
+            }
         }
     }
     const clickinn_icon = `https://firebasestorage.googleapis.com/v0/b/clickinn-996f0.appspot.com/o/clickinn_logo.jpg?
-		alt=media&token=6c24891a-8e7d-43f6-ab84-5f196fdf4ed5`;
+        alt=media&token=6c24891a-8e7d-43f6-ab84-5f196fdf4ed5`;
+
     const payload = {
         data: {
             title: `Clickinn Secure Payment`,
@@ -318,19 +317,20 @@ exports.depositConfirmation = functions.firestore.document(`Deposits/{deposit_id
             priority: 'high',
             'content-available': '1'
         }
-    };
+    }
     const db = admin.firestore();
     const deviceRef = db.collection('Tokens').where('uid', '==', notifyObject.to);
-    const devices = yield deviceRef.get();
+    const devices = await deviceRef.get();
     const tokens = [];
     console.log('Devices: ', devices.docs);
-    devices.forEach(device => {
-        console.log('Device: ', device);
-        tokens.push(device.data().token);
-    });
-    console.log('Tokens: ', tokens);
-    return admin.messaging().sendToDevice(tokens, payload);
-}));
+    devices.forEach(device =>{
+        console.log('Device: ', device)
+        tokens.push(device.data().token)
+    })
+    console.log('Tokens: ', tokens)
+
+    return admin.messaging().sendToDevice(tokens, payload)
+})*/
 exports.newThreadNotification = functions.firestore.document(`Threads/{thread_id}`)
     .onCreate((event, context) => __awaiter(this, void 0, void 0, function* () {
     console.log('data: ', event.data());
