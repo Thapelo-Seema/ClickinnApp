@@ -433,10 +433,9 @@ exports.searchNotification = functions.firestore.document(`Searches2/{search_id}
 	//Go through each users locations array and check if the it matches the current location
 	//We need to iterate through the users locations as we test
 	//If it does, put that users uid in a temp array
-	
+
 	const agentRef = db.collection('Agents').where('online', '==', true)
 	const agents = await agentRef.get();
-
 
 	agents.forEach(agent =>{
 		const agentDetails: Agent = <Agent>agent.data();
