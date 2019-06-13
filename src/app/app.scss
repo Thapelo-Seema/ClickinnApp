@@ -54,6 +54,11 @@
   src: url('../assets/fonts/4iCs6KVjbNBYlgoKfw72.woff2') format('woff2');
 }
 
+ion-spinner {
+    width: 40px !important;
+    height: 40px !important;
+}
+
 ion-content{
 	font-family: 'Raleway', sans-serif;
   padding: 0;
@@ -67,7 +72,7 @@ ion-content{
 }
 
 .spinners{
-  font-size: 40px;
+  font-size: 500px;
 }
 
 ion-spinner * {

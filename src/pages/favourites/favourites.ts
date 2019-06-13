@@ -53,7 +53,8 @@ export class FavouritesPage {
       this.done = data;
       if(this.done == true) this.loadingMore = false;
     })*/
-    this.loader.present()
+    this.loader.setDuration(3000);
+    this.loader.present();
   	this.storage.getUser().then(data =>{
       this.user = data;
       this.apartments = this.accom_svc.getUserFavourites(data.liked_apartments)
@@ -66,11 +67,11 @@ export class FavouritesPage {
           aparts.forEach(apart =>{
             this.imagesLoaded.push(false);
           })
-          this.loader.dismiss()
+          
         }else{
           //this.toast_svc.showToast('You have not liked any apartments yet...')
           this.noLiked = true;
-          this.loader.dismiss()
+          
         }
   		})
   	})
@@ -89,7 +90,7 @@ export class FavouritesPage {
     //delete apartment.doc
     this.storage.setApartment(apartment).then(data => {
       //this.accom_svc.reset();
-      this.navCtrl.push('ApartmentDetailsPage')
+      this.navCtrl.push('ApartmentDetailsPage', {from:"favourites"})
     })
     .catch(err => {
       console.log(err)

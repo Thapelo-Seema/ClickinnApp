@@ -6,13 +6,13 @@
 -->
 <ion-header>
   <ion-navbar color="clickinn-pitch">
-    <ion-title style="font-family: 'Ubuntu', sans-serif;">Clickinn</ion-title>
+    <ion-title text-center style="font-weight: 3.0px; letter-spacing: 2px">Clickinn</ion-title>
     <button ion-button menuToggle icon-only>
       <ion-icon name='menu'></ion-icon> <span *ngIf="unseenNotifications > 0">&nbsp;&nbsp;({{unseenNotifications}}) </span>
     </button>
   </ion-navbar>
 </ion-header>
-<ion-content text-center class="clickinn-bg" style="font-family: 'Raleway', sans-serif;">
+<ion-content text-center class="clickinn-bg">
   <ion-fab bottom right>
     <button ion-fab color="secondary" (click)="gotoChats()">
       <ion-icon name="ios-chatboxes-outline">
@@ -28,10 +28,7 @@
           <div *ngIf="!search">
             <ion-slides loop="true" [autoplay]="3500">
               <ion-slide >
-                <h1  style="color: white">Welcome to the Clickinn community {{user ? returnFirst(user?.displayName): ''}} !</h1>
-              </ion-slide>
-              <ion-slide >
-                <h1 style="color: white">Looking for a good place to rent ?</h1>
+                <h1 style="color: white">Looking for a place to rent ?</h1>
                 <!-- <img src="assets/imgs/apartment.jpeg"/> -->
                 <ion-buttons margin-bottom>
                   <button ion-button round  (click)="showSearch()">Yes, I need a place</button>
@@ -65,14 +62,11 @@
                 </ion-buttons>
               </ion-slide>
             </ion-slides>
-            <ion-buttons margin-top>
-              <button ion-button outline round (click)="showSearch()">
-                <strong>Search for Accommodation</strong></button>
-              <button ion-button outline round margin-vertical (click)="gotoLandlordDash()">
-                <strong>Help others find a place</strong></button>
-              <button ion-button outline round (click)="gotoOwners()" >
-                <strong>I am a landlord</strong></button>
-            </ion-buttons>
+            
+              <button ion-button margin-top color="white" outline  round  (click)="showSearch()">
+                <ion-icon name="search" item-start></ion-icon>
+                &nbsp;&nbsp;Search
+              </button>
           </div>
           <div *ngIf="search" >
             <h2 style="color: white">Enter name of school, company or place you're moving to </h2>

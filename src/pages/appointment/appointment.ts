@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams,  ToastController, AlertController, LoadingController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams,  ToastController, 
+  AlertController, LoadingController, Platform } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { DatePicker } from '@ionic-native/date-picker';
 import { Calendar } from '@ionic-native/calendar';
@@ -26,6 +27,7 @@ export class AppointmentPage {
   appointment: Appointment;
   user: User;
   imageLoaded: boolean = false;
+  on_browser: boolean = false;
 
   constructor(
     public navCtrl: NavController, 
@@ -39,8 +41,17 @@ export class AppointmentPage {
     private appointment_svc: AppointmentsProvider,
     private accom_svc: AccommodationsProvider,
     private alertCtrl: AlertController,
-    private loadingCtrl: LoadingController){
-    this.loader.present()	
+    private loadingCtrl: LoadingController, 
+    private platform: Platform){
+    console.log('Platforms: ', this.platform.platforms());
+    this.on_browser = this.onBrowser(this.platform.platforms());
+    /*if(this.onBrowser(this.platform.platforms()) == true){
+      alert("Running on a broswer");
+    }else{
+      alert("Running on mobile");
+    }*/
+    this.loader.setDuration(4000);
+    this.loader.present();
     this.apartment = this.object_init.initializeApartment(); //Initialize an empty apartment object
     this.appointment = this.object_init.initializeAppointment(); //Initialize an empty appointment object
     this.user = this.object_init.initializeUser(); //Initialize an empty user object
@@ -73,31 +84,38 @@ export class AppointmentPage {
           this.appointment.apart_id = apartment.apart_id;
           this.appointment.apart_type = apartment.room_type;
           this.appointment.room_type = apartment.room_type;
-          this.loader.dismiss();
         })
         .catch(err =>{
-          this.loader.dismiss()
           this.errHandler.handleError(err)
         })
       },
       err =>{
-        this.loader.dismiss()
+        
         this.errHandler.handleError(err);
       })
     }).catch(err => {
       this.errHandler.handleError(err);
-      this.loader.dismiss()
     });
+  }
+
+  onBrowser(devices: string[]):boolean{
+    let browser = false;
+    devices.forEach(dev =>{
+      if(dev == 'mobileweb' || dev == 'core') browser = true;
+    })
+    return browser;
   }
 
   /* This function prompts the user to confirm the appointment and creates the appointment on the database if granted */
   book(){
-    let ldr = this.loadingCtrl.create()
-    ldr.present()
+    let ldr = this.loadingCtrl.create({
+      cssClass: 'my-loading-class'
+    })
+    
     let confirm: boolean = false;
     let alert = this.alertCtrl.create({
       title: "Make Appointment",
-      message: "Are you sure you want to make this appointment and all the details are correct ?",
+      message: "Are you sure you want to make this appointment and that all the details are correct ?",
       buttons: [
         {
           text: 'Yes Make Appointment',
@@ -117,13 +135,16 @@ export class AppointmentPage {
     alert.present();
     alert.onDidDismiss(data =>{
       if(confirm){
-        this.createCalenderEvent();
+        ldr.setDuration(2000);
+        ldr.present();
+        if(this.on_browser == false){
+          this.createCalenderEvent();
+        }
         this.updateAppointmentVals();
         this.appointment_svc.createBooking(this.appointment).then(data =>{
           this.appointment.appointment_id = data.id;
           this.appointment_svc.updateBooking(this.appointment)
           .then(() =>{
-            ldr.dismiss()
             this.toast.create({
                 message: "Appointment successfully created",
                 showCloseButton: true,
@@ -133,17 +154,14 @@ export class AppointmentPage {
             }).present()
           })
           .catch(err =>{
-            ldr.dismiss()
             this.errHandler.handleError(err);
           }) 
         }).catch(err => {
-          ldr.dismiss()
           this.errHandler.handleError(err);
         })
       }else{
-        ldr.dismiss()
         this.toast.create({
-                message: "Appointment cancelled",
+                message: "Appointment not created",
                 showCloseButton: true,
                   closeButtonText: 'Ok',
                   position: 'middle',

@@ -48,7 +48,8 @@ export class WelcomePage {
     private navParams: NavParams){
     console.log('welcome constructor...');
     let ldng = this.loadingCtrl.create();
-    ldng.present();
+    //ldng.setDuration(2000);
+    //ldng.present();
     this.user = this.object_init.initializeUser2(this.navParams.data); //Initialize user object with default values
     this.pointOfInterest = this.object_init.initializeAddress(); //Initialize the point of interest with default values
     this.pointOfInterest.description = ''; //Initialize the description of the the POI with an empty string (for some strange reason)
@@ -76,7 +77,7 @@ export class WelcomePage {
         console.log('Got user: ', user);
         if(user){
           this.user = this.object_init.initializeUser2(user);
-          ldng.dismiss();
+          
           if(user.uid){
             console.log('user ready for notifications')
             this.chat_svc.getUnseenChats(user.uid)

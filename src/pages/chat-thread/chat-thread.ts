@@ -57,6 +57,7 @@ export class ChatThreadPage {
     private errHandler: ErrorHandlerProvider,
     private loadingCtrl: LoadingController,
     private modalCtrl:  ModalController){
+    this.loader.setDuration(4000);
     this.loader.present()
   	this.user = this.object_init.initializeUser(); //Initializing an empty user
     this.message = this.object_init.initializeChatMessage(); //Initialize empty chat message
@@ -65,7 +66,8 @@ export class ChatThreadPage {
     
 
       this.threadInfo = this.navParams.data;
-      this.storage.setThread(this.threadInfo).catch(err => this.errHandler.handleError(err));
+      if(this.navParams.data != null && this.navParams.data != undefined)
+        this.storage.setThread(this.threadInfo).catch(err => this.errHandler.handleError(err));
 
       if(this.threadInfo == null || this.threadInfo == undefined){
         this.storage.getThread().then(thread =>{
@@ -106,10 +108,10 @@ export class ChatThreadPage {
             threads.forEach(th =>{
               if(th.thread_id == this.threadInfo.thread_id) this.threadInfo = th; //Update thread info with a more complete threadInfo object
             })
-            this.loader.dismiss()
+    
           },
           err =>{
-            this.loader.dismiss()
+            
             this.toast_svc.showToast('Error loading threads')
           })
           this.user_svc.getUser(user.uid).pipe(take(1)).subscribe(synced_user =>{
@@ -118,12 +120,12 @@ export class ChatThreadPage {
           })
         })
         .catch(err =>{
-          this.loader.dismiss()
+          
           this.toast_svc.showToast('Could not get user')
         })
       },
       err =>{
-        this.loader.dismiss()
+        
         this.errHandler.handleError(err)
       })
   }

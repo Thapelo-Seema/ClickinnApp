@@ -42,7 +42,7 @@
 							<img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 					      </ion-avatar>
 					      <p style="margin-bottom: 5px">
-					      	<strong style="overflow-wrap: normal">For {{app?.date?.toDate() | date : "medium" }}</strong>
+					      	<strong style="overflow-wrap: normal">For {{adjustDate(app?.date) | date : "medium" }}</strong>
 					      </p>
 					      <p *ngIf="app?.host_declines && !app?.seeker_cancels && !app?.host_confirms" style="background: rgba(180,0,0,0.3); padding: 15px"> 
 					      	{{app?.booker_name ? app?.booker_name : 'Anonymous'}} wants to view the {{app?.apart_type ? app?.apart_type : 'room'}} at {{app?.address}}
@@ -64,7 +64,7 @@
 					        <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
 					      </ion-avatar>
 					      <p style="margin-bottom: 5px">
-					      	<strong style="overflow-wrap: normal;">For {{app?.date?.toDate() | date : "medium" }}</strong>
+					      	<strong style="overflow-wrap: normal;">For {{adjustDate(app?.date) | date : "medium" }}</strong>
 					      </p>
 					      <p *ngIf="app?.host_declines && !app?.seeker_cancels && !app?.host_confirms" style="background: rgba(180,0,0,0.3); padding: 15px"> You want to view the {{app?.apart_type ? app?.apart_type : 'room'}} at
 					      	{{app?.address}}

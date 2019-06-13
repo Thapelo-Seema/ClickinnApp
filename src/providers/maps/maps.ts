@@ -287,6 +287,26 @@ addApartmentMarkersWithClickListeners(places: Apartment[], poi: Address, map: an
   }else resolve(null) ;
   })
 }
+
+addApartmentMarker(place: Apartment, map: any){
+  return new Promise<any[]>((resolve, reject) =>{
+    if(place){ 
+    const location = new google.maps.LatLng(place.property.address.lat, place.property.address.lng);
+    const markerOptions: MarkerOptions = 
+    {
+      position: location, 
+      map: map, 
+      title: place.description, 
+      icon: {url: 'assets/imgs/png/price_tag.png'} 
+    }
+    var marker = this.addMarker(markerOptions, place.price);
+    marker.addListener('click', () =>{
+      this.gotoApartment(place);
+    });
+    resolve(marker)
+  }else resolve([]) ;
+  })
+}
 /*Initialises and returns markers with click listeners that reveal information about each place*/
 addApartmentMarkerWithClickListeners(place: Apartment, poi: Address, map: any): Promise<any[]>{
   return new Promise<any[]>((resolve, reject) =>{

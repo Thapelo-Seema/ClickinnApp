@@ -19,10 +19,10 @@
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6>
 				<ion-item no-lines text-wrap style="border-radius: 7px; color: white; background: rgba(0,0,0, 0.5); letter-spacing: 2px">
 					<p text-center style="color: white">
-						If you want Clickinn agents to do placements for you please give us a list of the areas which your accommodation business serves.
+						If you want Clickinn agents to do placements for you, add a list of the areas which your accommodation business serves below.
 					</p>
 					<p text-center style="color: white">
-						Also make sure that your cellphone number is up-to-date on your profile, this will help us to assign the most relevant agents to you.
+						Also make sure that your cellphone number is up-to-date on your profile. All this information will help us to assign the most relevant agents to you.
 					</p>
 				</ion-item>
 				<ion-item margin-vertical padding>
@@ -46,15 +46,15 @@
 		        <ion-item *ngFor="let area of user?.locations; let idx = index" text-wrap margin-vertical (click)="deleteNearby(idx)" style="border-radius: 6px">
 		        	<ion-icon name="close" start></ion-icon> &nbsp;&nbsp;&nbsp; {{area ? returnFirst(area?.description): ''}}
 		        </ion-item>
+		        <ion-item text-wrap text-center no-lines>
+			         By clicking the register button, you agree to the Clickinn <button ion-button clear small (click)="gotoTerms()" >terms of service</button>
+			    </ion-item>
 		        <ion-buttons text-center>
 		            <button color="clickinn" ion-button margin-vertical padding-horizontal round outline (click)="save()">
-		              Save &nbsp;&nbsp;&nbsp;&nbsp;
+		              Register/Update &nbsp;&nbsp;&nbsp;&nbsp;
 		                <ion-icon style="font-size: 30px" name="ios-cloud-upload-outline"></ion-icon>
 		            </button>
 		        </ion-buttons>
-		        <div *ngIf="loading" class="centered_on_screen">
-				    <ion-spinner style="font-size: 50px"></ion-spinner>
-				</div>
 			</ion-col>
 			<ion-col col-0 col-sm-0 col-md-0 col-lg-3>
 			</ion-col>

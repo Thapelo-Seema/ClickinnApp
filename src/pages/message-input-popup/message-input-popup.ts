@@ -55,6 +55,7 @@ export class MessageInputPopupPage {
         this.message.to.dp = to.dp ?  to.dp : 'assets/imgs/placeholder.png';
         this.message.to.uid = to.uid;
         this.message.topic = to.topic;
+        this.message.text = "Hi " + to.name + " my name is " + this.user.firstname + ", I am a Clickinn agent and I would like to help you find your next home. Please respond if you still haven't found what you're looking for."
         console.log('to object: ', this.message.to);
       })
   		

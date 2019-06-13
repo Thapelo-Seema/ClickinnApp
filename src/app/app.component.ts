@@ -32,10 +32,12 @@ export class MyApp {
   dpLoaded: boolean = false;
   chats: number = 0;
   unseenNotifications: number = 0 ;
-  loader = this.loadingCtrl.create({
-    dismissOnPageChange: true
-  });
   notificationObject: any = null;
+  loader = this.loadingCtrl.create({
+    content: 'Clickinn Loading',
+    spinner: 'dots',
+    cssClass: 'spinners'
+  })
 
   @ViewChild('content') navCtrl;
 
@@ -71,6 +73,7 @@ export class MyApp {
     private chat_svc: ChatServiceProvider
     //private events: Events
     ){
+    this.loader.setDuration(4000);
     this.loader.present();
     //Check for platform readiness before doing anything
     this.platform.ready()
@@ -88,7 +91,7 @@ export class MyApp {
     })
     .catch(err =>{
       console.log('theres an error...')
-      this.loader.dismiss();
+      
       this.errHandler.handleError(err);
     })
   }
@@ -255,6 +258,12 @@ export class MyApp {
           this.gotoMyAgents(message)
           break;
       }
+  }
+
+  editProfile(){
+    if(this.user.phoneNumber ==""){
+      
+    }
   }
 
   //Change the users authState, remove the users local copy
@@ -492,7 +501,7 @@ export class MyApp {
       .subscribe(user =>{
         if(user){
           this.user = this.object_init.initializeUser2(user);
-          this.loader.dismiss()
+          
           this.navigateUser(user);
           this.initNotifications();
           return;
@@ -500,7 +509,7 @@ export class MyApp {
       })
     }
     else{
-      this.loader.dismiss();
+     
       this.rootPage = 'LoginPage';
       this.appViewReady();
       return;
@@ -511,19 +520,19 @@ export class MyApp {
     this.storage.getUser().then(user =>{
       if(user){
         this.user = this.object_init.initializeUser2(user);
-        this.loader.dismiss();
+       
         this.navigateUser(user);
         this.initNotifications();
       }
       else{
-        this.loader.dismiss();
+        
         console.log('No user cached')
         this.rootPage = 'LoginPage';
         this.appViewReady()
         return;
       }
     }).catch(err => {
-      this.loader.dismiss();
+      
       this.errHandler.handleError({errCode: 'GET_OFFLINE_USER', message: 'Error initializing offline user'});
       this.rootPage = 'LoginPage';
       return;
@@ -585,11 +594,11 @@ export class MyApp {
         }
       }
       else if(user == null){
-        this.loader.dismiss()
+        
         this.navCtrl.setRoot('SignupPage');
         this.appViewReady();  
       }else{
-        this.loader.dismiss()
+        
         this.navCtrl.setRoot('SignupPage');
         this.appViewReady();
         console.log('I dunno')

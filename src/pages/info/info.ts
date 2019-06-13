@@ -201,7 +201,7 @@ export class InfoPage {
   }
 
   gotoMap(){
-    this.navCtrl.push('MapPage');
+    this.navCtrl.push('MapPage', this.navParams);
   }
 
   gotoAppointment(){

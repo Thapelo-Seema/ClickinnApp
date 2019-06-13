@@ -176,7 +176,7 @@
         </ion-buttons>
       </ion-item>
         <ion-buttons margin-vertical>
-          <button ion-button clear color="clickinn" icon-right *ngIf="openList" (click)="closeList()" >
+          <button ion-button clear color="clickinn" icon-right *ngIf="openList" (click)="closeList()">
             Close list &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropup" end></ion-icon>
           </button>
           <button ion-button clear color="clickinn" icon-right *ngIf="!openList" (click)="showList()">
@@ -186,10 +186,10 @@
         <ion-grid *ngIf="openList">
           <ion-row>
             <ion-col col-12 col-md-6 col-sm-6 *ngFor="let building of buildings; let i = index" 
-               (click)="selectEBuilding(building)" ionicStepperNext>
+              (click)="selectEBuilding(building)" ionicStepperNext>
             <ion-item text-wrap>
               <ion-avatar item-start>
-                <img src="{{building?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]" />
+                <img src="{{building?.dP?.url}}" (load)="imagesLoaded[i] = true" [hidden]="!imagesLoaded[i]"/>
                 <img src="assets/imgs/placeholder.jpg" [hidden]="imagesLoaded[i]" />
               </ion-avatar>
               <p>{{building?.address?.description}}</p>
@@ -199,7 +199,8 @@
         </ion-grid>
         <ion-item>
           <ion-label stacked style="letter-spacing: 2px">Building Address</ion-label>
-          <ion-input type="search" [(ngModel)]="address" placeholder="eg 79 Caroline Street..." (keyup)="getPredictionsAdd($event)">
+          <ion-input type="search" [(ngModel)]="address" placeholder="eg 79 Caroline Street..." 
+          (keyup)="getPredictionsAdd($event)">
           </ion-input>
         </ion-item>
         <ion-list *ngIf="predictionsAdd">
@@ -252,7 +253,7 @@
             <p>{{building.address.description}}</p>
           </ion-item>
         <ion-buttons>
-          <button ion-button padding color="clickinn" round outline small ionicStepperPrevious (click)="scrollToTop()" >
+          <button ion-button padding color="clickinn" round outline small ionicStepperPrevious (click)="scrollToTop()">
             <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;Back
           </button>
         </ion-buttons> 

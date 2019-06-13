@@ -46,7 +46,8 @@ export class ChatsPage {
     private errorHandler: ErrorHandlerProvider,
     private loadingCtrl: LoadingController,
     private user_svc: UserSvcProvider){
-    this.loader.present()
+    this.loader.setDuration(4000);
+    this.loader.present();
     /* Get user from cache and get the users threads */
   	this.storage.getUser().then(user =>{
       if(user != undefined){
@@ -101,22 +102,22 @@ export class ChatsPage {
             threads.forEach(prop =>{
             this.imagesLoaded.push(false);
           })
-            this.loader.dismiss()
+            
           }else{
-            this.loader.dismiss()
+            
             this.noChats = true;
             //this.showToast('You currently have no chats')
           }
         },
         (err) =>{
-          this.loader.dismiss()
+          
           this.showToast(err.message);
         }
         )
       }
   	})
     .catch(err =>{
-      this.loader.dismiss();
+      
       this.errorHandler.handleError(err);
     })
   }

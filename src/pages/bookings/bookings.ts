@@ -136,6 +136,14 @@ export class BookingsPage {
     this.monitorEnd();
   }
 
+  adjustDate(date: any){
+    if(date != null && date.seconds != null && date.seconds != undefined)
+      return date.seconds * 1000
+    else{
+      return date;
+    }
+  }
+
   callLandlord(uid: string){
     this.toast_svc.showToast('Please note that network charges may apply for making this call...')
     this.user_svc.getUser(uid)

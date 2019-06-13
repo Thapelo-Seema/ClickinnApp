@@ -22,11 +22,16 @@
 					<h2 margin-vertical style="color: white;">Want to view this place ?</h2> 
 					<p style="color: white; padding-bottom: 20px">Set an appointment below</p>
 				</ion-item>
-				<ion-item margin-bottom text-wrap text-center padding-horizontal (click)="showDatePicker()">
-					<h1>Appointment Date</h1>
+				<ion-item *ngIf="!on_browser" margin-bottom text-wrap text-center padding-horizontal (click)="showDatePicker()">
+					<h1>Appointment Date and time</h1>
 					<p style="color: #488aff">
 					    {{myDate ? myDate : 'Select appointment date'}}
 					</p>
+				</ion-item>
+				<ion-item *ngIf="on_browser" margin-bottom text-wrap text-center padding-horizontal>
+					<ion-label stacked>Appointment Date and time</ion-label>
+					<ion-input type="datetime-local" text-center [(ngModel)]="myDate">
+					</ion-input>
 				</ion-item>
 				<ion-item margin-bottom text-wrap text-center padding-horizontal>
 					<h1>Apartment</h1>
@@ -41,8 +46,8 @@
 					</p>
 				</ion-item>
 				<ion-buttons padding center>
-					<button *ngIf="myDate" ion-button full margin-vertical padding (click)="makeAppointment()">Change appointment</button>
-					<button ion-button bottom-right color="secondary" (click)="book()">
+					<button *ngIf="myDate && on_browser == false" ion-button full margin-vertical padding (click)="makeAppointment()">Change appointment</button>
+					<button *ngIf="myDate" ion-button bottom-right color="secondary" (click)="book()">
 						Confirm&nbsp;&nbsp; <ion-icon  end name="checkmark"></ion-icon>
 					</button>
 				</ion-buttons>

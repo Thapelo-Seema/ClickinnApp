@@ -81,8 +81,8 @@ export class PrefferencesPage {
     this.search_object.minPrice = Number(this.search_object.minPrice);
     this.search_object.timeStamp = Date.now();
     if(this.user.user_type != 'agent'){
-      this.afs.collection('Searches2').add(this.search_object).then(data =>{
-      })
+      console.log('Logging search in database');
+      this.afs.collection('Searches2').add(this.search_object)
       .catch(err => {
         this.errHandler.handleError(err);
       })
