@@ -34,7 +34,6 @@ export class MyApp {
   unseenNotifications: number = 0 ;
   notificationObject: any = null;
   loader = this.loadingCtrl.create({
-    content: 'Clickinn Loading',
     spinner: 'dots',
     cssClass: 'spinners'
   })
@@ -275,10 +274,13 @@ export class MyApp {
     this.authSubs.unsubscribe();
     let ldr = this.loadingCtrl.create()
     ldr.present();
-    this.navCtrl.setRoot('LoginPage')
-    .then(() =>{
+    this.afAuth.auth.signOut()
+    .then(v =>{
       ldr.dismiss();
-      this.afAuth.auth.signOut()
+      this.navCtrl.setRoot('LoginPage')
+    })
+    .catch(err =>{
+      ldr.dismiss();
     })  
   }
   //Navigate to the upload and earn page

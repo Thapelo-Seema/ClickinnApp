@@ -7,65 +7,65 @@
 <ion-header>
 
   <ion-navbar color="clickinn">
-    <ion-title text-center style="font-family: 'Ubuntu', sans-serif;">Clickinn</ion-title>
+    <ion-title text-center style="font-family: 'Ubuntu', sans-serif;">
+      <img src="assets/imgs/logo.png" style="width: 5.0em" />
+    </ion-title>
   </ion-navbar>
 
 </ion-header>
 
 
-<ion-content padding class="clickinn-bg">
+<ion-content padding >
   <ion-grid>
     <ion-row>
       <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
       </ion-col>
       <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
        
-  <ion-item text-wrap no-lines style="background: transparent; color: white">
-    <div text-center>
-      <img src="assets/imgs/logo.png" width="100px" />
-    </div>
-  
-      <h1 text-center margin-top style="font-family: 'Bangers', cursive;">
-        Take our <a href="https://www.surveymonkey.com/r/QLKJC3N"> survey </a> and stand a chance to win a free lunch with a partner
-        
+  <ion-item text-wrap no-lines style="background: rgba(0,0,0,0.2); color: white">
+    
+      <h1 text-center margin-top style="font-family: 'Ubuntu', sans-serif; font-size: 3.0em">
+        <b>Renters, Landlords and Agents</b>
       </h1>
-      <!-- <div text-center>
-        <img src="assets/imgs/images.jpg" />
-      </div> -->
-      <p text-center margin-bottom>(valid till 30 April 2019)</p>
-      <h1 text-center margin-top style="font-family: 'Ubuntu', sans-serif;">
-        Renters, Landlords and Agents
-      </h1>
-      <p text-center style="color: white">Join our innovative community today and help us transform property and accommodation search 
+      <p text-center style="color: white; font-size: 1.5em">
+        <b>Join our innovative community today and help us transform property and accommodation search </b>
         <strong style="letter-spacing: 2px">forever!</strong>
       </p>
-
     </ion-item>
-    <form margin-top margin-bottom>
-      <ion-item padding-horizontal style="background: transparent; color: white">
-        <ion-label stacked>First Name</ion-label>
-        <ion-input type="text" [(ngModel)]="seeker.firstname" name="fname" autocomplete="given-name" autocorrect="off"></ion-input>
-      </ion-item>
-      <ion-item padding-horizontal style="background: transparent; color: white">
-        <ion-label stacked>Last Name</ion-label>
-        <ion-input type="text" [(ngModel)]="seeker.lastname" name="lname" autocomplete="family-name" autocorrect="off"></ion-input>
-      </ion-item>
-      <ion-item padding-horizontal style="background: transparent; color: white">
-        <ion-label stacked>Email</ion-label>
-        <ion-input type="email" [(ngModel)]="seeker.email" name="email" autocomplete="email" autocorrect="off"></ion-input>
-      </ion-item>
-      <ion-item padding-horizontal style="background: transparent; color: white">
-        <ion-label stacked>Password</ion-label>
-        <ion-input type="password" [(ngModel)]="password" name="pword"></ion-input>
-      </ion-item>
-    </form>
-    <ion-buttons>
-      <ion-item text-wrap no-lines style="background: transparent; color: white">
-         By clicking the signup button, you agree to the Clickinn <button ion-button clear small (click)="gotoTerms()" >terms of service</button>
-      </ion-item>
-      <button ion-button color="secondary" (click)="signup()">Sign Up</button>
-      <button ion-button clear (click)="signin()">Have an account ?</button>
-    </ion-buttons>
+    <ion-row>
+      <ion-col col-0 col-lg-2>
+      </ion-col>
+      <ion-col col-12 col-lg-8>
+        <ion-card margin-vertical padding style=" border-radius: 10px">
+          <ion-item lines padding>
+            <ion-label stacked color="dark">First Name</ion-label>
+            <ion-input padding-left type="text" [(ngModel)]="seeker.firstname" name="fname" autocomplete="given-name" autocorrect="off"></ion-input>
+          </ion-item>
+          <ion-item padding>
+            <ion-label stacked color="dark">Last Name</ion-label>
+            <ion-input padding-left type="text" [(ngModel)]="seeker.lastname" name="lname" autocomplete="family-name" autocorrect="off"></ion-input>
+          </ion-item>
+          <ion-item padding>
+            <ion-label stacked color="dark">Email</ion-label>
+            <ion-input padding-left type="email" [(ngModel)]="seeker.email" name="email" autocomplete="email" autocorrect="off"></ion-input>
+          </ion-item>
+          <ion-item padding margin-bottom>
+            <ion-label stacked color="dark">Password</ion-label>
+            <ion-input padding-left type="password" [(ngModel)]="password" name="pword"></ion-input>
+          </ion-item>
+          <ion-buttons>
+          <ion-item text-wrap no-lines>
+             By clicking the signup button, you agree to the Clickinn <button ion-button clear small (click)="gotoTerms()" >terms of service</button>
+          </ion-item>
+          <button ion-button color="secondary" (click)="signup()">Sign Up</button>
+          <button ion-button clear (click)="signin()">Have an account ?</button>
+        </ion-buttons>
+        </ion-card>
+      </ion-col>
+      <ion-col col-0 col-lg-2>
+      </ion-col>
+    </ion-row>
+    
       </ion-col>
       <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
       </ion-col>

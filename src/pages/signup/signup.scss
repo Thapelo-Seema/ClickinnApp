@@ -1,29 +1,9 @@
 page-signup {
-	.round{
-		height: 30vw; 
-     	width: 30vw; 
-		-webkit-border-radius: 50%;
-		border-radius: 50%;
-	}
+	
 
-	ion-input:first-child {
-	    border: 1px solid lightgray;
-	    border-radius: 4px;
-	}
-
-  	ion-input:last-child {
-    	border: 1px solid lightgray;
-    	border-radius: 4px;
-  	}
-
-  	ion-item {
-	    border-bottom: 0px !important;
-	    box-shadow: none !important;
-	}
-
-	.item-inner {
-		border-bottom-color: transparent !important;
-		box-shadow: none !important;
+	ion-content{
+		background: url('../../assets/imgs/greenwich.jpg') no-repeat;
+		background-size: cover;
 	}
   	
 

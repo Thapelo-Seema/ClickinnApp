@@ -6,13 +6,14 @@
 -->
 <ion-header>
   <ion-navbar color="clickinn-pitch">
-    <ion-title text-center style="font-weight: 3.0px; letter-spacing: 2px">Clickinn</ion-title>
+    <ion-title text-center style="font-weight: 3.0px; letter-spacing: 2px">
+      <h1><b>Clickinn</b></h1></ion-title>
     <button ion-button menuToggle icon-only>
       <ion-icon name='menu'></ion-icon> <span *ngIf="unseenNotifications > 0">&nbsp;&nbsp;({{unseenNotifications}}) </span>
     </button>
   </ion-navbar>
 </ion-header>
-<ion-content text-center class="clickinn-bg">
+<ion-content text-center>
   <ion-fab bottom right>
     <button ion-fab color="secondary" (click)="gotoChats()">
       <ion-icon name="ios-chatboxes-outline">
@@ -25,17 +26,18 @@
         <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
         </ion-col>
         <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-          <div *ngIf="!search">
+          <div *ngIf="!search" style="border: 1px solid white; 
+          border-radius: 10px; background: rgba(0,0,0, 0.6); padding: 30px">
             <ion-slides loop="true" [autoplay]="3500">
               <ion-slide >
-                <h1 style="color: white">Looking for a place to rent ?</h1>
+                <h1 style="color: white"><b>Looking for a place to rent ?</b></h1>
                 <!-- <img src="assets/imgs/apartment.jpeg"/> -->
                 <ion-buttons margin-bottom>
                   <button ion-button round  (click)="showSearch()">Yes, I need a place</button>
                 </ion-buttons>
               </ion-slide>
               <ion-slide >
-                <h1 style="color: white">Wana become an agent in your neighbourhood ?</h1>
+                <h1 style="color: white"><b>Wana become an agent in your neighbourhood ?</b></h1>
                 <!-- <img src="assets/imgs/apartment.jpeg"/> -->
                 <ion-buttons margin-bottom>
                   <button ion-button round  color="metallic-gold" style="color: white"  (click)="gotoLandlordDash()">
@@ -44,7 +46,7 @@
                 </ion-buttons>
               </ion-slide>
               <ion-slide>
-                <h1 style="color: white">You a landlord looking for tenants ?</h1>
+                <h1 style="color: white"><b>You a landlord looking for tenants ?</b></h1>
                 <!-- <img src="assets/imgs/apartment.jpeg"/> -->
                 <ion-buttons margin-bottom>
                   <button ion-button round color="secondary" (click)="gotoOwners()" >
@@ -53,7 +55,7 @@
                 </ion-buttons>
               </ion-slide>
               <ion-slide>
-                <h1 style="color: white">Looking for NSFAS accredited accommodation ?</h1>
+                <h1 style="color: white"><b>Looking for NSFAS accredited accommodation ?</b></h1>
                 <!-- <img src="assets/imgs/apartment.jpeg"/> -->
                 <ion-buttons margin-bottom>
                   <button ion-button round color="danger" (click)="gotoNsfas()">
@@ -68,7 +70,8 @@
                 &nbsp;&nbsp;Search
               </button>
           </div>
-          <div *ngIf="search" >
+          <div *ngIf="search" style="border: 1px solid white; 
+          border-radius: 10px; background: rgba(0,0,0, 0.6); padding: 30px">
             <h2 style="color: white">Enter name of school, company or place you're moving to </h2>
             <ion-searchbar type="search" [(ngModel)]="pointOfInterest.description" 
               placeholder="e.g. Wits or liberty life  or  Braamfontein" (ionInput)="getPredictions($event)" mode="ios">
@@ -81,11 +84,11 @@
               <button ion-item *ngFor="let pred of predictions" (click)="selectPlace(pred)">{{pred?.description}}</button>
             </ion-list>
             <ion-buttons text-center>
-              <button ion-button margin-vertical padding-horizontal round outline (click)="showOptions()">
+              <button ion-button color="light" margin-vertical padding-horizontal round outline (click)="showOptions()">
                 <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;&nbsp;&nbsp;
                    Options 
               </button>
-              <button ion-button margin-vertical padding-horizontal round outline (click)="nextPage()">
+              <button ion-button color="light" margin-vertical padding-horizontal round outline (click)="nextPage()">
                 Next &nbsp;&nbsp;&nbsp;&nbsp;
                   <ion-icon name="arrow-round-forward"></ion-icon>
               </button>

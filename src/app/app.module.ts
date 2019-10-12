@@ -25,6 +25,7 @@ import { FileTransfer } from '@ionic-native/file-transfer';
 import { Push } from '@ionic-native/push';
 import { ProgressBarModule } from "angular-progress-bar";
 import { CallNumber } from '@ionic-native/call-number';
+import { SocialSharing } from '@ionic-native/social-sharing';
 
 
 
@@ -79,7 +80,7 @@ export const firebaseConfig = {
     MyApp 
   ],
   providers: [
-   StatusBar, SplashScreen,
+   StatusBar, SplashScreen, SocialSharing,
    Calendar, DatePicker, Camera, File, FileTransfer, 
     {provide: ErrorHandler, useClass: IonicErrorHandler},
     MapsProvider, 

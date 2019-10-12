@@ -13,14 +13,14 @@
 			<ion-col col-12 col-sm-12 col-md-12 col-lg-6 >
 				<ion-item no-lines style="background: #000020">
 					<ion-buttons text-center >
-						<button ion-button  padding-vertical style="border-bottom: 0.5px solid #f4f4f4" full color="clickinn" *ngIf="user?.user_type != 'landlord'" (click)="gotoLandlordSearch()">
-							Get Landlords
+						<button ion-button  margin-vertical style="border-bottom: 0.5px solid #f4f4f4" full color="clickinn" *ngIf="user?.user_type != 'landlord'" (click)="gotoLandlordSearch()">
+							<h1 padding-vertical>Get Landlords</h1>
 						</button> 
-						<button ion-button padding-vertical full color="clickinn" *ngIf="user?.user_type != 'landlord'" (click)="gotoMyLandlords()">
-							My Landlords
+						<button ion-button margin-vertical full color="clickinn" *ngIf="user?.user_type != 'landlord'" (click)="gotoMyLandlords()">
+							<h1>My Landlords</h1>
 						</button>
-						<button ion-button padding-vertical full color="clickinn" *ngIf="user?.user_type == 'landlord'" (click)="gotoMyAgents()">
-							My Agents
+						<button ion-button margin-vertical full color="clickinn" *ngIf="user?.user_type == 'landlord'" (click)="gotoMyAgents()">
+							<h1>My Agents</h1>
 						</button>
 					</ion-buttons>
 				</ion-item>
@@ -72,9 +72,9 @@
 				  </ion-card-content>
 				  <ion-row>
 				    <ion-col *ngIf="srch.searcher_id != user.uid">
-				      <button ion-button icon-start clear small (click)="showInput(srch)" >
+				      <button ion-button icon-start clear small (click)="sendWhatsApp(srch)" >
 				        <ion-icon name="text"></ion-icon>
-				        <div>Make offer</div>
+				        <div>Send follow up</div>
 				      </button>
 				    </ion-col>
 				    <ion-col>

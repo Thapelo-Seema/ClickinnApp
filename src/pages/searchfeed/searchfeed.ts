@@ -15,6 +15,7 @@ import { ErrorHandlerProvider } from '../../providers/error-handler/error-handle
 import { CallNumber } from '@ionic-native/call-number';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
+import { SocialSharing } from '@ionic-native/social-sharing';
 
 @IonicPage()
 @Component({
@@ -63,6 +64,7 @@ export class SearchfeedPage {
     private callNumber: CallNumber,
     private toast_svc: ToastSvcProvider,
     private user_svc: UserSvcProvider,
+    private socialSharing: SocialSharing,
     private platform: Platform){
     this.searchfeed_svc.getAllSearches();
     this.pointOfInterest = this.object_init.initializeAddress(); //Initialize the point of interest with default values
@@ -94,6 +96,76 @@ export class SearchfeedPage {
     (err) =>{
         this.loading = false;
         this.showToast('Something went wrong while fetching the searches, please also check if you are connected to the internet')
+    })
+    
+  }
+
+  sendWhatsApp(search: Search){
+    //Composing message
+    let msg: string = `Hi my name is ${this.user.firstname}, I am responding to your search on Clickinn. `;
+    if(search.apartment_type == 'Any'){
+      
+        msg += `I'd like to enquire if you're still looking for any room type 
+        around ${this.returnFirst(search.Address.description)}`
+      
+    }else{
+     
+        msg += `I'd like to enquire if you're still looking for
+         a ${search.apartment_type} around ${this.returnFirst(search.Address.description)}`
+    }
+
+    //Sending the message
+    this.user_svc.getUser(search.searcher_id)
+    .subscribe(u =>{
+      if(u != null && u != undefined){
+
+        //Sending WhatsApp...
+        if(u.phoneNumber != "" && u.phoneNumber.length >= 10){
+            this.socialSharing.shareViaWhatsAppToReceiver(u.phoneNumber, msg)
+            .then(val =>{
+              let toast = this.toastCtrl.create({
+                duration: 3000,
+                message: "Follow up WhatsApp successfully sent!"
+              })
+              toast.present();
+            })
+            .catch(err =>{
+              this.toast_svc.showToast(err.message);
+            })
+
+            
+        }else{
+          let toast = this.toastCtrl.create({
+            duration: 5000,
+            message: "This user did not specify their contact number"
+          })
+          toast.present();
+        }
+
+        //Sending email...
+        this.socialSharing.shareViaEmail(msg, "Clickinn Accommodation Search", [u.email])
+        .then(v =>{
+          this.toast_svc.showToast("Email sent!")
+        })
+        .catch(err =>{
+          this.toast_svc.showToast("Email not sent")
+        })
+
+      }else{
+          let toast = this.toastCtrl.create({
+            duration: 5000,
+            message: "This user no longer exists on Clickinn"
+          })
+          toast.present();
+      } 
+    }, 
+    err =>{
+        let toast = this.toastCtrl.create({
+            duration: 5000,
+            message: "Something went wrong while trying to send your message, " +
+            "please check your internet connection and try again"
+          })
+          toast.present();
     })
     
   }
