@@ -229,7 +229,10 @@ export class ObjectInitProvider {
 	    searcher_name: '',
 	    nearby: '',
 	    other: '',
-      searcher_dp: ''
+      searcher_dp: '',
+      searcher_contact: '',
+      searcher_email: '',
+      contact_on_WhatsApp: false
 
   	}
   	return search;

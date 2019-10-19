@@ -11,6 +11,9 @@ export interface Search{
 	searcher_id?: string;
 	searcher_name?: string;
 	searcher_dp?: string;
+	searcher_contact?: string;
+	searcher_email?: string;
+	contact_on_WhatsApp?: boolean;
 	timeStamp: number;
 	wifi?: boolean;
 	laundry?: boolean;

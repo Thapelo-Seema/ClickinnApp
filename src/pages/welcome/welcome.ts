@@ -11,6 +11,7 @@ import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 import { take } from 'rxjs-compat/operators/take';
 import { ChatServiceProvider } from '../../providers/chat-service/chat-service';
+import { Search } from '../../models/search.interface';
 
 
 @IonicPage()
@@ -23,6 +24,7 @@ export class WelcomePage {
   predictions: any[] = [];
   pointOfInterest: Address;
   user: User;
+  userSearch: Search = this.object_init.initializeSearch();
   search: boolean = false;
   unseenNotifications: number = 0;
   chats: number = 0;
@@ -77,21 +79,6 @@ export class WelcomePage {
         console.log('Got user: ', user);
         if(user){
           this.user = this.object_init.initializeUser2(user);
-          
-          if(user.uid){
-            console.log('user ready for notifications')
-            this.chat_svc.getUnseenChats(user.uid)
-            .subscribe(chats =>{
-              if(chats.length > 0){
-                console.log('Unseen chats: ', chats.length)
-                this.unseenNotifications = this.unseenNotifications - this.chats + chats.length
-                this.chats = chats.length
-              }else{
-                this.unseenNotifications -= this.chats;
-                this.chats = chats.length
-              }
-            })
-          }
         }else{
           this.navCtrl.setRoot('LoginPage');
         }
@@ -114,6 +101,7 @@ export class WelcomePage {
   
 /*Navigating to the next page, which is the PrefferencesPage and passing the pointOfInterest object along*/
   nextPage(){
+    this.userSearch.searcher_email = this.user.email;
     //If the POI is not set by a google maps response throw an error otherwise cache the POI and navigate to the next page
     if(this.pointOfInterest.lat == 0 && this.pointOfInterest.lng == 0){
       this.showWarnig(
@@ -123,7 +111,7 @@ export class WelcomePage {
       return;
     }
     this.storage.setPOI(this.pointOfInterest).then(data =>{
-      this.navCtrl.push('PrefferencesPage');
+      this.navCtrl.push('PrefferencesPage', {searchObj: this.userSearch});
     })
     .catch(err => {
       this.errHandler.handleError({message: 'Could not set POI', code: 102});

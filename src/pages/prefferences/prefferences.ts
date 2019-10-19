@@ -38,6 +38,11 @@ export class PrefferencesPage {
     this.user = this.object_init.initializeUser();
     this.pointOfInterest = this.object_init.initializeAddress();
     this.search_object = this.object_init.initializeSearch();
+    let searchObj: Search = this.navParams.get("searchObj");
+    if(searchObj != undefined && searchObj != null){
+      this.search_object.contact_on_WhatsApp = searchObj.contact_on_WhatsApp;
+      this.search_object.searcher_contact = searchObj.searcher_contact;
+    }
     this.storage.getUser()
     .then(user => {
       this.user = this.object_init.initializeUser2(user);

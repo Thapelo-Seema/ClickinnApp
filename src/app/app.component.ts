@@ -77,9 +77,9 @@ export class MyApp {
     //Check for platform readiness before doing anything
     this.platform.ready()
     .then(() =>{
-      console.log('platform ready')
+      //console.log('platform ready')
       //firestore required setting
-      afs.firestore.settings({timestampsInSnapshots: true});
+      //afs.firestore.settings({timestampsInSnapshots: true});
       this.initializeUser();
       //this.initializeApp();
     })
@@ -89,8 +89,7 @@ export class MyApp {
       this.monitorOfflineState();
     })
     .catch(err =>{
-      console.log('theres an error...')
-      
+      console.log(err)
       this.errHandler.handleError(err);
     })
   }
@@ -423,22 +422,22 @@ export class MyApp {
   */
   navigateUser(user: User){
     
-    console.log('getting first time...', user)
+    //console.log('getting first time...', user)
     if(user.firstime == true){
-      console.log('Users first time')
+      //console.log('Users first time')
       this.user.firstime = false;
-      console.log('New users', this.user)
+      //console.log('New users', this.user)
       this.storage.setUser(this.user)
       .then(uza =>{
-        console.log('Updating user...', uza)
+        //console.log('Updating user...', uza)
         this.afs.collection('Users').doc(user.uid).set(this.user)
         .then(() =>{
-          console.log('User updated')
+          //console.log('User updated')
           this.rootPage = 'WelcomePage';
         })
       })
     }else{
-      console.log('navigating...')
+      //console.log('navigating...')
       this.storage.setUser(user).
       then(() =>{
         if(user.user_type){ //check i user_type property exists in user
@@ -487,7 +486,7 @@ export class MyApp {
       }
       else{
         //Navigate to welcome page
-        console.log('No user match...')
+        //console.log('No user match...')
         this.rootPage = 'WelcomePage';
       }
       this.appViewReady();
@@ -528,7 +527,7 @@ export class MyApp {
       }
       else{
         
-        console.log('No user cached')
+        //console.log('No user cached')
         this.rootPage = 'LoginPage';
         this.appViewReady()
         return;
@@ -567,11 +566,11 @@ export class MyApp {
   monitorAuthState(){
    this.authSubs = this.afAuth.authState
     .subscribe(user =>{
-      console.log('MonitorAuthState running...')
+      //console.log('MonitorAuthState running...')
       if(user || this.afAuth.auth.currentUser){
-        console.log('Firebase user found...')
+        //console.log('Firebase user found...')
         if(user.uid){
-          console.log('user ready for notifications')
+          //console.log('user ready for notifications')
           this.chat_svc.getUnseenChats(user.uid)
           .subscribe(chats =>{
             if(chats.length > 0){
@@ -585,11 +584,11 @@ export class MyApp {
           })
         }
         if(window.navigator.onLine){//If there is a network connection
-          console.log('Connected!');
+          //console.log('Connected!');
           this.online = true;
           this.initializeAuthenticatedUser();
         }else{
-          console.log('offline')
+          //console.log('offline')
           this.online = false;
           //Atleast check if there's a cached user otherwise only show login page
           this.InitializeOfflineUser();
@@ -603,7 +602,7 @@ export class MyApp {
         
         this.navCtrl.setRoot('SignupPage');
         this.appViewReady();
-        console.log('I dunno')
+        //console.log('I dunno')
       }
     })
   }
@@ -621,7 +620,7 @@ export class MyApp {
   }
   //Update the offine user data when an internet connection is established
   monitorConnectionState(){
-    console.log('MonitorConnectionState running....')
+    //console.log('MonitorConnectionState running....')
     window.addEventListener('online', () =>{
       if(!this.online){
         this.online = true;
@@ -632,7 +631,7 @@ export class MyApp {
   }
 
   monitorOfflineState(){
-    console.log('MonitorConnectionState running....')
+    //console.log('MonitorConnectionState running....')
     window.addEventListener('offline', () =>{
       this.online = false;
       this.showToast('You are offline...')

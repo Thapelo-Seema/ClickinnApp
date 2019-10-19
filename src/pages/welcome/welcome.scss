@@ -12,6 +12,38 @@ page-welcome {
 		background-size: cover;
 	}
 
+
+	ion-input:first-child {
+	    border: 1px solid white;
+	    border-radius: 4px;
+	}
+
+  	ion-input:last-child {
+    	border: 1px solid white;
+    	border-radius: 4px;
+  	}
+
+  	ion-textarea:first-child {
+	    border: 1px solid white;
+	    border-radius: 4px;
+	}
+
+	ion-textarea:last-child {
+    	border: 1px solid white;
+    	border-radius: 4px;
+  	}
+
+
+  	ion-item {
+	    border-bottom: 0px !important;
+	    box-shadow: none !important;
+	}
+
+	.item-inner {
+		border-bottom-color: transparent !important;
+		box-shadow: none !important;
+	}
+
 	
 	
 }

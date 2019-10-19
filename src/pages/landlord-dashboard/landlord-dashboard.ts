@@ -24,7 +24,7 @@ export class LandlordDashboardPage {
   }
 
   ionViewDidLoad() {
-    console.log('ionViewDidLoad LandlordDashboardPage');
+    //console.log('ionViewDidLoad LandlordDashboardPage');
   }
 
   gotoHome(){

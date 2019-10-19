@@ -9,7 +9,7 @@ import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/take';
 import { User } from '../../models/users/user.interface';
 import { ServiceDeal } from '../../models/service_deal.interface';
-import { take } from 'rxjs-compat/operators/take';
+//import { take } from 'rxjs-compat/operators/take';
 import { Subscription } from 'rxjs-compat/Subscription';
 
 interface QueryConfig {
@@ -28,7 +28,7 @@ export class SearchfeedProvider {
   private _loading = new BehaviorSubject(false);
   private _data = new BehaviorSubject([]);
 
-  private query: QueryConfig;
+  //private query: QueryConfig;
 
   // Observable data
   data: Observable<any> = this._data.asObservable();
@@ -113,7 +113,6 @@ refresh(){
           const doc = snap.payload.doc
           return { ...data, doc }
         })
-  
         // update source with new values, done loading
         this._data.next(values)
         this._loading.next(false)
@@ -129,7 +128,7 @@ refresh(){
   }
 
   getAllSearches(){
-    console.log('Getting all seraches : ')
+    //console.log('Getting all seraches : ')
     const first = this.afs.collection<Search>('Searches2', ref => {
       return ref.orderBy('timeStamp', 'desc')
       .limit(15)
@@ -144,7 +143,7 @@ refresh(){
 
    // Retrieves additional data from firestore
   moreAllSearches() {
-    console.log('Getting more all searches : ')
+    //console.log('Getting more all searches : ')
     const cursor = this.getCursor()
     const more = this.afs.collection('Searches2', ref => {
       return ref
@@ -190,7 +189,7 @@ refresh(){
   }
 
   getSearchesOfArea(area: string){
-    console.log('Getting seraches of area: ', area)
+    //console.log('Getting seraches of area: ', area)
     let first = this.afs.collection<Search>('Searches2', ref => ref
       .where('Address.locality_lng', '==', area)
       .orderBy('timeStamp', 'desc')
@@ -204,16 +203,16 @@ refresh(){
   }
 
   moreAreaSearches(area: string) {
-    console.log('Getting more searches of area: ', area)
+    //console.log('Getting more searches of area: ', area)
     const cursor = this.getCursor()
     const more = this.afs.collection('Searches2', ref => {
       return ref
       .where('Address.locality_lng', '==', area)
       .orderBy('timeStamp', 'desc' )
-      .limit(10)
+      .limit(15)
       .startAfter(cursor)
     })
-    this.mapAndUpdate(more)
+    this.mapAndUpdateMore(more)
   }
 
   getSearchesSince(){

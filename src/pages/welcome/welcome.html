@@ -83,6 +83,15 @@
             <ion-list *ngIf="predictions">
               <button ion-item *ngFor="let pred of predictions" (click)="selectPlace(pred)">{{pred?.description}}</button>
             </ion-list>
+            <ion-item style="background: transparent; color: white" text-wrap>
+              <ion-label stacked  color="light"><b>Your contact number (For quick and direct responses from Clickinn landlords)</b></ion-label>
+              <ion-input type="number" padding-left [(ngModel)]="userSearch.searcher_contact">
+              </ion-input>
+            </ion-item>
+            <ion-item padding style="background: transparent; color: white" text-wrap>
+               <ion-label>Tick this box if the number above is on WhatsApp</ion-label>
+               <ion-checkbox [(ngModel)]="userSearch.contact_on_WhatsApp"></ion-checkbox>
+            </ion-item>
             <ion-buttons text-center>
               <button ion-button color="light" margin-vertical padding-horizontal round outline (click)="showOptions()">
                 <ion-icon name="arrow-round-back"></ion-icon> &nbsp;&nbsp;&nbsp;&nbsp;
