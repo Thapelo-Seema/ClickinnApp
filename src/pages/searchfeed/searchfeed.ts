@@ -24,6 +24,9 @@ import { SocialSharing } from '@ionic-native/social-sharing';
 export class SearchfeedPage {
   @ViewChild(Content) content: Content;
   searches: Observable<Search[]>;
+  respondViaWebStr = "https://wa.me";
+  urlEncodedMsg = "";
+  formatedNum = "";
   search: Search;
   inputVisible: boolean = false;
   user: User;
@@ -113,21 +116,32 @@ export class SearchfeedPage {
       //Sending WhatsApp...
     if(search.searcher_contact != null && search.searcher_contact != ""  
       && search.contact_on_WhatsApp && search.searcher_contact != undefined){
-          this.socialSharing.shareViaWhatsAppToReceiver(search.searcher_contact, msg)
-          .then(val =>{
+        if(search.searcher_contact.substring(0, 0) == "0"){
+          this.formatedNum =  "27"+ search.searcher_contact.substring(1);
+        }else if(search.searcher_contact.substring(0, 0) == "+"){
+          this.formatedNum =   search.searcher_contact.substring(1);
+        }else if(search.searcher_contact.substring(0, 1) == "27"){
+          this.formatedNum =   search.searcher_contact;
+        }
+        this.urlEncodedMsg = encodeURI(msg);
+        console.log(this.formatedNum);
+        console.log(this.urlEncodedMsg);
+          this.respondViaWebStr = `https://wa.me/${this.formatedNum}/?text=${this.urlEncodedMsg}`;
+          this.searchfeed_svc.getRequest(this.respondViaWebStr)
+          .subscribe(res =>{
             let toast = this.toastCtrl.create({
               duration: 3000,
               message: "Follow up WhatsApp successfully sent!"
             })
             toast.present();
-          })
-          .catch(err =>{
-            this.toast_svc.showToast(err.message);
+          },
+          err =>{
+             this.toast_svc.showToast(err.message);
           })
       }else{
         let toast = this.toastCtrl.create({
           duration: 5000,
-          message: "This user did not specify thier contact details"
+          message: "This user did not supply WhatsApp number"
       })
       toast.present();
     }
@@ -138,7 +152,7 @@ export class SearchfeedPage {
         this.toast_svc.showToast("Email sent!")
       })
       .catch(err =>{
-        this.toast_svc.showToast("Email not sent")
+        this.toast_svc.showToast("Email follow up could not be sent")
       })
     }else{
       let toast = this.toastCtrl.create({

@@ -11,6 +11,7 @@ import { User } from '../../models/users/user.interface';
 import { ServiceDeal } from '../../models/service_deal.interface';
 //import { take } from 'rxjs-compat/operators/take';
 import { Subscription } from 'rxjs-compat/Subscription';
+import { HttpClient } from '@angular/common/http';
 
 interface QueryConfig {
   path: string, //  path to collection
@@ -36,7 +37,7 @@ export class SearchfeedProvider {
   loading: Observable<boolean> = this._loading.asObservable();
   data1Subs: Subscription;
   data2Subs: Subscription;
-  constructor(private afs: AngularFirestore) {
+  constructor(private afs: AngularFirestore, private http: HttpClient) {
   }
 
 reset(){
@@ -44,6 +45,10 @@ reset(){
   this.data = this._data.asObservable()
   this._data.next([])
   this._done.next(false);
+}
+
+getRequest(url: string){
+  return this.http.get(url);
 }
 
 unsubscribe(){
