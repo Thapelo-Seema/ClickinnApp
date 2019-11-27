@@ -28,6 +28,7 @@ export class MyApp {
   regSubs: Subscription;
   errSubs: Subscription;
   authSubs: Subscription;
+  userSubs: Subscription;
   online: boolean = false;
   dpLoaded: boolean = false;
   chats: number = 0;
@@ -266,11 +267,25 @@ export class MyApp {
 
   //Change the users authState, remove the users local copy
   logout(){
-    this.searchfeed_svc.unsubscribe();
-    this.pushSubs.unsubscribe();
-    this.errSubs.unsubscribe();
-    this.regSubs.unsubscribe();
-    this.authSubs.unsubscribe();
+    if(this.searchfeed_svc != null && this.searchfeed_svc != undefined){
+      this.searchfeed_svc.unsubscribe();
+    }
+    if(this.pushSubs != null && this.pushSubs != undefined){
+      this.pushSubs.unsubscribe();
+    }
+    if(this.errSubs != null && this.errSubs != undefined){
+      this.errSubs.unsubscribe();
+    }
+    if(this.regSubs != null && this.regSubs != undefined){
+      this.regSubs.unsubscribe();
+    }
+    if(this.authSubs != null && this.authSubs != undefined){
+      this.authSubs.unsubscribe();
+    }
+    if(this.userSubs != null && this.userSubs != undefined){
+      this.userSubs.unsubscribe();
+    }
+    
     let ldr = this.loadingCtrl.create()
     ldr.present();
     this.afAuth.auth.signOut()
@@ -542,7 +557,7 @@ export class MyApp {
 
   syncAuthenticatedUser(){
     if(this.afAuth.auth.currentUser){
-      this.afs.collection('Users').doc<User>(this.afAuth.auth.currentUser.uid).valueChanges()
+      this.userSubs = this.afs.collection('Users').doc<User>(this.afAuth.auth.currentUser.uid).valueChanges()
       .subscribe(user =>{
         if(user){
           this.user = this.object_init.initializeUser2(user);
@@ -569,20 +584,6 @@ export class MyApp {
       //console.log('MonitorAuthState running...')
       if(user || this.afAuth.auth.currentUser){
         //console.log('Firebase user found...')
-        if(user.uid){
-          //console.log('user ready for notifications')
-          this.chat_svc.getUnseenChats(user.uid)
-          .subscribe(chats =>{
-            if(chats.length > 0){
-              //console.log('Unseen chats: ', chats.length)
-              this.unseenNotifications = this.unseenNotifications - this.chats + chats.length
-              this.chats = chats.length
-            }else{
-              this.unseenNotifications -= this.chats;
-              this.chats = chats.length
-            }
-          })
-        }
         if(window.navigator.onLine){//If there is a network connection
           //console.log('Connected!');
           this.online = true;

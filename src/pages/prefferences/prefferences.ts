@@ -42,6 +42,7 @@ export class PrefferencesPage {
     if(searchObj != undefined && searchObj != null){
       this.search_object.contact_on_WhatsApp = searchObj.contact_on_WhatsApp;
       this.search_object.searcher_contact = searchObj.searcher_contact;
+
     }
     this.storage.getUser()
     .then(user => {
@@ -86,7 +87,7 @@ export class PrefferencesPage {
     this.search_object.minPrice = Number(this.search_object.minPrice);
     this.search_object.timeStamp = Date.now();
     if(this.user.user_type != 'agent'){
-      console.log('Logging search in database');
+      console.log('Logging search in database: ', this.search_object);
       this.afs.collection('Searches2').add(this.search_object)
       .catch(err => {
         this.errHandler.handleError(err);
