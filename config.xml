@@ -93,6 +93,5 @@
     <plugin name="cordova-sqlite-storage" spec="^2.4.0" />
     <plugin name="phonegap-plugin-push" spec="2.2.3" />
     <plugin name="mx.ferreyra.callnumber" spec="~0.0.2" />
-    <engine name="android" spec="7.1.4" />
     <engine name="browser" spec="5.0.4" />
 </widget>
