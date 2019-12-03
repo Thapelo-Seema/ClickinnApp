@@ -30,7 +30,6 @@
 							refresh feeds &nbsp;&nbsp;
 							<ion-icon name="refresh" style="font-size: 30px">
 							</ion-icon> 
-
 						</button>
 					</span>
 					<ion-label text-center style=" margin-bottom: 2px; letter-spacing: 2px">Filter Searches By Location</ion-label>
@@ -74,13 +73,16 @@
 				  </ion-card-content>
 				  <ion-row>
 				    <ion-col *ngIf="srch.searcher_id != user.uid">
-				      <button ion-button icon-start clear small (click)="sendWhatsApp(srch)" >
-				        <ion-icon name="text"></ion-icon>
-				        <div>Send follow up</div>
-				      </button>
+				      <a href="{{sendWhatsApp(srch)}}" (click)="sendMail(srch)">
+				        <div text-center>
+				        	<ion-icon name="text" center></ion-icon>
+				        </div>
+				        <div text-center>WhatsApp and Email</div>
+				      </a>
 				    </ion-col>
 				    <ion-col>
-		    			<button ion-button small icon-start clear (click)="callSearcher(srch?.searcher_id)" >
+		    			<button ion-button small icon-start clear 
+		    			(click)="callSearcher(srch?.searcher_id)">
 		    				<ion-icon name="call"></ion-icon>
 		    				<div>Call</div>
 		    			</button>

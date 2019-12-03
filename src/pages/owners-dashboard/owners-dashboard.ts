@@ -18,7 +18,6 @@ export class OwnersDashboardPage {
   tab1Root: any = 'SearchfeedPage';
   tab2Root: any = 'ManageBuildingsPage';
   tab3Root: any = 'BookingsPage';
-  tab4Root: any = 'ChatsPage';
   constructor(
     public navCtrl: NavController, 
     public navParams: NavParams,

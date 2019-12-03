@@ -12,7 +12,6 @@ export class LandlordDashboardPage {
   tab1Root: any = 'SearchfeedPage';
   tab2Root: any = 'ManageBuildingsPage';
   tab3Root: any = 'BookingsPage';
-  tab4Root: any = 'ChatsPage';
   tab5Root: any = 'PlacementsPage';
   constructor(
     public navCtrl: NavController, 

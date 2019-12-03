@@ -81,18 +81,22 @@ export class PrefferencesPage {
     }else{
       this.search_object.searcher_name = 'Anonymous';
     }
+    this.search_object.searcher_email = this.user.email;
     this.search_object.searcher_dp = this.user.photoURL;
     this.search_object.Address = this.pointOfInterest;
     this.search_object.maxPrice = Number(this.search_object.maxPrice);
     this.search_object.minPrice = Number(this.search_object.minPrice);
     this.search_object.timeStamp = Date.now();
-    if(this.user.user_type != 'agent'){
+    
       console.log('Logging search in database: ', this.search_object);
       this.afs.collection('Searches2').add(this.search_object)
+      .then(dat =>{
+        console.log(dat);
+      })
       .catch(err => {
         this.errHandler.handleError(err);
       })
-    }
+    
     this.navCtrl.push('SeekingPage', {search: this.search_object, poi: this.pointOfInterest, user: this.user});
     this.storage.setSearch(this.search_object)
     .catch(err => {

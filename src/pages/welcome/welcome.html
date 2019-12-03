@@ -9,17 +9,11 @@
     <ion-title text-center style="font-weight: 3.0px; letter-spacing: 2px">
       <h1><b>Clickinn</b></h1></ion-title>
     <button ion-button menuToggle icon-only>
-      <ion-icon name='menu'></ion-icon> <span *ngIf="unseenNotifications > 0">&nbsp;&nbsp;({{unseenNotifications}}) </span>
+      <ion-icon name='menu'></ion-icon> 
     </button>
   </ion-navbar>
 </ion-header>
 <ion-content text-center>
-  <ion-fab bottom right>
-    <button ion-fab color="secondary" (click)="gotoChats()">
-      <ion-icon name="ios-chatboxes-outline">
-      </ion-icon>
-    </button>
-  </ion-fab>
 	<div class="centered_on_screen full_width">
     <ion-grid>
       <ion-row>

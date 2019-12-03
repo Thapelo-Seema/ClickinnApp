@@ -101,9 +101,39 @@ export class SearchfeedPage {
     })
   }
 
+  urlEncodedMessge(search: Search): string{
+    let msg: string = `Hi my name is ${this.user.firstname}, I am responding to your search on Clickinn.\n`;
+    if(search.apartment_type == 'Any'){
+        msg += `I'd like to enquire if you're still looking for any room type 
+        around ${this.returnFirst(search.Address.description)}`
+    }else{
+        msg += `I'd like to enquire if you're still looking for
+         a ${search.apartment_type} around ${this.returnFirst(search.Address.description)}`
+    }
+    return encodeURI(msg);
+  }
+
+  sendMail(search: Search){
+    let msg: string = `Hi my name is ${this.user.firstname}, I am responding to your search on Clickinn.\n`;
+    if(search.apartment_type == 'Any'){
+        msg += `I'd like to enquire if you're still looking for any room type 
+        around ${this.returnFirst(search.Address.description)}. If you are still looking please contact me on ${this.user.phoneNumber} or email me on ${this.user.email}`
+    }else{
+        msg += `I'd like to enquire if you're still looking for
+         a ${search.apartment_type} around ${this.returnFirst(search.Address.description)}`
+    }
+    this.searchfeed_svc.sendMail(search, this.user.firstname, msg)
+    .subscribe(res =>{
+      console.log(res)
+    }, err =>{
+      console.log(err);
+    })
+  }
+
   //Send a follow up
   sendWhatsApp(search: Search){
     //Composing message
+    this.sendMail(search);
     let msg: string = `Hi my name is ${this.user.firstname}, I am responding to your search on Clickinn.\n`;
     if(search.apartment_type == 'Any'){
         msg += `I'd like to enquire if you're still looking for any room type 
@@ -116,9 +146,9 @@ export class SearchfeedPage {
       //Sending WhatsApp...
     if(search.searcher_contact != null && search.searcher_contact != ""  
       && search.contact_on_WhatsApp && search.searcher_contact != undefined){
-        if(search.searcher_contact.substring(0, 0) == "0"){
+        if(search.searcher_contact.substring(0, 1) == "0"){
           this.formatedNum =  "27"+ search.searcher_contact.substring(1);
-        }else if(search.searcher_contact.substring(0, 0) == "+"){
+        }else if(search.searcher_contact.substring(0, 1) == "+"){
           this.formatedNum =   search.searcher_contact.substring(1);
         }else if(search.searcher_contact.substring(0, 1) == "27"){
           this.formatedNum =   search.searcher_contact;
@@ -126,7 +156,7 @@ export class SearchfeedPage {
         this.urlEncodedMsg = encodeURI(msg);
         console.log(this.formatedNum);
         console.log(this.urlEncodedMsg);
-          this.respondViaWebStr = `https://wa.me/${this.formatedNum}/?text=${this.urlEncodedMsg}`;
+          this.respondViaWebStr = `https://wa.me/${this.formatedNum}?text=${this.urlEncodedMsg}`;
           this.searchfeed_svc.getRequest(this.respondViaWebStr)
           .subscribe(res =>{
             let toast = this.toastCtrl.create({
@@ -144,9 +174,12 @@ export class SearchfeedPage {
           message: "This user did not supply WhatsApp number"
       })
       toast.present();
+      return "";
     }
+
+    
     //Sending email...
-    if(search.searcher_email !=""){
+    /*if(search.searcher_email !=""){
       this.socialSharing.shareViaEmail(msg, "Clickinn Accommodation Search", [search.searcher_email])
       .then(v =>{
         this.toast_svc.showToast("Email sent!")
@@ -160,7 +193,7 @@ export class SearchfeedPage {
         message: "This user did not specify thier email address"
       })
       toast.present();
-    }
+    }*/
   }
 
 //No longer need this function

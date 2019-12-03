@@ -10,6 +10,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const nodemailer = require('nodemailer');
+const cors = require('cors')({ origin: true });
 admin.initializeApp();
 admin.firestore().settings({ timestampsInSnapshots: true });
 // // Start writing Firebase Functions
@@ -18,6 +20,36 @@ admin.firestore().settings({ timestampsInSnapshots: true });
 // export const helloWorld = functions.https.onRequest((request, response) => {
 //  response.send("Hello from Firebase!");
 // });
+let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'clickinn.accommodation@gmail.com',
+        pass: 'I_love_clickinn123'
+    }
+});
+exports.sendMail = functions.https.onRequest((req, res) => {
+    const sender = req.query.sender;
+    const msg = req.query.msg;
+    cors(req, res, () => {
+        // getting dest email by query string
+        const dest = req.query.dest;
+        const mailOptions = {
+            from: 'Clickinn Accommodation <clickinn.accommodation@gmail.com>',
+            to: dest,
+            subject: `${sender} has responded to your search on Clickinn Accommodation`,
+            html: `<p style="font-size: 16px;"> ${msg} </p>
+                <br />
+            ` // email content in HTML
+        };
+        // returning result
+        return transporter.sendMail(mailOptions, (erro, info) => {
+            if (erro) {
+                return res.send(erro.toString());
+            }
+            return res.send('Sended');
+        });
+    });
+});
 exports.bookingNotification = functions.firestore.document(`Viewings/{viewing_id}`)
     .onCreate((event, context) => __awaiter(this, void 0, void 0, function* () {
     const data = event.data();
@@ -439,8 +471,10 @@ exports.searchNotifier = functions.firestore.document('Searches2/{search_id}')
         //console.log('Devices: ', devices.docs);
         devices.forEach(device => {
             console.log('Device: ', device.data().token);
-            if (tokens.indexOf(device.data().token) === -1)
+            if (tokens.indexOf(device.data().token) === -1) {
+                console.log('pushing token...');
                 tokens.push(device.data().token);
+            }
         });
     }));
     console.log('Tokens: ', tokens);

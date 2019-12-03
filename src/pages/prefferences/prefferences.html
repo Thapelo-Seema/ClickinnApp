@@ -12,18 +12,19 @@
         <ion-col col-0 col-sm-0 col-md-0 col-lg-3>
         </ion-col>
         <ion-col col-12 col-sm-12 col-md-12 col-lg-6>
-        	<p style="color: white; text-align: center">
-        	Tell us about the kind of place you're looking for. 
-        	<font style="color: orange">( Maximum Rent and Apartment Type are required fields )</font></p>
-			<ion-item padding style="background: transparent; color: white">
+        	<ion-card margin-vertical padding style=" border-radius: 10px">
+        	<p style="text-align: center">
+        	<b>Tell us about the kind of place you're looking for. 
+        	<font style="color: orange">( Maximum Rent and Apartment Type are required fields )</font></b></p>
+			<ion-item padding >
 			  <ion-label floating>Maximum Rent (Rands)</ion-label>
 			  <ion-input type="number" [(ngModel)]="search_object.maxPrice" required></ion-input>
 			</ion-item>
-			<ion-item padding style="background: transparent; color: white">
+			<ion-item padding>
 			  <ion-label floating>Minimum Rent (Rands)</ion-label>
 			  <ion-input type="number" [(ngModel)]="search_object.minPrice" required></ion-input>
 			</ion-item>
-			<ion-item padding style="background: transparent; color: white">
+			<ion-item padding >
 			  <ion-label>Apartment Type</ion-label>
 			  <ion-select [(ngModel)]="search_object.apartment_type" required>
 			  	<ion-option value="Back room">Back room</ion-option>
@@ -51,25 +52,26 @@
 					Less filters  &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropup" end></ion-icon>
 				</button>
 			</ion-buttons>
-			<ion-item *ngIf="more" padding style="background: transparent; color: white">
+			<ion-item *ngIf="more" padding >
 			   <ion-label>NSFAS</ion-label>
 			   <ion-checkbox [(ngModel)]="search_object.nsfas"></ion-checkbox>
 			</ion-item>
-			<ion-item *ngIf="more" padding style="background: transparent; color: white">
+			<ion-item *ngIf="more" padding >
 			   <ion-label>Parking</ion-label>
 			   <ion-checkbox [(ngModel)]="search_object.parking"></ion-checkbox>
 			</ion-item>
-			<ion-item *ngIf="more" padding style="background: transparent; color: white">
+			<ion-item *ngIf="more" padding>
 			   <ion-label>wifi</ion-label>
 			   <ion-checkbox [(ngModel)]="search_object.wifi"></ion-checkbox>
 			</ion-item>
-			<ion-item *ngIf="more" padding style="background: transparent; color: white">
+			<ion-item *ngIf="more" padding>
 			   <ion-label>Laundry machine</ion-label>
 			   <ion-checkbox [(ngModel)]="search_object.laundry"></ion-checkbox>
 			</ion-item>
 			<ion-item *ngIf="more" padding margin-vertical no-lines>
 			   <ion-textarea text-center rows="7" placeholder="Any other special needs that you may have like, wheelchair friendly, pet friendly etc." [(ngModel)]="search_object.other"></ion-textarea>
 			</ion-item>
+		</ion-card>
 			<ion-buttons end>
 				<button ion-button round outline color="silver" (click)="gotoSeekPage()">
 			  		 Done &nbsp;&nbsp; <ion-icon  end name="checkmark"></ion-icon>

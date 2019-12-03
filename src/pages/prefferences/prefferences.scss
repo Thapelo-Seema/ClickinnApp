@@ -1,14 +1,25 @@
 page-prefferences {
 
 	ion-input:first-child {
-	    border: 1px solid lightgray;
+	    border: 1px solid gray;
 	    border-radius: 4px;
 	}
 
   	ion-input:last-child {
-    	border: 1px solid lightgray;
+    	border: 1px solid gray;
     	border-radius: 4px;
   	}
+
+  	ion-textarea:first-child {
+	    border: 1px solid gray;
+	    border-radius: 4px;
+	}
+
+	ion-textarea:last-child {
+    	border: 1px solid gray;
+    	border-radius: 4px;
+  	}
+
 
   	ion-item {
 	    border-bottom: 0px !important;

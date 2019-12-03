@@ -11,7 +11,7 @@ import { User } from '../../models/users/user.interface';
 import { ServiceDeal } from '../../models/service_deal.interface';
 //import { take } from 'rxjs-compat/operators/take';
 import { Subscription } from 'rxjs-compat/Subscription';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 
 interface QueryConfig {
   path: string, //  path to collection
@@ -48,7 +48,19 @@ reset(){
 }
 
 getRequest(url: string){
-  return this.http.get(url);
+  const headers = new HttpHeaders();
+    headers.append("Content-Type", "application/x-www-form-urlencoded");
+    return this.http.post(url, {}, {headers})
+  //return this.http.get(url);
+}
+
+sendMail(search: Search, sender: string, msg: string){
+  let url = "https://us-central1-clickinn-996f0.cloudfunctions.net/sendMail";
+  let params: HttpParams = new HttpParams()
+  .set("dest", search.searcher_email)
+  .set("sender", sender)
+  .set("msg", msg);
+  return this.http.get(url, {params: params});
 }
 
 unsubscribe(){
