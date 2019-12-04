@@ -14,7 +14,7 @@ import { ErrorHandlerProvider } from '../../providers/error-handler/error-handle
 import { CallNumber } from '@ionic-native/call-number';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
-import { SocialSharing } from '@ionic-native/social-sharing';
+//import { SocialSharing } from '@ionic-native/social-sharing';
 
 @IonicPage()
 @Component({
@@ -65,7 +65,7 @@ export class SearchfeedPage {
     private callNumber: CallNumber,
     private toast_svc: ToastSvcProvider,
     private user_svc: UserSvcProvider,
-    private socialSharing: SocialSharing,
+    //private socialSharing: SocialSharing,
     private platform: Platform){
     this.searchfeed_svc.getAllSearches();
     this.pointOfInterest = this.object_init.initializeAddress(); //Initialize the point of interest with default values
@@ -101,6 +101,8 @@ export class SearchfeedPage {
     })
   }
 
+  
+
   urlEncodedMessge(search: Search): string{
     let msg: string = `Hi my name is ${this.user.firstname}, I am responding to your search on Clickinn.\n`;
     if(search.apartment_type == 'Any'){
@@ -131,49 +133,29 @@ export class SearchfeedPage {
   }
 
   //Send a follow up
-  sendWhatsApp(search: Search){
+  generateWhatsAppLink(search: Search): string{
     //Composing message
-    this.sendMail(search);
     let msg: string = `Hi my name is ${this.user.firstname}, I am responding to your search on Clickinn.\n`;
     if(search.apartment_type == 'Any'){
-        msg += `I'd like to enquire if you're still looking for any room type 
-        around ${this.returnFirst(search.Address.description)}`
+        msg += `I'd like to enquire if you're still looking for any room type around ${this.returnFirst(search.Address.description)}`
     }else{
-        msg += `I'd like to enquire if you're still looking for
-         a ${search.apartment_type} around ${this.returnFirst(search.Address.description)}`
+        msg += `I'd like to enquire if you're still looking for a ${search.apartment_type} around ${this.returnFirst(search.Address.description)}`
     }
     //Sending the message
       //Sending WhatsApp...
     if(search.searcher_contact != null && search.searcher_contact != ""  
       && search.contact_on_WhatsApp && search.searcher_contact != undefined){
         if(search.searcher_contact.substring(0, 1) == "0"){
-          this.formatedNum =  "27"+ search.searcher_contact.substring(1);
+          this.formatedNum = "27" + search.searcher_contact.substring(1);
         }else if(search.searcher_contact.substring(0, 1) == "+"){
-          this.formatedNum =   search.searcher_contact.substring(1);
-        }else if(search.searcher_contact.substring(0, 1) == "27"){
-          this.formatedNum =   search.searcher_contact;
+          this.formatedNum = search.searcher_contact.substring(1);
+        }
+        else if(search.searcher_contact.substring(0, 1) == "27"){
+          this.formatedNum = search.searcher_contact;
         }
         this.urlEncodedMsg = encodeURI(msg);
-        console.log(this.formatedNum);
-        console.log(this.urlEncodedMsg);
-          this.respondViaWebStr = `https://wa.me/${this.formatedNum}?text=${this.urlEncodedMsg}`;
-          this.searchfeed_svc.getRequest(this.respondViaWebStr)
-          .subscribe(res =>{
-            let toast = this.toastCtrl.create({
-              duration: 3000,
-              message: "Follow up WhatsApp successfully sent!"
-            })
-            toast.present();
-          },
-          err =>{
-             this.toast_svc.showToast(err.message);
-          })
+        return `https://wa.me/${this.formatedNum}?text=${this.urlEncodedMsg}`;
       }else{
-        let toast = this.toastCtrl.create({
-          duration: 5000,
-          message: "This user did not supply WhatsApp number"
-      })
-      toast.present();
       return "";
     }
 

@@ -72,8 +72,8 @@
 				    </p>
 				  </ion-card-content>
 				  <ion-row>
-				    <ion-col *ngIf="srch.searcher_id != user.uid">
-				      <a href="{{sendWhatsApp(srch)}}" (click)="sendMail(srch)">
+				    <ion-col *ngIf="srch.searcher_id != user.uid" (click)="sendMail(srch)">
+				      <a href="{{generateWhatsAppLink(srch)}}" >
 				        <div text-center>
 				        	<ion-icon name="text" center></ion-icon>
 				        </div>

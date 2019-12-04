@@ -15,7 +15,7 @@ import { Thread } from '../models/thread.interface';
 import { DepositProvider } from '../providers/deposit/deposit';
 import { Subscription } from 'rxjs-compat/Subscription';
 import { SearchfeedProvider } from '../providers/searchfeed/searchfeed';
-import { ChatServiceProvider } from '../providers/chat-service/chat-service';
+//import { ChatServiceProvider } from '../providers/chat-service/chat-service';
 //import { AccommodationsProvider } from '../providers/accommodations/accommodations';
 
 @Component({
@@ -24,6 +24,7 @@ import { ChatServiceProvider } from '../providers/chat-service/chat-service';
 export class MyApp {
   rootPage:any;
   user: User;
+  depSubs: Subscription;
   pushSubs: Subscription;
   regSubs: Subscription;
   errSubs: Subscription;
@@ -70,7 +71,7 @@ export class MyApp {
     private loadingCtrl: LoadingController,
     private modalCtrl: ModalController,
     private searchfeed_svc: SearchfeedProvider,
-    private chat_svc: ChatServiceProvider
+    //private chat_svc: ChatServiceProvider
     //private events: Events
     ){
     this.loader.setDuration(4000);
@@ -285,6 +286,9 @@ export class MyApp {
     if(this.userSubs != null && this.userSubs != undefined){
       this.userSubs.unsubscribe();
     }
+    if(this.depSubs != undefined && this.depSubs != null){
+      this.depSubs.unsubscribe();
+    }
     
     let ldr = this.loadingCtrl.create()
     ldr.present();
@@ -396,7 +400,7 @@ export class MyApp {
   gotoDepositInfo(deposit_id: string, code: string){
     let message: string = '';
     let title: string = '';
-    this.deposit_svc.getDepositById(deposit_id)
+    this.depSubs = this.deposit_svc.getDepositById(deposit_id)
     .pipe(take(1))
     .subscribe(dep =>{
         switch (code) {
@@ -512,7 +516,7 @@ export class MyApp {
   //Check for authState and sync user data if possible
   initializeAuthenticatedUser(){
     if(this.afAuth.auth.currentUser){
-      this.afs.collection('Users').doc<User>(this.afAuth.auth.currentUser.uid).valueChanges()
+      this.userSubs = this.afs.collection('Users').doc<User>(this.afAuth.auth.currentUser.uid).valueChanges()
       .pipe(take(1))
       .subscribe(user =>{
         if(user){
