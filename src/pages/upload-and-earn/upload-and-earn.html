@@ -129,17 +129,18 @@
         </ion-grid>
           <!-- <input type="file" accept="image/*"  (change)="updateApartmentPics($event)"> -->
           <ion-row>
-            <ion-col col-6 *ngIf="!apartmentImagesAdded">
+            <!-- <ion-col col-6 *ngIf="!apartmentImagesAdded">
               <button ion-button color="clickinn" padding outline margin-vertical (click)="addPictures(1, 1)" >
                 <strong>CAMERA</strong>&nbsp;&nbsp;&nbsp;&nbsp;<ion-icon name="ios-camera-outline"></ion-icon> 
               </button>
-            </ion-col>
-            <ion-col col-6 *ngIf="!apartmentImagesAdded">
+            </ion-col> -->
+            <ion-col text-center padding>
               <button ion-button color="clickinn" padding  outline margin-vertical  (click)="addPictures(2, 1)" >
-               <strong>GALLERY</strong>&nbsp;&nbsp;&nbsp;&nbsp;<ion-icon name="ios-images-outline"></ion-icon>  
+               <strong>Get Pictures from device</strong>&nbsp;&nbsp;&nbsp;&nbsp;<ion-icon name="ios-images-outline"></ion-icon>  
               </button>
+              <input type="file" hidden="hidden" #apartmentpictures accept="image/*" (change)="updateApartmentImgs($event)" multiple="true">
             </ion-col>
-            <ion-col col-6 *ngIf="apartmentImagesAdded">
+            <!-- <ion-col col-6 *ngIf="apartmentImagesAdded">
                 <button ion-button color="clickinn" padding  outline margin-vertical (click)="addPictures(1, 1)">
                   <strong>MORE</strong>&nbsp;&nbsp;&nbsp;&nbsp;<ion-icon name="ios-camera-outline"></ion-icon>   
                 </button>
@@ -148,7 +149,7 @@
               <button ion-button color="clickinn" padding  outline margin-vertical (click)="addPictures(2, 1)" >
                 <strong>MORE</strong>&nbsp;&nbsp;&nbsp;&nbsp;<ion-icon name="ios-images-outline"></ion-icon>  
               </button>
-            </ion-col>
+            </ion-col> -->
           </ion-row>
           
         <ion-buttons text-center>
@@ -164,8 +165,8 @@
         <h1 text-center>More Details</h1>
         <ion-item no-lines text-wrap style="border-radius: 7px; background: rgba(0,0,0, 0.5); color: white; letter-spacing: 2px">
         <p text-center style="color: white">
-          These are details about the property or building in which the apartment is situated. If you have an apartment
-          already uploaded in the same property (building), just select the property from the property list below. 
+          These are details about the address at which the apartment is situated. If you have an apartment
+          already uploaded at the same address, just select the address from the address list below. 
         </p>
         <ion-buttons end>
           <button ion-button small clear>
@@ -180,7 +181,7 @@
             Close list &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropup" end></ion-icon>
           </button>
           <button ion-button clear color="clickinn" icon-right *ngIf="!openList" (click)="showList()">
-            Select property from list &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropdown" end></ion-icon>
+            Select address from list &nbsp;&nbsp;&nbsp;<ion-icon name="arrow-dropdown" end></ion-icon>
           </button>
         </ion-buttons>
         <ion-grid *ngIf="openList">

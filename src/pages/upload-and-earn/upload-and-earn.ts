@@ -1,5 +1,6 @@
-import { Component, ViewChild } from '@angular/core';
-import { IonicPage, NavController, NavParams, AlertController, Platform, ToastController, Content, LoadingController } from 'ionic-angular';
+import { Component, ViewChild, ElementRef } from '@angular/core';
+import { IonicPage, NavController, NavParams, AlertController, Platform, 
+  ToastController, Content, LoadingController } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { Property } from '../../models/properties/property.interface';
 import { Camera, CameraOptions } from '@ionic-native/camera';
@@ -26,6 +27,7 @@ import { IonicStepperComponent } from 'ionic-stepper';
 export class UploadAndEarnPage{
   @ViewChild(Content) content: Content;
   @ViewChild('stepper') stepper: IonicStepperComponent;
+  @ViewChild('apartmentpictures') apartment_pictures_input: ElementRef;
   apartment: Apartment;
   building: Property;
   buildings: Property[] = [];
@@ -126,6 +128,20 @@ export class UploadAndEarnPage{
     this.content.scrollToTop();
   }
 
+  updateApartmentImgs(event){
+   console.log(event);
+   /*this.apartImgCount++;
+   this.apartmentImagesAdded = true;
+   let image: FileUpload ={
+     file: 'data:image/jpeg;base64,' + imageData,
+     path: 'ApartmentImages',
+     url: '',
+     name: `${this.apartment.apart_id}_${this.apartImgCount}.jpg`,
+     progress: 0
+   }
+   this.apartmentImages.push(image);*/   
+  }
+
   initializeExisting(apartment: Apartment){
     this.existing = true;
     this.storage.setApartment(apartment)
@@ -174,6 +190,7 @@ export class UploadAndEarnPage{
   }
 
   addPictures(source: number, destination: number){
+    this.apartment_pictures_input.nativeElement.click();
     const options: CameraOptions = {
       quality: 60,
       destinationType: this.camera.DestinationType.DATA_URL,
@@ -213,7 +230,7 @@ export class UploadAndEarnPage{
        }
     }).catch(err => {
       console.log(err)
-      this.errHandler.handleError({errCode: 'IMAGE_NOT_SELECTED', message: 'No image selected'});
+      //this.errHandler.handleError({errCode: 'IMAGE_NOT_SELECTED', message: 'No image selected'});
     })
   }
 

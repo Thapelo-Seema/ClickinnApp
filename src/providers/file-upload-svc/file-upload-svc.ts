@@ -81,4 +81,45 @@ export class FileUploadSvcProvider {
     })
   }
 
+  uploadFile(fileUpload: FileUpload): Promise<FileUpload>{
+    console.log('Uploading file... ', fileUpload);
+    let tempFile = fileUpload;
+    const storageRef = this.afstorage.ref(`${fileUpload.path}/${fileUpload.name}`);
+    let uploadTask = this.afstorage.upload(`${fileUpload.path}/${fileUpload.name}`, fileUpload.file)
+    return new Promise<FileUpload>((resolve, reject) =>{
+      uploadTask.snapshotChanges().subscribe(
+        (snapshot) =>{
+        uploadTask.percentageChanges().subscribe(progress =>{
+          tempFile.progress = progress;
+          console.log('Uploading in progress...', progress);
+        })
+      },
+      (err) =>{
+          console.log(err)
+      }, 
+      () =>{
+        let tempUrl = '';
+          //on success of the upload, update the url property of the upload object
+          storageRef.getDownloadURL().subscribe(down_url =>{
+            tempUrl = down_url;
+            }, 
+            err =>{
+               console.log(err)
+            },
+            () =>{
+              let fileout: FileUpload = {
+                url: tempUrl,
+                name: tempFile.name,
+                progress: tempFile.progress,
+                path: tempFile.path,
+                file: tempFile.file
+              }
+              resolve(fileout)
+            }
+          )  
+      })
+    })
+  }
+
+
 }
