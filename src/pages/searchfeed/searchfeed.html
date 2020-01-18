@@ -46,7 +46,7 @@
 		        </div>
 	            
 				<ion-card *ngFor="let srch of searchfeed_svc?.data | async; let idx = index">
-				  <ion-item (click)="seeProfile(srch.searcher_id)">
+				  <ion-item (click)="seeProfile(srch)">
 				    <ion-avatar item-start>
 				      <img src="{{srch?.searcher_dp}}" (load)="imagesLoaded[idx] = true" [hidden]="!imagesLoaded[idx]" />
 				      <img src="assets/imgs/genPlaceholder.png" [hidden]="imagesLoaded[idx]" />
@@ -72,20 +72,24 @@
 				    </p>
 				  </ion-card-content>
 				  <ion-row>
-				    <ion-col *ngIf="srch.searcher_id != user.uid" (click)="sendMail(srch)">
-				      <a href="{{generateWhatsAppLink(srch)}}" >
+				    <ion-col *ngIf="srch.searcher_id != user.uid" (click)="whatsAppNumberStatus(srch)">
+				      <a ion-button color="secondary" href="{{generateWhatsAppLink(srch)}}" >
 				        <div text-center>
 				        	<ion-icon name="text" center></ion-icon>
-				        </div>
-				        <div text-center>WhatsApp and Email</div>
+				        </div>&nbsp;&nbsp;
+				        <div text-center>WhatsApp</div>
 				      </a>
 				    </ion-col>
 				    <ion-col>
-		    			<button ion-button small icon-start clear 
+		    			<!-- <button ion-button small icon-start clear 
 		    			(click)="callSearcher(srch?.searcher_id)">
 		    				<ion-icon name="call"></ion-icon>
 		    				<div>Call</div>
-		    			</button>
+		    			</button> -->
+		    			<a ion-button href="tel:{{formatContactNumber(srch)}}">
+		    				<ion-icon name="call"></ion-icon>
+		    				&nbsp;&nbsp;<div>Call</div>
+		    			</a>
 		    		</ion-col>
 				    <ion-col center text-center>
 				      <ion-note>

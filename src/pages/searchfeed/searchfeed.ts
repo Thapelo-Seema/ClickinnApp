@@ -11,7 +11,7 @@ import { take } from 'rxjs-compat/operators/take';
 import { Subscription } from 'rxjs-compat/Subscription';
 import { Address } from '../../models/location/address.interface';
 import { ErrorHandlerProvider } from '../../providers/error-handler/error-handler';
-import { CallNumber } from '@ionic-native/call-number';
+//import { CallNumber } from '@ionic-native/call-number';
 import { UserSvcProvider } from '../../providers/user-svc/user-svc';
 import { ToastSvcProvider } from '../../providers/toast-svc/toast-svc';
 //import { SocialSharing } from '@ionic-native/social-sharing';
@@ -62,7 +62,6 @@ export class SearchfeedPage {
     private errHandler: ErrorHandlerProvider,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
-    private callNumber: CallNumber,
     private toast_svc: ToastSvcProvider,
     private user_svc: UserSvcProvider,
     //private socialSharing: SocialSharing,
@@ -132,6 +131,21 @@ export class SearchfeedPage {
     })
   }
 
+  formatContactNumber(search: Search): string{
+    let newNumber = search.searcher_contact ? search.searcher_contact: "";
+    if(search.searcher_contact != undefined){
+      if(search.searcher_contact.substring(0, 1) == "0"){
+          newNumber = "+27" + search.searcher_contact.substring(1);
+        }else if(search.searcher_contact.substring(0, 1) == "+"){
+          newNumber = search.searcher_contact;
+        }
+        else if(search.searcher_contact.substring(0, 1) == "27"){
+          newNumber = "+" + search.searcher_contact;
+        }
+    }
+    return newNumber;
+  }
+
   //Send a follow up
   generateWhatsAppLink(search: Search): string{
     //Composing message
@@ -158,24 +172,20 @@ export class SearchfeedPage {
       }else{
       return "";
     }
+  }
 
-    
-    //Sending email...
-    /*if(search.searcher_email !=""){
-      this.socialSharing.shareViaEmail(msg, "Clickinn Accommodation Search", [search.searcher_email])
-      .then(v =>{
-        this.toast_svc.showToast("Email sent!")
-      })
-      .catch(err =>{
-        this.toast_svc.showToast("Email follow up could not be sent")
-      })
+  whatsAppNumberStatus(search: Search){
+    if(search.searcher_contact != null && search.searcher_contact != ""  
+      && search.contact_on_WhatsApp && search.searcher_contact != undefined){
+
     }else{
       let toast = this.toastCtrl.create({
-        duration: 5000,
-        message: "This user did not specify thier email address"
+        duration: 3000,
+        message: "No WhatsApp number provided, sending email..."
       })
       toast.present();
-    }*/
+      this.sendMail(search);
+    }
   }
 
 //No longer need this function
@@ -202,8 +212,8 @@ export class SearchfeedPage {
     })
   }*/
 
-  //Function for calling a searcher
-  callSearcher(search: Search){
+  //Function for calling a searcher no longer needed
+  /*callSearcher(search: Search){
     if(this.onBrowser(this.platform.platforms()) == true){
       this.toast_svc.showToast('This service is only available on the mobile app')
       return
@@ -224,7 +234,7 @@ export class SearchfeedPage {
         })
       })
     }
-  }
+  }*/
 
   onBrowser(devices: string[]):boolean{
     let browser = false;
@@ -250,11 +260,14 @@ export class SearchfeedPage {
     this.navCtrl.push('MyLandlordsPage')
   }
 
-  seeProfile(uid: string){
-    this.user_svc.getUser(uid)
+  seeProfile(search: Search){
+    this.user_svc.getUser(search.searcher_id)
     .pipe(take(1))
     .subscribe(user =>{
-      this.local_db.setViewedProfile(user)
+      let modeUser = user;
+      if(user.phoneNumber == null || user.phoneNumber == undefined || user.phoneNumber == "")
+        modeUser.phoneNumber = search.searcher_contact
+      this.local_db.setViewedProfile(modeUser)
       .then(() =>{
         this.navCtrl.push('ViewProfilePage')
       })

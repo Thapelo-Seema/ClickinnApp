@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, AlertController, LoadingController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, AlertController, LoadingController, ToastController } from 'ionic-angular';
 import { Apartment } from '../../models/properties/apartment.interface';
 import { LocalDataProvider } from '../../providers/local-data/local-data';
 import { Image } from '../../models/image.interface';
@@ -22,7 +22,9 @@ import { UsagePatternProvider } from '../../providers/usage-pattern/usage-patter
   templateUrl: 'info.html',
 })
 export class InfoPage {
-
+  respondViaWebStr = "https://wa.me";
+  urlEncodedMsg = "";
+  formatedNum = "";
   apartment: Apartment;
   //adjustedDuration: number = 0;
   pointOfInterest: Address ;
@@ -52,6 +54,7 @@ export class InfoPage {
     private toast_svc: ToastSvcProvider,
     private alertCtrl: AlertController, 
     private loadingCtrl: LoadingController,
+    private toastCtrl: ToastController,
     private callNumber: CallNumber,
     private usage_pttn: UsagePatternProvider){
       //this.chatMessage = this.object_init.initializeChatMessage();
@@ -67,10 +70,16 @@ export class InfoPage {
       .catch(err => {
         this.errHandler.handleError(err);
       })
+
+      //Gathering information about the current apartment
       this.storage.getApartment().then(data => {
       console.log('apartment: ', data)
       console.log('data.property.images: ', data.property.images)
       this.apartment = this.object_init.initializeApartment2(data);
+      if(this.apartment.callNumber == undefined || 
+        this.apartment.callNumber == null || this.apartment.callNumber == ""){
+        this.apartment.callNumber = "0639131282"
+      }
       //this.loader.dismiss()
       if(data.prop_id){
         this.accom_svc.getPropertyById(data.prop_id)
@@ -87,7 +96,10 @@ export class InfoPage {
           console.log('nearbys ', this.property.nearbys)
         })
       }
+
       
+
+      //Gathering information about the current User
       this.storage.getUser().then(user => {
         this.user = this.object_init.initializeUser2(user)
         //if(this.user.firstime == true) this.showAlert();
@@ -320,7 +332,82 @@ export class InfoPage {
           })
       })
     }
-    
+  }
+
+  urlEncodedMessge(): string{
+    let msg: string = `Hi my name is ${this.user.firstname}, I am responding to 
+    your advert on Clickinn.\n`;
+        msg += `I'd like to enquire if the ${this.apartment.room_type} around 
+        ${this.returnFirst(this.apartment.property.address.description)} is still available`
+    return encodeURI(msg);
+  }
+
+  sendMail(){
+    let msg: string = `Hi my name is ${this.user.firstname}, I am responding to 
+    your advert on Clickinn.\n`;
+        msg += `I'd like to enquire if the ${this.apartment.room_type} around 
+        ${this.returnFirst(this.apartment.property.address.description)} is still available`
+    /*this.searchfeed_svc.sendMail(search, this.user.firstname, msg)
+    .subscribe(res =>{
+      console.log(res)
+    }, err =>{
+      console.log(err);
+    })*/
+  }
+
+  formatContactNumber(): string{
+    let newNumber = this.apartment.callNumber ? this.apartment.callNumber: "";
+    if(this.apartment.callNumber != undefined){
+      if(this.apartment.callNumber.substring(0, 1) == "0"){
+          newNumber = "+27" + this.apartment.callNumber.substring(1);
+        }else if(this.apartment.callNumber.substring(0, 1) == "+"){
+          newNumber = this.apartment.callNumber;
+        }
+        else if(this.apartment.callNumber.substring(0, 1) == "27"){
+          newNumber = "+" + this.apartment.callNumber;
+        }
+    }
+    return newNumber;
+  }
+
+  //Send a follow up
+  generateWhatsAppLink(): string{
+    //Composing message
+    let msg: string = `Hi my name is ${this.user.firstname}, I am responding to 
+    your advert on Clickinn.\n`;
+        msg += `I'd like to enquire if the ${this.apartment.room_type} around 
+        ${this.returnFirst(this.apartment.property.address.description)} is still available`
+    //Sending the message
+      //Sending WhatsApp...
+    if(this.apartment.callNumber != null && this.apartment.callNumber != ""  
+      && this.apartment.callNumber != undefined){
+        if(this.apartment.callNumber.substring(0, 1) == "0"){
+          this.formatedNum = "27" + this.apartment.callNumber.substring(1);
+        }else if(this.apartment.callNumber.substring(0, 1) == "+"){
+          this.formatedNum = this.apartment.callNumber.substring(1);
+        }
+        else if(this.apartment.callNumber.substring(0, 1) == "27"){
+          this.formatedNum = this.apartment.callNumber;
+        }
+        this.urlEncodedMsg = encodeURI(msg);
+        return `https://wa.me/${this.formatedNum}?text=${this.urlEncodedMsg}`;
+      }else{
+      return "";
+    }
+  }
+
+  whatsAppNumberStatus(){
+    if(this.apartment.callNumber != null && this.apartment.callNumber != ""  
+      && this.apartment.callNumber != undefined){
+
+    }else{
+      let toast = this.toastCtrl.create({
+        duration: 3000,
+        message: "No WhatsApp number provided, sending email..."
+      })
+      toast.present();
+      this.sendMail();
+    }
   }
 
 

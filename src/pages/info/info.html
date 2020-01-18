@@ -35,32 +35,35 @@
 		</div>
 		<ion-row margin-vertical>
 			<ion-col>
-    			<button ion-button small clear (click)="callLandlord(apartment?.property?.user_id)" >
-    				<ion-icon name="call"></ion-icon>
-    			</button>
+    			<a ion-button href="tel:{{formatContactNumber()}}">
+		    				<ion-icon name="call"></ion-icon>
+		    				&nbsp;&nbsp;<div>Call</div>
+		    			</a>
     		</ion-col>
-			<ion-col>
+			<!-- <ion-col>
 				<button ion-button small clear  (click)="gotoAppointment()">
 					<ion-icon name="alarm"></ion-icon>
 				</button>
-			</ion-col>
+			</ion-col> --><!-- 
 			<ion-col>
 				<button ion-button small clear color="metallic-gold" (click)="gotoSecure()">
 					<ion-icon name="cart"></ion-icon>
 				</button>
-			</ion-col>
-			<ion-col>
+			</ion-col> -->
+			<!-- <ion-col>
 				<button ion-button small clear color="danger" (click)="addToLiked()">
 					<ion-icon name="{{heart}}">
 					</ion-icon>
 				</button>
-			</ion-col>
-			<ion-col>
-				<button ion-button clear small color="secondary" (click)="sendMessage()">
-					<ion-icon name="ios-chatboxes-outline">
-					</ion-icon>
-				</button>
-			</ion-col>
+			</ion-col> -->
+			<ion-col (click)="whatsAppNumberStatus()">
+				      <a ion-button color="secondary" href="{{generateWhatsAppLink()}}" >
+				        <div text-center>
+				        	<ion-icon name="text" center></ion-icon>
+				        </div>&nbsp;&nbsp;
+				        <div text-center>WhatsApp</div>
+				      </a>
+				    </ion-col>
 			<ion-col>
 				<button ion-button clear small (click)="gotoMap()">
 					<ion-icon name="map">
