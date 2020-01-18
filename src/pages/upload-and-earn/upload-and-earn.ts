@@ -17,7 +17,7 @@ import { ObjectInitProvider } from '../../providers/object-init/object-init';
 import { Subscription } from 'rxjs-compat/Subscription';
 import { SearchfeedProvider } from '../../providers/searchfeed/searchfeed';
 import { take } from 'rxjs-compat/operators/take';
-import { Observable } from 'rxjs-compat/Observable';
+//import { Observable } from 'rxjs-compat/Observable';
 import { IonicStepperComponent } from 'ionic-stepper';
 @IonicPage()
 @Component({
@@ -81,16 +81,16 @@ export class UploadAndEarnPage{
     private object_init: ObjectInitProvider,
     private loadingCtrl: LoadingController,
     private searchfeed_svc: SearchfeedProvider){
-    this.loader.present();
-    this.apartment = this.object_init.initializeApartment();
-    this.building = this.object_init.initializeProperty();
+    this.loader.present(); //Show the loader
+    this.apartment = this.object_init.initializeApartment(); //Initialise apartment fields
+    this.building = this.object_init.initializeProperty(); //Initialise property fields
 
     this.platform.ready().then(val =>{
-      if(platform.is('cordova')) this.onMobile = true;
+      if(platform.is('cordova')) this.onMobile = true; //If the app is running from cordova
       this.storage.getUser().then(user =>{ //getting user from local storage
         this.user = this.object_init.initializeUser2(user);
         this.building.user_id = user.uid; //Setting the user id of the building
-        
+        //Update the landlords that this agent is working with
         this.searchfeed_svc.getAgentsLandlords(user.uid)
         .pipe(take(1))
         .subscribe(landlords =>{
@@ -105,7 +105,7 @@ export class UploadAndEarnPage{
         //If a navigation parameter containing prop_id is passed, we are just editting an existing apartment
         if(this.navParams.data.prop_id != undefined){
           console.log(this.navParams.data)
-          this.initializeExisting(this.navParams.data)
+          this.initializeExisting(this.navParams.data) //Initialise existing apartment
         }else{
           this.propertySubs = this.accom_svc.getUsersProperties(user.uid).subscribe(buildings =>{
             //Subscribing to the users properties and declaring a loaded - boolean for each buildings dp
@@ -113,7 +113,7 @@ export class UploadAndEarnPage{
             buildings.forEach(bld =>{
               this.imagesLoaded.push(false);
             })
-            this.loader.dismiss()
+            this.loader.dismiss() //Switch off loader
           })
         }
       })
@@ -129,17 +129,49 @@ export class UploadAndEarnPage{
   }
 
   updateApartmentImgs(event){
-   console.log(event);
-   /*this.apartImgCount++;
-   this.apartmentImagesAdded = true;
+   //console.log(event.target.files);
+   //Map Files object to an array of files
+   let files = Object.keys(event.target.files).map(ind =>{
+     let file = event.target.files[ind];
+     return file;
+   })
+   //console.log(files);
+   //Create a FileUpload object for each image file and push it into the apartmentImages array
+   files.forEach(fl =>{
+     this.apartImgCount++;
+     this.apartmentImagesAdded = true;
+     let image: FileUpload ={
+       file: fl,
+       path: 'ApartmentImages',
+       url: '',
+       name: fl.name,
+       progress: 0
+     }
+     this.apartmentImages.push(image);
+   })  
+  }
+
+  addBuildingPics(event){
+    //console.log(event.target.files);
+    //Map Files object to an array of files
+    let files = Object.keys(event.target.files).map(ind =>{
+     let file = event.target.files[ind];
+     return file;
+   })
+
+   //Create a FileUpload object for each image file and push it into the propertyImages array
+   files.forEach(fl =>{
+     this.buildingImgCount++;
+     this.propertyImagesAdded = true;
    let image: FileUpload ={
-     file: 'data:image/jpeg;base64,' + imageData,
-     path: 'ApartmentImages',
+     file: fl,
+     path: 'PropertyImages',
      url: '',
-     name: `${this.apartment.apart_id}_${this.apartImgCount}.jpg`,
+     name: fl.name,
      progress: 0
    }
-   this.apartmentImages.push(image);*/   
+   this.propertyImages.push(image);
+   })
   }
 
   initializeExisting(apartment: Apartment){
@@ -235,28 +267,30 @@ export class UploadAndEarnPage{
   }
 
   uploadApartment(){
-    console.log('Uploading apartment...');
-    console.log(this.apartment)
-    console.log(this.building)
-    this.apartment.prop_id = this.building.prop_id;
+    this.apartment.prop_id = this.building.prop_id; //set property id of apartment
     let ldr = this.loadingCtrl.create();
-    ldr.present();
-    
-      if(this.apartment.images.length > 0){
-        if(this.apartment.images[0].url != '' && this.apartment.images[0].url != 'assets/imgs/placeholder.jpg'){
-          this.apartment.dP = this.apartment.images[0]
-        }else{
-          this.apartment.dP = this.apartment.images[1]
-        }
+    ldr.present(); //show loader
+    //Update apartment dp
+    if(this.apartment.images.length > 0){
+      if(this.apartment.images[0].url != '' && 
+         this.apartment.images[0].url != 'assets/imgs/placeholder.jpg'){
+        this.apartment.dP = this.apartment.images[0]
+      }else if(this.apartment.images[1].url != '' && 
+         this.apartment.images[1].url != 'assets/imgs/placeholder.jpg'){
+        this.apartment.dP = this.apartment.images[1]
       }
-      if(this.building.images.length > 0){
-        if(this.building.images[0].url != '' && this.building.images[0].url != 'assets/imgs/placeholder.jpg'){
-          this.building.dP = this.building.images[0]
-        }else{
-          this.building.dP = this.building.images[1]
-        }
+    }//Update property dp
+    if(this.building.images.length > 0){
+      if(this.building.images[0].url != '' && 
+        this.building.images[0].url != 'assets/imgs/placeholder.jpg'){
+        this.building.dP = this.building.images[0]
+      }else if(this.building.images[1].url != '' && 
+        this.building.images[1].url != 'assets/imgs/placeholder.jpg'){
+        this.building.dP = this.building.images[1]
       }
-    
+    }
+    //Updating apartment that has already been uploaded
+    //If property selected from previously uploaded buildings
     if(this.buildingSelected == true){
       console.log('buiding selected')
       this.building.complete = true;
@@ -268,12 +302,10 @@ export class UploadAndEarnPage{
       this.apartment.timeStampModified = Date.now();
       this.apartment.property.timeStampModified = Date.now();
       this.accom_svc.updateApartment(this.apartment).then(() =>{
-        console.log('Apartment updated...')
+        ldr.dismiss();
+        this.successful();
         this.storage.setApartment(this.apartment)
         .then(apart =>{
-          console.log('Dismissing...')
-          ldr.dismiss();
-          this.successful();
           this.navCtrl.push('InfoPage');
         })
         .catch(err =>{
@@ -297,15 +329,11 @@ export class UploadAndEarnPage{
       this.apartment.property = this.object_init.initializeProperty2(this.building);
       this.accom_svc.updateApartment(this.apartment)
       .then(() =>{
+        ldr.dismiss()
+        this.successful();
         this.storage.setApartment(this.apartment)
         .then(apart =>{
-          ldr.dismiss().then(() =>{
-            this.successful();
-            this.navCtrl.push('InfoPage');
-          })
-          .catch(err =>{
-            
-          })
+          this.navCtrl.push('InfoPage');
           this.uploadBuildingPics()
           .then(() =>{
             console.log('building pics uploaded...')
@@ -597,32 +625,32 @@ export class UploadAndEarnPage{
     })
   }
 
+  //This method uploads the images of the apartment selected to the file storage
   uploadApartPics(): Promise<void>{
-    let ldr = this.loadingCtrl.create()
+    //Create and display a loader for 3 seconds
+    let ldr = this.loadingCtrl.create({duration: 3000})
     ldr.present()
+    //If no images are selected, show appropriate toast message and return an empty promise
     if(this.apartmentImages.length <= 0){
       this.toast.create({
         position: 'bottom',
         duration: 2000,
         message: 'No apartment images added'
       })
-      console.log('No apartment images... ', this.apartmentImages);
+      /*console.log('No apartment images... ', this.apartmentImages);
       console.log(this.apartment)
-      console.log(this.building)
-      ldr.dismiss();
+      console.log(this.building)*/
       return new Promise<void>((resolve, reject) =>resolve())
     } 
     return this.uploadPics(this.apartmentImages).then(images =>{
       this.apartment.images = images;
-      ldr.dismiss();
-      console.log('Apartment pics uploaded');
+      /*console.log('Apartment pics uploaded');
       console.log(this.apartment)
-    console.log(this.building)
+      console.log(this.building)*/
     })
     .catch(err => {
-      ldr.dismiss();
       console.log(this.apartment)
-    console.log(this.building)
+      console.log(this.building)
       this.errHandler.handleError({message: 'Please check your connection...progress not saved'})
     })
   }

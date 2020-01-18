@@ -182,15 +182,12 @@ export class InfoPage {
   }
 
   ionViewWillLoad(){
-    this.storage.getPaymentWarningSeen()
+    /*this.storage.getPaymentWarningSeen()
     .then(val =>{
       if(val == undefined){
         this.showAlert();
       }
-    })
-    
-
-  	
+    })*/	
  }
 
  gotoApartment(apartment: Apartment){
